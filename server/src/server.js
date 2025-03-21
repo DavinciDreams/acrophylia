@@ -8,15 +8,13 @@ const { addBotPlayers } = require('./utils/botLogic')
 const app = express()
 const server = http.createServer(app)
 
-// Define allowed origins
 const allowedOrigins = [
   "http://localhost:3000",
   "https://urban-succotash-p9rqv5qxxg5cr4v4-3000.app.github.dev",
-  "https://acrophylia-5sij2fzvc-davincidreams-projects.vercel.app", 
-  "https://acrophylia.vercel.app/" // Your Vercel URL
+  "https://acrophylia-5sij2fzvc-davincidreams-projects.vercel.app",
+  "https://acrophylia.vercel.app/"
 ]
 
-// Apply CORS to Express
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -28,12 +26,11 @@ app.use(cors({
   methods: ["GET", "POST"]
 }))
 
-// Apply CORS to Socket.IO
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
     methods: ["GET", "POST"],
-    credentials: true // If needed for cookies/auth
+    credentials: true
   }
 })
 
@@ -59,17 +56,26 @@ io.on('connection', (socket) => {
     socket.join(roomId)
     console.log('Created room:', roomId)
     socket.emit('roomCreated', roomId)
+    // Start game immediately for the creator
+    startGame(roomId)
   })
 
   socket.on('joinRoom', (roomId) => {
     console.log('Received joinRoom event for room:', roomId)
     const room = rooms.get(roomId)
     if (room) {
-      room.players.push({ id: socket.id, score: 0 })
-      socket.join(roomId)
+      // Check if player is already in the room
+      const playerExists = room.players.some(player => player.id === socket.id)
+      if (!playerExists) {
+        room.players.push({ id: socket.id, score: 0 })
+        socket.join(roomId)
+        console.log('Player joined room:', roomId, 'Total players:', room.players.length)
+      } else {
+        console.log('Player', socket.id, 'already in room:', roomId)
+      }
       io.to(roomId).emit('playerUpdate', room.players)
-      console.log('Player joined room:', roomId, 'Total players:', room.players.length)
       
+      // Only start game if this is the first player (shouldn't happen here anymore)
       if (room.players.length === 1) {
         console.log('First player joined, starting game for room:', roomId)
         startGame(roomId)
