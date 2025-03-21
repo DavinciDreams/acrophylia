@@ -2,7 +2,10 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import io from 'socket.io-client';
 
-const socket = io('https://acrophylia.onrender.com'); // Replace with your Render URL
+const socket = io('https://acrophylia.onrender.com', {
+  withCredentials: true,
+  transports: ['websocket', 'polling']
+});
 
 const Home = () => {
   const router = useRouter();
