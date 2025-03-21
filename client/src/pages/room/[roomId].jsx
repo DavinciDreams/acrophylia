@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import io from 'socket.io-client';
 
-const socket = io('https://acrophylia.onrender.com'); // Replace with your Render URL
+const socket = io('https://acrophylia-server.onrender.com', { // Replace with your Render URL
+  withCredentials: true,
+  transports: ['websocket', 'polling']
+});
 
 const GameRoom = () => {
   const router = useRouter();
-  const { roomId: urlRoomId } = router.query; // Get roomId from URL
+  const { roomId: urlRoomId } = router.query;
   const [roomId, setRoomId] = useState(urlRoomId || null);
   const [players, setPlayers] = useState([]);
   const [roundNum, setRoundNum] = useState(0);
@@ -17,17 +20,23 @@ const GameRoom = () => {
   const [hasVoted, setHasVoted] = useState(false);
   const [results, setResults] = useState(null);
   const [winner, setWinner] = useState(null);
+  const [isCreator, setIsCreator] = useState(false);
 
   useEffect(() => {
     if (!urlRoomId) return;
 
+    socket.on('connect', () => console.log('Socket connected'));
+    socket.on('connect_error', (err) => console.log('Socket connect error:', err.message));
+
     socket.on('roomCreated', (newRoomId) => {
       setRoomId(newRoomId);
+      setIsCreator(true);
       router.push(`/room/${newRoomId}`);
     });
 
-    socket.on('roomJoined', (joinedRoomId) => {
-      setRoomId(joinedRoomId);
+    socket.on('roomJoined', ({ roomId, isCreator }) => {
+      setRoomId(roomId);
+      setIsCreator(isCreator);
     });
 
     socket.on('roomNotFound', () => {
@@ -70,6 +79,8 @@ const GameRoom = () => {
     socket.emit('joinRoom', urlRoomId);
 
     return () => {
+      socket.off('connect');
+      socket.off('connect_error');
       socket.off('roomCreated');
       socket.off('roomJoined');
       socket.off('roomNotFound');
@@ -96,6 +107,12 @@ const GameRoom = () => {
     }
   };
 
+  const startGame = () => {
+    if (roomId && isCreator) {
+      socket.emit('startGame', roomId);
+    }
+  };
+
   const inviteLink = roomId ? `${window.location.origin}/room/${roomId}` : '';
 
   return (
@@ -110,6 +127,13 @@ const GameRoom = () => {
               <li key={player.id}>{player.isBot ? `${player.name} (Bot)` : player.id} - Score: {player.score}</li>
             ))}
           </ul>
+
+          {gameState === 'waiting' && (
+            <>
+              <p>Waiting for players to join...</p>
+              {isCreator && <button onClick={startGame}>Start Game</button>}
+            </>
+          )}
 
           {gameState === 'submitting' && (
             <>
