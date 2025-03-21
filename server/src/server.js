@@ -45,15 +45,15 @@ io.on('connection', (socket) => {
     const roomId = Math.random().toString(36).substr(2, 9)
     rooms.set(roomId, {
       name: roomName,
-      creatorId: socket.id, // Track creator
+      creatorId: socket.id,
       players: [{ id: socket.id, score: 0, isBot: false }],
       round: 0,
       submissions: new Map(),
       votes: new Map(),
-      started: false // Track if game has started
+      started: false
     })
     socket.join(roomId)
-    console.log('Created room:', roomId)
+    console.log('Created room:', roomId, 'Rooms size:', rooms.size)
     socket.emit('roomCreated', roomId)
     io.to(roomId).emit('playerUpdate', rooms.get(roomId).players)
   })
@@ -73,7 +73,7 @@ io.on('connection', (socket) => {
       socket.emit('roomJoined', { roomId, isCreator: socket.id === room.creatorId })
       io.to(roomId).emit('playerUpdate', room.players)
     } else {
-      console.log('Room not found:', roomId)
+      console.log('Room not found on join:', roomId, 'Available rooms:', Array.from(rooms.keys()))
       socket.emit('roomNotFound')
     }
   })
