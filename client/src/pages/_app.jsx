@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import GameRoom from './GameRoom';
+import GameRoom from '.components/GameRoom';
 
 function App() {
   return (
