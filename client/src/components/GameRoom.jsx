@@ -3,7 +3,6 @@ import { useSocket } from '../lib/socket'
 import PlayerList from './PlayerList'
 import SubmissionForm from './SubmissionForm'
 import VotingPanel from './VotingPanel'
-import { generateLetters } from '../utils/gameLogic'
 
 export default function GameRoom({ roomId }) {
   const socket = useSocket()
