@@ -12,7 +12,8 @@ const io = new Server(server, {
     origin: [
       "http://localhost:3000", // Keep for local dev
       "https://urban-succotash-p9rqv5qxxg5cr4v4-3000.app.github.dev", // Your Codespaces URL
-      "https://acrophylia.vercel.app/" // Add your Vercel URL if deployed there
+      "https://acrophylia.vercel.app/",
+      "https://acrophylia-davincidreams-projects.vercel.app/" // Add your Vercel URL if deployed there
     ],
     methods: ["GET", "POST"]
   }
