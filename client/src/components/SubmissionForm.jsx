@@ -2,25 +2,28 @@ import { useState } from 'react'
 import { useSocket } from '../lib/socket'
 
 export default function SubmissionForm({ letters, roomId }) {
-  const [acronym, setAcronym] = useState('')
   const socket = useSocket()
+  const [acronym, setAcronym] = useState('')
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (socket && acronym) {
+    if (acronym.length === letters.length) {
+      console.log('Submitting acronym:', { roomId, acronym })
       socket.emit('submitAcronym', { roomId, acronym })
       setAcronym('')
+    } else {
+      console.log('Acronym length mismatch:', acronym.length, 'vs', letters.length)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="submission-form">
-      <h4>Letters: {letters.join('')}</h4>
+    <form onSubmit={handleSubmit}>
       <input
+        type="text"
         value={acronym}
-        onChange={(e) => setAcronym(e.target.value)}
-        placeholder="Enter your acronym"
-        maxLength={50}
+        onChange={(e) => setAcronym(e.target.value.toUpperCase())}
+        placeholder={`Enter ${letters.length} letters`}
+        maxLength={letters.length}
       />
       <button type="submit">Submit</button>
     </form>
