@@ -1,21 +1,25 @@
-import { useState } from 'react'
-import GameLobby from '../components/GameLobby'
-import GameRoom from '../components/GameRoom'
+import React from 'react';
+import { useRouter } from 'next/router';
+import io from 'socket.io-client';
 
-export default function Home() {
-  const [gameStarted, setGameStarted] = useState(false)
-  const [roomId, setRoomId] = useState(null)
+const socket = io('https://your-render-url.onrender.com'); // Replace with your Render URL
+
+const Home = () => {
+  const router = useRouter();
+
+  const createRoom = () => {
+    socket.emit('createRoom', 'one');
+    socket.on('roomCreated', (roomId) => {
+      router.push(`/room/${roomId}`);
+    });
+  };
 
   return (
-    <div className="container">
-      {!gameStarted ? (
-        <GameLobby onGameStart={(id) => {
-          setGameStarted(true)
-          setRoomId(id)
-        }} />
-      ) : (
-        <GameRoom roomId={roomId} />
-      )}
+    <div>
+      <h1>Acrophylia</h1>
+      <button onClick={createRoom}>Create Room</button>
     </div>
-  )
-}
+  );
+};
+
+export default Home;
