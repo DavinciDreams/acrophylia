@@ -29,26 +29,31 @@ const GameRoom = () => {
     socket.on('connect_error', (err) => console.log('Socket connect error:', err.message));
 
     socket.on('roomCreated', (newRoomId) => {
+      console.log('Room created, I am creator, roomId:', newRoomId);
       setRoomId(newRoomId);
       setIsCreator(true);
       router.push(`/room/${newRoomId}`);
     });
 
     socket.on('roomJoined', ({ roomId, isCreator }) => {
+      console.log('Room joined, roomId:', roomId, 'isCreator:', isCreator);
       setRoomId(roomId);
       setIsCreator(isCreator);
     });
 
     socket.on('roomNotFound', () => {
+      console.log('Room not found');
       alert('Room not found!');
       router.push('/');
     });
 
     socket.on('playerUpdate', (updatedPlayers) => {
+      console.log('Players updated:', updatedPlayers);
       setPlayers(updatedPlayers);
     });
 
     socket.on('newRound', ({ roundNum, letterSet }) => {
+      console.log('New round started:', roundNum, letterSet);
       setRoundNum(roundNum);
       setLetterSet(letterSet);
       setGameState('submitting');
@@ -58,24 +63,29 @@ const GameRoom = () => {
     });
 
     socket.on('submissionsReceived', (submissionList) => {
+      console.log('Submissions received:', submissionList);
       setSubmissions(submissionList);
       setGameState('voting');
     });
 
     socket.on('votingStart', () => {
+      console.log('Voting started');
       setGameState('voting');
     });
 
     socket.on('roundResults', (roundResults) => {
+      console.log('Round results:', roundResults);
       setResults(roundResults);
       setGameState('results');
     });
 
     socket.on('gameEnd', ({ winner }) => {
+      console.log('Game ended, winner:', winner);
       setWinner(winner);
       setGameState('ended');
     });
 
+    console.log('Joining room:', urlRoomId);
     socket.emit('joinRoom', urlRoomId);
 
     return () => {
@@ -95,6 +105,7 @@ const GameRoom = () => {
 
   const submitAcronym = () => {
     if (acronym && roomId) {
+      console.log('Submitting acronym:', acronym);
       socket.emit('submitAcronym', { roomId, acronym });
       setAcronym('');
     }
@@ -102,6 +113,7 @@ const GameRoom = () => {
 
   const submitVote = (submissionId) => {
     if (!hasVoted && roomId) {
+      console.log('Submitting vote for:', submissionId);
       socket.emit('vote', { roomId, submissionId });
       setHasVoted(true);
     }
@@ -109,15 +121,18 @@ const GameRoom = () => {
 
   const startGame = () => {
     if (roomId && isCreator) {
+      console.log('Starting game for room:', roomId);
       socket.emit('startGame', roomId);
     }
   };
 
   const inviteLink = roomId ? `${window.location.origin}/room/${roomId}` : '';
 
+  console.log('Rendering - gameState:', gameState, 'isCreator:', isCreator);
+
   return (
     <div>
-      {roomId && (
+      {roomId ? (
         <>
           <h2>Room: {roomId}</h2>
           <p>Invite others: <input type="text" value={inviteLink} readOnly /> <button onClick={() => navigator.clipboard.writeText(inviteLink)}>Copy</button></p>
@@ -129,10 +144,10 @@ const GameRoom = () => {
           </ul>
 
           {gameState === 'waiting' && (
-            <>
+            <div>
               <p>Waiting for players to join...</p>
               {isCreator && <button onClick={startGame}>Start Game</button>}
-            </>
+            </div>
           )}
 
           {gameState === 'submitting' && (
@@ -182,6 +197,8 @@ const GameRoom = () => {
             </>
           )}
         </>
+      ) : (
+        <p>Loading room...</p>
       )}
     </div>
   );
