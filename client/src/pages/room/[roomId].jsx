@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import io from 'socket.io-client';
 
-const socket = io('https://acrophylia-server.onrender.com', { // Replace with your Render URL
+const socket = io('https://acrophylia.onrender.com', {
   withCredentials: true,
   transports: ['websocket', 'polling']
 });
