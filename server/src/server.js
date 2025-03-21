@@ -12,29 +12,43 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://urban-succotash-p9rqv5qxxg5cr4v4-3000.app.github.dev",
   "https://acrophylia-5sij2fzvc-davincidreams-projects.vercel.app",
-  "https://acrophylia.vercel.app"
+  "https://acrophylia.vercel.app",
+  "https://*.vercel.app" // Wildcard for Vercel subdomains
 ]
 
 app.use(cors({
   origin: function (origin, callback) {
-    console.log('CORS check for origin:', origin)
-    if (!origin || allowedOrigins.includes(origin)) {
+    console.log('CORS check - Request origin:', origin)
+    if (!origin || allowedOrigins.some(allowed => 
+      allowed.includes('*') ? new RegExp(allowed.replace('*', '.*')).test(origin) : allowed === origin
+    )) {
       callback(null, true)
     } else {
-      console.log('CORS rejected origin:', origin)
+      console.log('CORS rejected - Origin not allowed:', origin)
       callback(new Error('Not allowed by CORS'))
     }
   },
-  methods: ["GET", "POST"]
+  methods: ["GET", "POST"],
+  credentials: true
 }))
 
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      console.log('Socket.IO CORS check - Request origin:', origin)
+      if (!origin || allowedOrigins.some(allowed => 
+        allowed.includes('*') ? new RegExp(allowed.replace('*', '.*')).test(origin) : allowed === origin
+      )) {
+        callback(null, true)
+      } else {
+        console.log('Socket.IO CORS rejected - Origin not allowed:', origin)
+        callback(new Error('Not allowed by CORS'))
+      }
+    },
     methods: ["GET", "POST"],
     credentials: true
   }
-})
+}))
 
 app.get('/', (req, res) => {
   res.send('Acrophobia Game Server is running. Connect via the frontend.')
@@ -68,13 +82,13 @@ io.on('connection', (socket) => {
     if (room) {
       const playerExists = room.players.some(player => player.id === socket.id)
       if (!playerExists) {
-        room.players.push({ id: socket.id, score: 0, isBot: false }) // Allow new human players
+        room.players.push({ id: socket.id, score: 0, isBot: false })
         socket.join(roomId)
         console.log('Player joined room:', roomId, 'Total players:', room.players.length)
         io.to(roomId).emit('playerUpdate', room.players)
       } else {
         console.log('Player', socket.id, 'already in room:', roomId)
-        socket.emit('roomJoined', roomId) // Reconfirm join for existing player
+        socket.emit('roomJoined', roomId)
       }
     } else {
       console.log('Room not found:', roomId)
@@ -101,7 +115,7 @@ io.on('connection', (socket) => {
     console.log('Received vote for room:', roomId, 'submission:', submissionId)
     const room = rooms.get(roomId)
     if (room) {
-      if (!room.votes.has(socket.id)) { // Prevent multiple votes
+      if (!room.votes.has(socket.id)) {
         room.votes.set(socket.id, submissionId)
         console.log('Current votes:', room.votes.size, 'Players:', room.players.length)
         if (room.votes.size === room.players.length) {
@@ -164,7 +178,7 @@ function startRound(roomId) {
   room.submissions.clear()
   
   room.players.forEach(player => {
-    if (player.isBot) { // Use isBot flag from addBotPlayers
+    if (player.isBot) {
       const botAcronym = letters.join('')
       room.submissions.set(player.id, botAcronym)
       console.log('Bot', player.id, 'submitted:', botAcronym)
