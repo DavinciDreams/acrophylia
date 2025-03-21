@@ -9,16 +9,19 @@ const app = express()
 const server = http.createServer(app)
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: [
+      "http://localhost:3000", // Keep for local dev
+      "https://urban-succotash-p9rqv5qxxg5cr4v4-3000.app.github.dev", // Your Codespaces URL
+      "https://acrophylia.vercel.app/" // Add your Vercel URL if deployed there
+    ],
     methods: ["GET", "POST"]
   }
 })
 
 app.use(cors())
 
-// Add a simple root route
 app.get('/', (req, res) => {
-  res.send('Acrophobia Game Server is running. Connect via the frontend at http://localhost:3000')
+  res.send('Acrophobia Game Server is running. Connect via the frontend.')
 })
 
 const rooms = new Map()
