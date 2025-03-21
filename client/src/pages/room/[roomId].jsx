@@ -31,18 +31,19 @@ const GameRoom = () => {
     socket.on('roomCreated', (newRoomId) => {
       console.log('Room created, I am creator, roomId:', newRoomId);
       setRoomId(newRoomId);
-      setIsCreator(true);
+      setIsCreator(true); // Set as creator
       router.push(`/room/${newRoomId}`);
     });
 
-    socket.on('roomJoined', ({ roomId, isCreator }) => {
-      console.log('Room joined, roomId:', roomId, 'isCreator:', isCreator);
+    socket.on('roomJoined', ({ roomId, isCreator: serverIsCreator }) => {
+      console.log('Room joined, roomId:', roomId, 'serverIsCreator:', serverIsCreator);
       setRoomId(roomId);
-      setIsCreator(isCreator);
+      // Only update isCreator if not already set (prevents overwrite for creator)
+      if (!isCreator) setIsCreator(serverIsCreator);
     });
 
     socket.on('roomNotFound', () => {
-      console.log('Room not found');
+      console.log('Room not found for roomId:', urlRoomId);
       alert('Room not found!');
       router.push('/');
     });
