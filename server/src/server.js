@@ -13,42 +13,22 @@ const allowedOrigins = [
   "https://urban-succotash-p9rqv5qxxg5cr4v4-3000.app.github.dev",
   "https://acrophylia-5sij2fzvc-davincidreams-projects.vercel.app",
   "https://acrophylia.vercel.app",
-  "https://*.vercel.app" // Wildcard for Vercel subdomains
+  "https://*.vercel.app"
 ]
 
 app.use(cors({
-  origin: function (origin, callback) {
-    console.log('CORS check - Request origin:', origin)
-    if (!origin || allowedOrigins.some(allowed => 
-      allowed.includes('*') ? new RegExp(allowed.replace('*', '.*')).test(origin) : allowed === origin
-    )) {
-      callback(null, true)
-    } else {
-      console.log('CORS rejected - Origin not allowed:', origin)
-      callback(new Error('Not allowed by CORS'))
-    }
-  },
+  origin: allowedOrigins,
   methods: ["GET", "POST"],
   credentials: true
 }))
 
 const io = new Server(server, {
   cors: {
-    origin: function (origin, callback) {
-      console.log('Socket.IO CORS check - Request origin:', origin)
-      if (!origin || allowedOrigins.some(allowed => 
-        allowed.includes('*') ? new RegExp(allowed.replace('*', '.*')).test(origin) : allowed === origin
-      )) {
-        callback(null, true)
-      } else {
-        console.log('Socket.IO CORS rejected - Origin not allowed:', origin)
-        callback(new Error('Not allowed by CORS'))
-      }
-    },
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true
   }
-}))
+})
 
 app.get('/', (req, res) => {
   res.send('Acrophobia Game Server is running. Connect via the frontend.')
@@ -65,15 +45,17 @@ io.on('connection', (socket) => {
     const roomId = Math.random().toString(36).substr(2, 9)
     rooms.set(roomId, {
       name: roomName,
+      creatorId: socket.id, // Track creator
       players: [{ id: socket.id, score: 0, isBot: false }],
       round: 0,
       submissions: new Map(),
-      votes: new Map()
+      votes: new Map(),
+      started: false // Track if game has started
     })
     socket.join(roomId)
     console.log('Created room:', roomId)
     socket.emit('roomCreated', roomId)
-    startGame(roomId)
+    io.to(roomId).emit('playerUpdate', rooms.get(roomId).players)
   })
 
   socket.on('joinRoom', (roomId) => {
@@ -85,21 +67,32 @@ io.on('connection', (socket) => {
         room.players.push({ id: socket.id, score: 0, isBot: false })
         socket.join(roomId)
         console.log('Player joined room:', roomId, 'Total players:', room.players.length)
-        io.to(roomId).emit('playerUpdate', room.players)
       } else {
         console.log('Player', socket.id, 'already in room:', roomId)
-        socket.emit('roomJoined', roomId)
       }
+      socket.emit('roomJoined', { roomId, isCreator: socket.id === room.creatorId })
+      io.to(roomId).emit('playerUpdate', room.players)
     } else {
       console.log('Room not found:', roomId)
       socket.emit('roomNotFound')
     }
   })
 
+  socket.on('startGame', (roomId) => {
+    const room = rooms.get(roomId)
+    if (room && socket.id === room.creatorId && !room.started) {
+      console.log('Received startGame event for room:', roomId)
+      room.started = true
+      startGame(roomId)
+    } else {
+      console.log('Start game rejected:', socket.id, 'not creator or game already started')
+    }
+  })
+
   socket.on('submitAcronym', ({ roomId, acronym }) => {
     console.log('Received submitAcronym for room:', roomId, 'acronym:', acronym)
     const room = rooms.get(roomId)
-    if (room) {
+    if (room && room.started) {
       room.submissions.set(socket.id, acronym)
       console.log('Current submissions:', room.submissions.size, 'Players:', room.players.length)
       if (room.submissions.size === room.players.length) {
@@ -114,7 +107,7 @@ io.on('connection', (socket) => {
   socket.on('vote', ({ roomId, submissionId }) => {
     console.log('Received vote for room:', roomId, 'submission:', submissionId)
     const room = rooms.get(roomId)
-    if (room) {
+    if (room && room.started) {
       if (!room.votes.has(socket.id)) {
         room.votes.set(socket.id, submissionId)
         console.log('Current votes:', room.votes.size, 'Players:', room.players.length)
