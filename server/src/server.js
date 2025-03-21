@@ -51,7 +51,7 @@ io.on('connection', (socket) => {
     const roomId = Math.random().toString(36).substr(2, 9)
     rooms.set(roomId, {
       name: roomName,
-      players: [{ id: socket.id, score: 0 }],
+      players: [{ id: socket.id, score: 0, isBot: false }],
       round: 0,
       submissions: new Map(),
       votes: new Map()
@@ -68,15 +68,17 @@ io.on('connection', (socket) => {
     if (room) {
       const playerExists = room.players.some(player => player.id === socket.id)
       if (!playerExists) {
-        room.players.push({ id: socket.id, score: 0 })
+        room.players.push({ id: socket.id, score: 0, isBot: false }) // Allow new human players
         socket.join(roomId)
         console.log('Player joined room:', roomId, 'Total players:', room.players.length)
+        io.to(roomId).emit('playerUpdate', room.players)
       } else {
         console.log('Player', socket.id, 'already in room:', roomId)
+        socket.emit('roomJoined', roomId) // Reconfirm join for existing player
       }
-      io.to(roomId).emit('playerUpdate', room.players)
     } else {
       console.log('Room not found:', roomId)
+      socket.emit('roomNotFound')
     }
   })
 
@@ -90,10 +92,8 @@ io.on('connection', (socket) => {
         console.log('All submissions received for room:', roomId)
         io.to(roomId).emit('submissionsReceived', Array.from(room.submissions))
         io.to(roomId).emit('votingStart')
-        simulateBotVotes(roomId) // Add bot votes after voting starts
+        simulateBotVotes(roomId)
       }
-    } else {
-      console.log('Room not found for submitAcronym:', roomId)
     }
   })
 
@@ -101,26 +101,46 @@ io.on('connection', (socket) => {
     console.log('Received vote for room:', roomId, 'submission:', submissionId)
     const room = rooms.get(roomId)
     if (room) {
-      room.votes.set(socket.id, submissionId)
-      console.log('Current votes:', room.votes.size, 'Players:', room.players.length)
-      if (room.votes.size === room.players.length) {
-        console.log('All votes received for room:', roomId)
-        const results = calculateResults(room)
-        io.to(roomId).emit('roundResults', results)
-        
-        if (room.round < 3) {
-          room.submissions.clear()
-          room.votes.clear()
-          startRound(roomId)
-        } else {
-          const winner = room.players.reduce((prev, curr) => 
-            prev.score > curr.score ? prev : curr
-          )
-          console.log('Game ended, winner:', winner.id)
-          io.to(roomId).emit('gameEnd', { winner })
+      if (!room.votes.has(socket.id)) { // Prevent multiple votes
+        room.votes.set(socket.id, submissionId)
+        console.log('Current votes:', room.votes.size, 'Players:', room.players.length)
+        if (room.votes.size === room.players.length) {
+          console.log('All votes received for room:', roomId)
+          const results = calculateResults(room)
+          io.to(roomId).emit('roundResults', results)
+          
+          if (room.round < 3) {
+            room.submissions.clear()
+            room.votes.clear()
+            startRound(roomId)
+          } else {
+            const winner = room.players.reduce((prev, curr) => 
+              prev.score > curr.score ? prev : curr
+            )
+            console.log('Game ended, winner:', winner.id)
+            io.to(roomId).emit('gameEnd', { winner })
+          }
         }
+      } else {
+        console.log('Player', socket.id, 'already voted in room:', roomId)
       }
     }
+  })
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id)
+    rooms.forEach((room, roomId) => {
+      const playerIndex = room.players.findIndex(p => p.id === socket.id)
+      if (playerIndex !== -1) {
+        room.players.splice(playerIndex, 1)
+        console.log('Player removed from room:', roomId, 'Remaining players:', room.players.length)
+        io.to(roomId).emit('playerUpdate', room.players)
+        if (room.players.length === 0) {
+          rooms.delete(roomId)
+          console.log('Room deleted:', roomId)
+        }
+      }
+    })
   })
 })
 
@@ -144,7 +164,7 @@ function startRound(roomId) {
   room.submissions.clear()
   
   room.players.forEach(player => {
-    if (player.id.startsWith('bot_')) {
+    if (player.isBot) { // Use isBot flag from addBotPlayers
       const botAcronym = letters.join('')
       room.submissions.set(player.id, botAcronym)
       console.log('Bot', player.id, 'submitted:', botAcronym)
@@ -160,7 +180,7 @@ function simulateBotVotes(roomId) {
   if (room) {
     const submissionIds = Array.from(room.submissions.keys())
     room.players.forEach(player => {
-      if (player.id.startsWith('bot_') && !room.votes.has(player.id)) {
+      if (player.isBot && !room.votes.has(player.id)) {
         const randomVote = submissionIds[Math.floor(Math.random() * submissionIds.length)]
         room.votes.set(player.id, randomVote)
         console.log('Bot', player.id, 'voted for:', randomVote)
