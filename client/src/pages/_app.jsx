@@ -1,14 +1,8 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import GameRoom from '/acrophylia/client/src/components/GameRoom.jsx';
+// src/pages/_app.jsx
+import '../styles/globals.css'; // Adjust if you have CSS
 
-function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<GameRoom />} />
-        <Route path="/room/:roomId" element={<GameRoom />} />
-      </Routes>
-    </Router>
-  );
+function MyApp({ Component, pageProps }) {
+  return <Component {...pageProps} />;
 }
-export default App;
+
+export default MyApp;
