@@ -6,5 +6,13 @@
       "server": "cd server && npm run start",
       "dev": "npm run client & npm run server",
       "install-all": "npm install && cd client && npm install && cd ../server && npm install"
+    },
+    "vercel": {
+      "builds": [
+        {
+          "src": "client/package.json",
+          "use": "@vercel/next"
+        }
+      ]
     }
   }
