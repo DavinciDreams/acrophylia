@@ -90,6 +90,7 @@ io.on('connection', (socket) => {
         console.log('All submissions received for room:', roomId)
         io.to(roomId).emit('submissionsReceived', Array.from(room.submissions))
         io.to(roomId).emit('votingStart')
+        simulateBotVotes(roomId) // Add bot votes after voting starts
       }
     } else {
       console.log('Room not found for submitAcronym:', roomId)
@@ -101,6 +102,7 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomId)
     if (room) {
       room.votes.set(socket.id, submissionId)
+      console.log('Current votes:', room.votes.size, 'Players:', room.players.length)
       if (room.votes.size === room.players.length) {
         console.log('All votes received for room:', roomId)
         const results = calculateResults(room)
@@ -139,12 +141,10 @@ function startRound(roomId) {
   const letters = generateLetters(room.round)
   console.log('Starting round', room.round, 'for room:', roomId, 'letters:', letters)
   
-  // Clear submissions for new round
   room.submissions.clear()
   
-  // Simulate bot submissions
   room.players.forEach(player => {
-    if (player.id.startsWith('bot_')) { // Changed from 'bot-' to 'bot_'
+    if (player.id.startsWith('bot_')) {
       const botAcronym = letters.join('')
       room.submissions.set(player.id, botAcronym)
       console.log('Bot', player.id, 'submitted:', botAcronym)
@@ -153,6 +153,37 @@ function startRound(roomId) {
   
   io.to(roomId).emit('newRound', { roundNum: room.round, letterSet: letters })
   console.log('Emitted newRound event to room:', roomId, 'with letters:', letters)
+}
+
+function simulateBotVotes(roomId) {
+  const room = rooms.get(roomId)
+  if (room) {
+    const submissionIds = Array.from(room.submissions.keys())
+    room.players.forEach(player => {
+      if (player.id.startsWith('bot_') && !room.votes.has(player.id)) {
+        const randomVote = submissionIds[Math.floor(Math.random() * submissionIds.length)]
+        room.votes.set(player.id, randomVote)
+        console.log('Bot', player.id, 'voted for:', randomVote)
+      }
+    })
+    if (room.votes.size === room.players.length) {
+      console.log('All votes received for room:', roomId)
+      const results = calculateResults(room)
+      io.to(roomId).emit('roundResults', results)
+      
+      if (room.round < 3) {
+        room.submissions.clear()
+        room.votes.clear()
+        startRound(roomId)
+      } else {
+        const winner = room.players.reduce((prev, curr) => 
+          prev.score > curr.score ? prev : curr
+        )
+        console.log('Game ended, winner:', winner.id)
+        io.to(roomId).emit('gameEnd', { winner })
+      }
+    }
+  }
 }
 
 function calculateResults(room) {
