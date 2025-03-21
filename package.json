@@ -1,0 +1,18 @@
+{
+    "name": "acrophobia-game",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+      "dev": "next dev",
+      "build": "next build",
+      "start": "next start",
+      "server": "node src/server/gameServer.js"
+    },
+    "dependencies": {
+      "next": "latest",
+      "react": "latest",
+      "react-dom": "latest",
+      "socket.io": "^4.5.0",
+      "socket.io-client": "^4.5.0"
+    }
+  }

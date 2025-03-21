@@ -1,0 +1,31 @@
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .lobby, .game-room {
+    text-align: center;
+  }
+  
+  .player-list {
+    margin: 20px 0;
+  }
+  
+  .submission-form, .voting-panel {
+    margin: 20px 0;
+  }
+  
+  .submission {
+    margin: 10px 0;
+  }
+  
+  button {
+    margin: 5px;
+    padding: 5px 15px;
+  }
