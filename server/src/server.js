@@ -144,7 +144,7 @@ function startRound(roomId) {
   
   // Simulate bot submissions
   room.players.forEach(player => {
-    if (player.id.startsWith('bot-')) {
+    if (player.id.startsWith('bot_')) { // Changed from 'bot-' to 'bot_'
       const botAcronym = letters.join('')
       room.submissions.set(player.id, botAcronym)
       console.log('Bot', player.id, 'submitted:', botAcronym)
