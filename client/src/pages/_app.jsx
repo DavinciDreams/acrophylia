@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import GameRoom from '.components/GameRoom';
+import GameRoom from '/acrophylia/client/src/components/GameRoom.jsx';
 
 function App() {
   return (
