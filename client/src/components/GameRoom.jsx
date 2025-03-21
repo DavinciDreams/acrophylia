@@ -1,96 +1,173 @@
-import { useState, useEffect } from 'react'
-import { useSocket } from '../lib/socket'
-import PlayerList from './PlayerList'
-import SubmissionForm from './SubmissionForm'
-import VotingPanel from './VotingPanel'
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import io from 'socket.io-client';
 
-export default function GameRoom({ roomId }) {
-  const socket = useSocket()
-  const [players, setPlayers] = useState([])
-  const [round, setRound] = useState(1)
-  const [letters, setLetters] = useState([])
-  const [submissions, setSubmissions] = useState([])
-  const [phase, setPhase] = useState('submission')
-  const [results, setResults] = useState(null)
-  const [winner, setWinner] = useState(null)
+const socket = io('https://your-render-url.onrender.com'); // Replace with your Render URL
+
+const GameRoom = () => {
+  const { roomId: urlRoomId } = useParams(); // Get roomId from URL
+  const navigate = useNavigate();
+  const [roomId, setRoomId] = useState(urlRoomId || null);
+  const [players, setPlayers] = useState([]);
+  const [roundNum, setRoundNum] = useState(0);
+  const [letterSet, setLetterSet] = useState([]);
+  const [acronym, setAcronym] = useState('');
+  const [submissions, setSubmissions] = useState([]);
+  const [gameState, setGameState] = useState('waiting'); // waiting, submitting, voting, results, ended
+  const [hasVoted, setHasVoted] = useState(false); // Track if player has voted
+  const [results, setResults] = useState(null);
+  const [winner, setWinner] = useState(null);
 
   useEffect(() => {
-    if (!socket) return;
+    socket.on('roomCreated', (newRoomId) => {
+      setRoomId(newRoomId);
+      navigate(`/room/${newRoomId}`);
+    });
 
-    console.log('Setting up socket listeners for room:', roomId)
-    socket.emit('joinRoom', roomId)
+    socket.on('roomJoined', (joinedRoomId) => {
+      setRoomId(joinedRoomId);
+    });
+
+    socket.on('roomNotFound', () => {
+      alert('Room not found!');
+      navigate('/');
+    });
 
     socket.on('playerUpdate', (updatedPlayers) => {
-      console.log('Received playerUpdate:', updatedPlayers)
-      setPlayers(updatedPlayers)
-    })
+      setPlayers(updatedPlayers);
+    });
+
     socket.on('newRound', ({ roundNum, letterSet }) => {
-      console.log('Received newRound:', { roundNum, letterSet })
-      setRound(roundNum)
-      setLetters(letterSet || [])
-      setPhase('submission')
-      setResults(null)
-    })
-    socket.on('submissionsReceived', (subs) => {
-      console.log('Received submissionsReceived:', subs)
-      setSubmissions(subs)
-    })
+      setRoundNum(roundNum);
+      setLetterSet(letterSet);
+      setGameState('submitting');
+      setSubmissions([]);
+      setHasVoted(false);
+      setResults(null);
+    });
+
+    socket.on('submissionsReceived', (submissionList) => {
+      setSubmissions(submissionList);
+      setGameState('voting');
+    });
+
     socket.on('votingStart', () => {
-      console.log('Received votingStart')
-      setPhase('voting')
-    })
+      setGameState('voting');
+    });
+
     socket.on('roundResults', (roundResults) => {
-      console.log('Received roundResults:', roundResults)
-      setResults(roundResults)
-      setPhase('roundEnd')
-      setPlayers(roundResults.updatedPlayers)
-    })
+      setResults(roundResults);
+      setGameState('results');
+    });
+
     socket.on('gameEnd', ({ winner }) => {
-      console.log('Received gameEnd:', winner)
-      setWinner(winner)
-      setPhase('gameEnd')
-    })
+      setWinner(winner);
+      setGameState('ended');
+    });
+
+    if (urlRoomId) {
+      socket.emit('joinRoom', urlRoomId);
+    }
 
     return () => {
-      console.log('Cleaning up socket listeners for room:', roomId)
-      socket.off('playerUpdate')
-      socket.off('newRound')
-      socket.off('submissionsReceived')
-      socket.off('votingStart')
-      socket.off('roundResults')
-      socket.off('gameEnd')
+      socket.off('roomCreated');
+      socket.off('roomJoined');
+      socket.off('roomNotFound');
+      socket.off('playerUpdate');
+      socket.off('newRound');
+      socket.off('submissionsReceived');
+      socket.off('votingStart');
+      socket.off('roundResults');
+      socket.off('gameEnd');
+    };
+  }, [urlRoomId, navigate]);
+
+  const createRoom = () => {
+    socket.emit('createRoom', 'one');
+  };
+
+  const submitAcronym = () => {
+    if (acronym && roomId) {
+      socket.emit('submitAcronym', { roomId, acronym });
+      setAcronym('');
     }
-  }, [socket, roomId])
+  };
+
+  const submitVote = (submissionId) => {
+    if (!hasVoted && roomId) {
+      socket.emit('vote', { roomId, submissionId });
+      setHasVoted(true);
+    }
+  };
+
+  const inviteLink = roomId ? `${window.location.origin}/room/${roomId}` : '';
 
   return (
-    <div className="game-room">
-      <h2>Round {round} - {letters.join('')}</h2>
-      <PlayerList players={players} />
-      <p>Letters: {letters.join('') || 'None yet'}</p>
-      
-      {phase === 'submission' && (
-        <SubmissionForm letters={letters} roomId={roomId} />
+    <div>
+      {!roomId && (
+        <button onClick={createRoom}>Create Room</button>
       )}
-      {phase === 'voting' && (
-        <VotingPanel submissions={submissions} roomId={roomId} />
-      )}
-      {phase === 'roundEnd' && results && (
-        <div>
-          <h3>Round Results</h3>
-          {results.submissions.map(([id, acronym]) => (
-            <p key={id}>
-              {acronym} - {results.votes.filter(([_, voteId]) => voteId === id).length} votes
-              {results.winnerId === id && ' (Winner)'}
-            </p>
-          ))}
-        </div>
-      )}
-      {phase === 'gameEnd' && winner && (
-        <div>
-          <h3>Game Over!</h3>
-          <p>Winner: {winner.id} with {winner.score} points!</p>
-        </div>
+      {roomId && (
+        <>
+          <h2>Room: {roomId}</h2>
+          <p>Invite others: <input type="text" value={inviteLink} readOnly /> <button onClick={() => navigator.clipboard.writeText(inviteLink)}>Copy</button></p>
+          <h3>Players ({players.length}):</h3>
+          <ul>
+            {players.map((player) => (
+              <li key={player.id}>{player.isBot ? `${player.name} (Bot)` : player.id} - Score: {player.score}</li>
+            ))}
+          </ul>
+
+          {gameState === 'submitting' && (
+            <>
+              <h3>Round {roundNum} - Letters: {letterSet.join(', ')}</h3>
+              <input
+                type="text"
+                value={acronym}
+                onChange={(e) => setAcronym(e.target.value.toUpperCase())}
+                placeholder="Enter acronym"
+              />
+              <button onClick={submitAcronym}>Submit</button>
+            </>
+          )}
+
+          {gameState === 'voting' && (
+            <>
+              <h3>Vote for an Acronym:</h3>
+              <ul>
+                {submissions.map(([playerId, acronym]) => (
+                  <li key={playerId}>
+                    {acronym} - <button onClick={() => submitVote(playerId)} disabled={hasVoted}>Vote</button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {gameState === 'results' && results && (
+            <>
+              <h3>Round {roundNum} Results</h3>
+              <ul>
+                {results.submissions.map(([playerId, acronym]) => (
+                  <li key={playerId}>
+                    {acronym} - Votes: {results.votes.filter(([_, votedId]) => votedId === playerId).length}
+                    {results.winnerId === playerId && ' (Winner)'}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {gameState === 'ended' && winner && (
+            <>
+              <h3>Game Over!</h3>
+              <p>Winner: {winner.id} with {winner.score} points</p>
+            </>
+          )}
+        </>
       )}
     </div>
-  )
-}
+  );
+};
+
+export default GameRoom;
