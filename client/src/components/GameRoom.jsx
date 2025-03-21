@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 
-const socket = io('https://your-render-url.onrender.com'); // Replace with your Render URL
+const socket = io('https://acrophylia.onrender.com'); // Replace with your Render URL
 
 const GameRoom = () => {
   const { roomId: urlRoomId } = useParams(); // Get roomId from URL
