@@ -7,19 +7,35 @@ const { addBotPlayers } = require('./utils/botLogic')
 
 const app = express()
 const server = http.createServer(app)
+
+// Define allowed origins
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://urban-succotash-p9rqv5qxxg5cr4v4-3000.app.github.dev",
+  "https://acrophylia-5sij2fzvc-davincidreams-projects.vercel.app", 
+  "https://acrophylia.vercel.app/" // Your Vercel URL
+]
+
+// Apply CORS to Express
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
+  methods: ["GET", "POST"]
+}))
+
+// Apply CORS to Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: [
-      "http://localhost:3000", // Keep for local dev
-      "https://urban-succotash-p9rqv5qxxg5cr4v4-3000.app.github.dev", // Your Codespaces URL
-      "https://acrophylia.vercel.app/",
-      "https://acrophylia-davincidreams-projects.vercel.app/" // Add your Vercel URL if deployed there
-    ],
-    methods: ["GET", "POST"]
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true // If needed for cookies/auth
   }
 })
-
-app.use(cors())
 
 app.get('/', (req, res) => {
   res.send('Acrophobia Game Server is running. Connect via the frontend.')
@@ -54,7 +70,10 @@ io.on('connection', (socket) => {
       io.to(roomId).emit('playerUpdate', room.players)
       console.log('Player joined room:', roomId, 'Total players:', room.players.length)
       
-      if (room.players.length === 1) startGame(roomId)
+      if (room.players.length === 1) {
+        console.log('First player joined, starting game for room:', roomId)
+        startGame(roomId)
+      }
     } else {
       console.log('Room not found:', roomId)
     }
@@ -113,6 +132,7 @@ function startRound(roomId) {
   const letters = generateLetters(room.round)
   console.log('Starting round', room.round, 'for room:', roomId, 'letters:', letters)
   io.to(roomId).emit('newRound', { roundNum: room.round, letterSet: letters })
+  console.log('Emitted newRound event to room:', roomId, 'with letters:', letters)
 }
 
 function calculateResults(room) {
