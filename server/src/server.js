@@ -12,14 +12,16 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://urban-succotash-p9rqv5qxxg5cr4v4-3000.app.github.dev",
   "https://acrophylia-5sij2fzvc-davincidreams-projects.vercel.app",
-  "https://acrophylia.vercel.app",
+  "https://acrophylia.vercel.app"
 ]
 
 app.use(cors({
   origin: function (origin, callback) {
+    console.log('CORS check for origin:', origin)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true)
     } else {
+      console.log('CORS rejected origin:', origin)
       callback(new Error('Not allowed by CORS'))
     }
   },
@@ -42,6 +44,7 @@ const rooms = new Map()
 
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id)
+  socket.on('connect_error', (err) => console.log('Client connect error:', err.message))
 
   socket.on('createRoom', (roomName) => {
     console.log('Received createRoom event with name:', roomName)
@@ -56,7 +59,6 @@ io.on('connection', (socket) => {
     socket.join(roomId)
     console.log('Created room:', roomId)
     socket.emit('roomCreated', roomId)
-    // Start game immediately for the creator
     startGame(roomId)
   })
 
@@ -64,7 +66,6 @@ io.on('connection', (socket) => {
     console.log('Received joinRoom event for room:', roomId)
     const room = rooms.get(roomId)
     if (room) {
-      // Check if player is already in the room
       const playerExists = room.players.some(player => player.id === socket.id)
       if (!playerExists) {
         room.players.push({ id: socket.id, score: 0 })
@@ -74,12 +75,6 @@ io.on('connection', (socket) => {
         console.log('Player', socket.id, 'already in room:', roomId)
       }
       io.to(roomId).emit('playerUpdate', room.players)
-      
-      // Only start game if this is the first player (shouldn't happen here anymore)
-      if (room.players.length === 1) {
-        console.log('First player joined, starting game for room:', roomId)
-        startGame(roomId)
-      }
     } else {
       console.log('Room not found:', roomId)
     }
@@ -88,34 +83,40 @@ io.on('connection', (socket) => {
   socket.on('submitAcronym', ({ roomId, acronym }) => {
     console.log('Received submitAcronym for room:', roomId, 'acronym:', acronym)
     const room = rooms.get(roomId)
-    room.submissions.set(socket.id, acronym)
-    if (room.submissions.size === room.players.length) {
-      console.log('All submissions received for room:', roomId)
-      io.to(roomId).emit('submissionsReceived', Array.from(room.submissions))
-      io.to(roomId).emit('votingStart')
+    if (room) {
+      room.submissions.set(socket.id, acronym)
+      console.log('Current submissions:', room.submissions.size, 'Players:', room.players.length)
+      if (room.submissions.size === room.players.length) {
+        console.log('All submissions received for room:', roomId)
+        io.to(roomId).emit('submissionsReceived', Array.from(room.submissions))
+        io.to(roomId).emit('votingStart')
+      }
+    } else {
+      console.log('Room not found for submitAcronym:', roomId)
     }
   })
 
   socket.on('vote', ({ roomId, submissionId }) => {
     console.log('Received vote for room:', roomId, 'submission:', submissionId)
     const room = rooms.get(roomId)
-    room.votes.set(socket.id, submissionId)
-    
-    if (room.votes.size === room.players.length) {
-      console.log('All votes received for room:', roomId)
-      const results = calculateResults(room)
-      io.to(roomId).emit('roundResults', results)
-      
-      if (room.round < 3) {
-        room.submissions.clear()
-        room.votes.clear()
-        startRound(roomId)
-      } else {
-        const winner = room.players.reduce((prev, curr) => 
-          prev.score > curr.score ? prev : curr
-        )
-        console.log('Game ended, winner:', winner.id)
-        io.to(roomId).emit('gameEnd', { winner })
+    if (room) {
+      room.votes.set(socket.id, submissionId)
+      if (room.votes.size === room.players.length) {
+        console.log('All votes received for room:', roomId)
+        const results = calculateResults(room)
+        io.to(roomId).emit('roundResults', results)
+        
+        if (room.round < 3) {
+          room.submissions.clear()
+          room.votes.clear()
+          startRound(roomId)
+        } else {
+          const winner = room.players.reduce((prev, curr) => 
+            prev.score > curr.score ? prev : curr
+          )
+          console.log('Game ended, winner:', winner.id)
+          io.to(roomId).emit('gameEnd', { winner })
+        }
       }
     }
   })
@@ -137,6 +138,19 @@ function startRound(roomId) {
   room.round++
   const letters = generateLetters(room.round)
   console.log('Starting round', room.round, 'for room:', roomId, 'letters:', letters)
+  
+  // Clear submissions for new round
+  room.submissions.clear()
+  
+  // Simulate bot submissions
+  room.players.forEach(player => {
+    if (player.id.startsWith('bot-')) {
+      const botAcronym = letters.join('')
+      room.submissions.set(player.id, botAcronym)
+      console.log('Bot', player.id, 'submitted:', botAcronym)
+    }
+  })
+  
   io.to(roomId).emit('newRound', { roundNum: room.round, letterSet: letters })
   console.log('Emitted newRound event to room:', roomId, 'with letters:', letters)
 }
