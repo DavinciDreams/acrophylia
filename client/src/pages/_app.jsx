@@ -1,12 +1,14 @@
-import '../styles/globals.css'  // Move the import here
-import { SocketProvider } from '../lib/socket'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import GameRoom from './GameRoom';
 
-function MyApp({ Component, pageProps }) {
+function App() {
   return (
-    <SocketProvider>
-      <Component {...pageProps} />
-    </SocketProvider>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<GameRoom />} />
+        <Route path="/room/:roomId" element={<GameRoom />} />
+      </Routes>
+    </Router>
+  );
 }
-
-export default MyApp
+export default App;
