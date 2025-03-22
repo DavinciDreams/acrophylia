@@ -11,7 +11,7 @@ const Home = () => {
   const router = useRouter();
 
   useEffect(() => {
-    socket.on('connect', () => console.log('Socket connected on index'));
+    socket.on('connect', () => console.log('Socket connected on index, ID:', socket.id));
     socket.on('connect_error', (err) => console.log('Socket connect error on index:', err.message));
     return () => {
       socket.off('connect');
@@ -20,12 +20,13 @@ const Home = () => {
   }, []);
 
   const createRoom = () => {
-    console.log('Creating room');
+    console.log('Creating room with socket.id:', socket.id);
     socket.emit('createRoom', 'one');
     socket.once('roomCreated', (roomId) => {
       console.log('Room created received, roomId:', roomId);
       sessionStorage.setItem('isCreator', 'true');
-      router.push(`/room/${roomId}`);
+      sessionStorage.setItem('creatorSocketId', socket.id); // Store creator's socket ID
+      router.push(`/room/${roomId}?creatorId=${socket.id}`);
     });
   };
 
