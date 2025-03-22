@@ -112,7 +112,7 @@ io.on('connection', (socket) => {
         console.debug('All submissions received for room:', roomId);
         io.to(roomId).emit('submissionsReceived', Array.from(room.submissions));
         io.to(roomId).emit('votingStart');
-        simulateBotVotes(roomId); // Bots vote immediately after all submissions
+        simulateBotVotes(roomId);
       }
     }
   });
@@ -124,10 +124,19 @@ io.on('connection', (socket) => {
       if (!room.votes.has(socket.id)) {
         room.votes.set(socket.id, submissionId);
         console.debug('Current votes:', room.votes.size, 'Players:', room.players.length);
-        checkAllVotes(roomId); // Check votes after human vote
+        checkAllVotes(roomId);
       } else {
         console.debug('Player', socket.id, 'already voted in room:', roomId);
       }
+    }
+  });
+
+  socket.on('requestResults', (roomId) => {
+    console.debug('Client requested results for room:', roomId);
+    const room = rooms.get(roomId);
+    if (room && room.votes.size === room.players.length) {
+      const results = calculateResults(room);
+      socket.emit('roundResults', results);
     }
   });
 
@@ -163,7 +172,7 @@ function startRound(roomId) {
   console.debug('Starting round', room.round, 'for room:', roomId, 'letters:', letters);
   
   room.submissions.clear();
-  room.votes.clear(); // Clear votes at round start
+  room.votes.clear();
   
   room.players.forEach(player => {
     if (player.isBot) {
@@ -191,7 +200,6 @@ function simulateBotVotes(roomId) {
       }
     });
     console.debug('After bot votes - Current votes:', room.votes.size, 'Players:', room.players.length);
-    // Don’t trigger results here; wait for human vote
   }
 }
 
