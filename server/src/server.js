@@ -38,7 +38,6 @@ const rooms = new Map()
 
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id)
-  socket.on('connect_error', (err) => console.log('Client connect error:', err.message))
 
   socket.on('createRoom', (roomName) => {
     console.log('Received createRoom event with name:', roomName, 'from:', socket.id)
@@ -53,7 +52,7 @@ io.on('connection', (socket) => {
       started: false
     })
     socket.join(roomId)
-    console.log('Created room:', roomId, 'Rooms size:', rooms.size)
+    console.log('Created room:', roomId, 'creatorId:', socket.id, 'Rooms size:', rooms.size)
     socket.emit('roomCreated', roomId)
     io.to(roomId).emit('playerUpdate', rooms.get(roomId).players)
   })
@@ -70,7 +69,9 @@ io.on('connection', (socket) => {
       } else {
         console.log('Player', socket.id, 'already in room:', roomId)
       }
-      socket.emit('roomJoined', { roomId, isCreator: socket.id === room.creatorId })
+      const isCreator = socket.id === room.creatorId;
+      console.log('Sending roomJoined, roomId:', roomId, 'socket.id:', socket.id, 'creatorId:', room.creatorId, 'isCreator:', isCreator)
+      socket.emit('roomJoined', { roomId, isCreator })
       io.to(roomId).emit('playerUpdate', room.players)
     } else {
       console.log('Room not found on join:', roomId, 'Available rooms:', Array.from(rooms.keys()))
@@ -154,9 +155,8 @@ io.on('connection', (socket) => {
 function startGame(roomId) {
   const room = rooms.get(roomId)
   console.log('Starting game for room:', roomId, 'Current players:', room.players.length)
-  // Ensure at least 4 players, add bots if needed
   while (room.players.length < 4) {
-    room.players = addBotPlayers(room.players, 1) // Add one bot at a time until 4
+    room.players = addBotPlayers(room.players, 1)
     console.log('Added bot, new player count:', room.players.length)
   }
   io.to(roomId).emit('playerUpdate', room.players)
