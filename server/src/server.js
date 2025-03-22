@@ -86,7 +86,7 @@ io.on('connection', (socket) => {
     if (room) {
       const player = room.players.find(p => p.id === socket.id);
       if (player && !player.isBot) {
-        player.name = name.trim().substring(0, 20); // Limit to 20 chars
+        player.name = name.trim().substring(0, 20);
         console.debug(`Player ${socket.id} set name to: ${player.name}`);
         io.to(roomId).emit('playerUpdate', room.players);
       }
@@ -152,6 +152,18 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('sendMessage', ({ roomId, message }) => {
+    const room = rooms.get(roomId);
+    if (room) {
+      const player = room.players.find(p => p.id === socket.id);
+      if (player) {
+        const senderName = player.name || socket.id;
+        console.debug(`Chat message from ${senderName} in room ${roomId}: ${message}`);
+        io.to(roomId).emit('chatMessage', { senderId: socket.id, senderName, message });
+      }
+    }
+  });
+
   socket.on('disconnect', () => {
     console.debug('Client disconnected:', socket.id);
     rooms.forEach((room, roomId) => {
@@ -171,7 +183,13 @@ function startGame(roomId) {
   const room = rooms.get(roomId);
   console.debug('Starting game for room:', roomId, 'Current players:', room.players.length);
   while (room.players.length < 4) {
-    room.players = addBotPlayers(room.players, 1); // Bot names assigned in addBotPlayers
+    room.players = addBotPlayers(room.players, 1);
+    const newBot = room.players[room.players.length - 1];
+    io.to(roomId).emit('chatMessage', {
+      senderId: newBot.id,
+      senderName: newBot.name,
+      message: `${newBot.name} has joined the chat!`
+    });
   }
   io.to(roomId).emit('playerUpdate', room.players);
   startRound(roomId);
@@ -262,5 +280,5 @@ function calculateResults(room) {
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} - v1.0 with bots`);
+  console.log(`Server running on port ${PORT} - v1.0 with bots and chat`);
 });
