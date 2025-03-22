@@ -61,15 +61,28 @@ io.on('connection', (socket) => {
     console.log('Received joinRoom event for room:', roomId, 'from:', socket.id, 'creatorId provided:', creatorId)
     const room = rooms.get(roomId)
     if (room) {
+      const isOriginalCreator = creatorId && creatorId === room.creatorId
       const playerExists = room.players.some(player => player.id === socket.id)
-      if (!playerExists) {
+
+      if (isOriginalCreator && room.creatorId !== socket.id) {
+        // Creator reconnected with a new socket ID
+        const oldCreatorIndex = room.players.findIndex(p => p.id === room.creatorId)
+        if (oldCreatorIndex !== -1) {
+          console.log('Updating creator ID from:', room.creatorId, 'to:', socket.id)
+          room.players[oldCreatorIndex].id = socket.id // Update player ID
+          room.creatorId = socket.id // Update creator ID
+        }
+        socket.join(roomId)
+      } else if (!playerExists) {
+        // New player joining
         room.players.push({ id: socket.id, score: 0, isBot: false })
         socket.join(roomId)
         console.log('Player joined room:', roomId, 'Total players:', room.players.length)
       } else {
         console.log('Player', socket.id, 'already in room:', roomId)
       }
-      const isCreator = creatorId ? socket.id === creatorId : socket.id === room.creatorId;
+
+      const isCreator = socket.id === room.creatorId
       console.log('Sending roomJoined, roomId:', roomId, 'socket.id:', socket.id, 'room.creatorId:', room.creatorId, 'creatorId from client:', creatorId, 'isCreator:', isCreator)
       socket.emit('roomJoined', { roomId, isCreator })
       io.to(roomId).emit('playerUpdate', room.players)
