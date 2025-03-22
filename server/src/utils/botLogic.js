@@ -1,18 +1,17 @@
-function addBotPlayers(players) {
-  const minPlayers = 4
-  const botsToAdd = minPlayers - players.length
-  const botPlayers = []
-
+function addBotPlayers(players, count = Infinity) {
+  const botNames = ['BotA', 'BotB', 'BotC', 'BotD', 'BotE'];
+  const currentBots = players.filter(p => p.isBot).length;
+  const botsToAdd = Math.min(count, botNames.length - currentBots);
+  
   for (let i = 0; i < botsToAdd; i++) {
-    botPlayers.push({
-      id: `bot_${i}`,
-      name: `Bot${i + 1}`,
+    players.push({
+      id: `bot_${Math.random().toString(36).substr(2, 9)}`,
+      name: botNames[currentBots + i],
       score: 0,
       isBot: true
-    })
+    });
   }
-
-  return [...players, ...botPlayers]
+  return players;
 }
 
-module.exports = { addBotPlayers }
+module.exports = { addBotPlayers };
