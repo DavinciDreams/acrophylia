@@ -226,10 +226,21 @@ function checkAllVotes(roomId) {
 
 function calculateResults(room) {
   const voteCounts = new Map();
+
+  // Count votes for each submission
   room.votes.forEach((votedId) => {
     voteCounts.set(votedId, (voteCounts.get(votedId) || 0) + 1);
   });
-  
+
+  // Award points based on votes received
+  voteCounts.forEach((count, id) => {
+    const player = room.players.find(p => p.id === id);
+    if (player) {
+      player.score += count; // Award points for each vote received
+    }
+  });
+
+  // Determine the winner (player with the most votes)
   let winnerId = null;
   let maxVotes = 0;
   voteCounts.forEach((count, id) => {
@@ -238,6 +249,24 @@ function calculateResults(room) {
       winnerId = id;
     }
   });
+
+  // Award points to losers for each vote they received
+  room.players.forEach(player => {
+    if (!voteCounts.has(player.id)) {
+      player.score += 1; // Losers get 1 point for each vote they received
+    }
+  });
+
+  const results = {
+    submissions: Array.from(room.submissions),
+    votes: Array.from(room.votes),
+    winnerId,
+    updatedPlayers: room.players
+  };
+
+  console.debug('Calculated results for room:', room.name, 'results:', JSON.stringify(results));
+  return results;
+}
 
   const winner = room.players.find(p => p.id === winnerId);
   if (winner) winner.score += 1;
