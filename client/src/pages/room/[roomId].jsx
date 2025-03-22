@@ -4,11 +4,11 @@ import io from 'socket.io-client';
 
 const socket = io('https://acrophylia.onrender.com', {
   withCredentials: true,
-  transports: ['polling', 'websocket'], // Prefer polling due to WebSocket issues
+  transports: ['polling', 'websocket'],
   reconnection: true,
   reconnectionAttempts: 15,
   reconnectionDelay: 1000,
-  timeout: 30000, // Longer timeout for Render wake-up
+  timeout: 30000,
 });
 
 const GameRoom = () => {
@@ -128,15 +128,14 @@ const GameRoom = () => {
     };
   }, [urlRoomId, router, creatorId]);
 
-  // Fallback to poll results if not received after voting
   useEffect(() => {
     if (gameState === 'voting' && hasVoted) {
       const timeout = setTimeout(() => {
         if (!results && roomId) {
           console.debug('No results received, retrying...');
-          socket.emit('requestResults', roomId); // Custom event to fetch results
+          socket.emit('requestResults', roomId);
         }
-      }, 5000); // Wait 5s for results
+      }, 5000);
       return () => clearTimeout(timeout);
     }
   }, [gameState, hasVoted, results, roomId]);
@@ -170,10 +169,13 @@ const GameRoom = () => {
   };
 
   const submitVote = (submissionId) => {
-    if (!hasVoted && roomId) {
+    if (!hasVoted && roomId && submissionId !== socket.id) { // Prevent self-voting
       console.debug('Submitting vote for:', submissionId);
       socket.emit('vote', { roomId, submissionId });
       setHasVoted(true);
+    } else if (submissionId === socket.id) {
+      console.debug('Cannot vote for your own submission');
+      alert('You cannot vote for your own submission!');
     }
   };
 
@@ -275,7 +277,6 @@ const GameRoom = () => {
                   return (
                     <li key={playerId} style={styles.submissionItem}>
                       {acronym} - Votes: {voteCount}
-                      {results.winnerId === playerId && ' (Winner)'}
                     </li>
                   );
                 })}
