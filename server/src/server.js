@@ -191,11 +191,13 @@ function simulateBotVotes(roomId) {
     const submissionIds = Array.from(room.submissions.keys());
     room.players.forEach(player => {
       if (player.isBot && !room.votes.has(player.id)) {
-        const validVoteOptions = submissionIds.filter(id => id !== player.id);
+        const validVoteOptions = submissionIds.filter(id => id !== player.id); // Exclude self
         if (validVoteOptions.length > 0) {
           const randomVote = validVoteOptions[Math.floor(Math.random() * validVoteOptions.length)];
           room.votes.set(player.id, randomVote);
           console.debug('Bot', player.id, 'voted for:', randomVote);
+        } else {
+          console.debug('Bot', player.id, 'found no valid vote options');
         }
       }
     });
@@ -230,7 +232,6 @@ function calculateResults(room) {
     voteCounts.set(votedId, (voteCounts.get(votedId) || 0) + 1);
   });
 
-  // Award points based on votes received
   voteCounts.forEach((count, playerId) => {
     const player = room.players.find(p => p.id === playerId);
     if (player) {
