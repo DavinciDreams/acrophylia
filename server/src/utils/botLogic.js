@@ -1,5 +1,5 @@
 function addBotPlayers(players, count = Infinity) {
-  const botNames = ['BotA', 'BotB', 'BotC', 'BotD', 'BotE'];
+  const botNames = ['Alice', 'Bob', 'Carol', 'Dave', 'Edward'];
   const currentBots = players.filter(p => p.isBot).length;
   const botsToAdd = Math.min(count, botNames.length - currentBots);
   
