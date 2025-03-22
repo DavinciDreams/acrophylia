@@ -57,8 +57,8 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('playerUpdate', rooms.get(roomId).players)
   })
 
-  socket.on('joinRoom', (roomId) => {
-    console.log('Received joinRoom event for room:', roomId, 'from:', socket.id)
+  socket.on('joinRoom', ({ roomId, creatorId }) => {
+    console.log('Received joinRoom event for room:', roomId, 'from:', socket.id, 'creatorId provided:', creatorId)
     const room = rooms.get(roomId)
     if (room) {
       const playerExists = room.players.some(player => player.id === socket.id)
@@ -69,8 +69,8 @@ io.on('connection', (socket) => {
       } else {
         console.log('Player', socket.id, 'already in room:', roomId)
       }
-      const isCreator = socket.id === room.creatorId;
-      console.log('Sending roomJoined, roomId:', roomId, 'socket.id:', socket.id, 'creatorId:', room.creatorId, 'isCreator:', isCreator)
+      const isCreator = creatorId ? socket.id === creatorId : socket.id === room.creatorId;
+      console.log('Sending roomJoined, roomId:', roomId, 'socket.id:', socket.id, 'room.creatorId:', room.creatorId, 'creatorId from client:', creatorId, 'isCreator:', isCreator)
       socket.emit('roomJoined', { roomId, isCreator })
       io.to(roomId).emit('playerUpdate', room.players)
     } else {
