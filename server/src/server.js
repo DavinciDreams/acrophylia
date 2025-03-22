@@ -41,7 +41,7 @@ io.on('connection', (socket) => {
   socket.on('connect_error', (err) => console.log('Client connect error:', err.message))
 
   socket.on('createRoom', (roomName) => {
-    console.log('Received createRoom event with name:', roomName)
+    console.log('Received createRoom event with name:', roomName, 'from:', socket.id)
     const roomId = Math.random().toString(36).substr(2, 9)
     rooms.set(roomId, {
       name: roomName,
@@ -59,7 +59,7 @@ io.on('connection', (socket) => {
   })
 
   socket.on('joinRoom', (roomId) => {
-    console.log('Received joinRoom event for room:', roomId)
+    console.log('Received joinRoom event for room:', roomId, 'from:', socket.id)
     const room = rooms.get(roomId)
     if (room) {
       const playerExists = room.players.some(player => player.id === socket.id)
@@ -81,7 +81,7 @@ io.on('connection', (socket) => {
   socket.on('startGame', (roomId) => {
     const room = rooms.get(roomId)
     if (room && socket.id === room.creatorId && !room.started) {
-      console.log('Received startGame event for room:', roomId)
+      console.log('Received startGame event for room:', roomId, 'from:', socket.id)
       room.started = true
       startGame(roomId)
     } else {
@@ -153,12 +153,13 @@ io.on('connection', (socket) => {
 
 function startGame(roomId) {
   const room = rooms.get(roomId)
-  console.log('Starting game for room:', roomId)
-  if (!checkMinPlayers(room.players)) {
-    room.players = addBotPlayers(room.players)
-    io.to(roomId).emit('playerUpdate', room.players)
-    console.log('Added bots to room:', roomId, 'New player count:', room.players.length)
+  console.log('Starting game for room:', roomId, 'Current players:', room.players.length)
+  // Ensure at least 4 players, add bots if needed
+  while (room.players.length < 4) {
+    room.players = addBotPlayers(room.players, 1) // Add one bot at a time until 4
+    console.log('Added bot, new player count:', room.players.length)
   }
+  io.to(roomId).emit('playerUpdate', room.players)
   startRound(roomId)
 }
 
