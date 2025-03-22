@@ -285,21 +285,18 @@ const GameRoom = () => {
               <div style={styles.section}>
                 <h3 style={styles.subtitle}>Vote for an Acronym:</h3>
                 <ul style={styles.submissionList}>
-                  {submissions.map(([playerId, acronym]) => {
-                    const player = players.find(p => p.id === playerId);
-                    return (
-                      <li key={playerId} style={styles.submissionItem}>
-                        {acronym} by {player?.name || (player?.isBot ? player.name : playerId)} -{' '}
-                        <button
-                          style={styles.voteButton}
-                          onClick={() => submitVote(playerId)}
-                          disabled={hasVoted}
-                        >
-                          Vote
-                        </button>
-                      </li>
-                    );
-                  })}
+                  {submissions.map(([playerId, acronym]) => (
+                    <li key={playerId} style={styles.submissionItem}>
+                      {acronym} -{' '}
+                      <button
+                        style={styles.voteButton}
+                        onClick={() => submitVote(playerId)}
+                        disabled={hasVoted}
+                      >
+                        Vote
+                      </button>
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}
