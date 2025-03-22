@@ -4,7 +4,10 @@ import io from 'socket.io-client';
 
 const socket = io('https://acrophylia.onrender.com', {
   withCredentials: true,
-  transports: ['websocket', 'polling']
+  transports: ['websocket', 'polling'],
+  reconnection: true, // Enable reconnection
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
 });
 
 const GameRoom = () => {
@@ -33,8 +36,16 @@ const GameRoom = () => {
 
     if (!urlRoomId || hasJoined) return;
 
-    socket.on('connect', () => console.debug('Socket connected, ID:', socket.id));
+    socket.on('connect', () => {
+      console.debug('Socket connected, ID:', socket.id);
+      if (urlRoomId && !hasJoined) {
+        console.debug('Rejoining room:', urlRoomId, 'with creatorId:', creatorId);
+        socket.emit('joinRoom', { roomId: urlRoomId, creatorId });
+      }
+    });
+
     socket.on('connect_error', (err) => console.error('Socket connect error:', err.message));
+    socket.on('reconnect', (attempt) => console.debug('Socket reconnected after attempt:', attempt));
 
     socket.on('roomJoined', ({ roomId, isCreator: serverIsCreator }) => {
       console.debug('Room joined, roomId:', roomId, 'serverIsCreator:', serverIsCreator, 'socket.id:', socket.id);
@@ -75,8 +86,12 @@ const GameRoom = () => {
     });
 
     socket.on('roundResults', (roundResults) => {
-      console.debug('Round results:', roundResults);
+      console.debug('Round results received:', roundResults);
       setResults(roundResults);
+      setPlayers(prevPlayers => {
+        console.debug('Updating players with scores:', roundResults.updatedPlayers);
+        return roundResults.updatedPlayers; // Ensure fresh state
+      });
       setGameState('results');
     });
 
@@ -93,6 +108,7 @@ const GameRoom = () => {
     return () => {
       socket.off('connect');
       socket.off('connect_error');
+      socket.off('reconnect');
       socket.off('roomJoined');
       socket.off('roomNotFound');
       socket.off('playerUpdate');
