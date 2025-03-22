@@ -4,10 +4,11 @@ import io from 'socket.io-client';
 
 const socket = io('https://acrophylia.onrender.com', {
   withCredentials: true,
-  transports: ['websocket', 'polling'],
-  reconnection: true, // Enable reconnection
-  reconnectionAttempts: 5,
+  transports: ['websocket', 'polling'], // Fallback to polling if WebSocket fails
+  reconnection: true,
+  reconnectionAttempts: 10,
   reconnectionDelay: 1000,
+  timeout: 20000, // Increase timeout for slow server wake-up
 });
 
 const GameRoom = () => {
@@ -46,6 +47,7 @@ const GameRoom = () => {
 
     socket.on('connect_error', (err) => console.error('Socket connect error:', err.message));
     socket.on('reconnect', (attempt) => console.debug('Socket reconnected after attempt:', attempt));
+    socket.on('reconnect_error', (err) => console.error('Socket reconnect error:', err.message));
 
     socket.on('roomJoined', ({ roomId, isCreator: serverIsCreator }) => {
       console.debug('Room joined, roomId:', roomId, 'serverIsCreator:', serverIsCreator, 'socket.id:', socket.id);
@@ -86,11 +88,11 @@ const GameRoom = () => {
     });
 
     socket.on('roundResults', (roundResults) => {
-      console.debug('Round results received:', roundResults);
+      console.debug('Round results received:', JSON.stringify(roundResults));
       setResults(roundResults);
       setPlayers(prevPlayers => {
         console.debug('Updating players with scores:', roundResults.updatedPlayers);
-        return roundResults.updatedPlayers; // Ensure fresh state
+        return roundResults.updatedPlayers;
       });
       setGameState('results');
     });
@@ -109,6 +111,7 @@ const GameRoom = () => {
       socket.off('connect');
       socket.off('connect_error');
       socket.off('reconnect');
+      socket.off('reconnect_error');
       socket.off('roomJoined');
       socket.off('roomNotFound');
       socket.off('playerUpdate');
@@ -248,12 +251,15 @@ const GameRoom = () => {
             <div style={styles.section}>
               <h3 style={styles.subtitle}>Round {roundNum} Results</h3>
               <ul style={styles.submissionList}>
-                {results.submissions.map(([playerId, acronym]) => (
-                  <li key={playerId} style={styles.submissionItem}>
-                    {acronym} - Votes: {(results.votes || []).filter(([_, votedId]) => votedId === playerId).length || 0}
-                    {results.winnerId === playerId && ' (Winner)'}
-                  </li>
-                ))}
+                {results.submissions.map(([playerId, acronym]) => {
+                  const voteCount = (results.votes || []).filter(([_, votedId]) => votedId === playerId).length || 0;
+                  return (
+                    <li key={playerId} style={styles.submissionItem}>
+                      {acronym} - Votes: {voteCount}
+                      {results.winnerId === playerId && ' (Winner)'}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
@@ -282,100 +288,21 @@ const GameRoom = () => {
 };
 
 const styles = {
-  container: {
-    padding: '2rem',
-    backgroundColor: '#f0f4f8',
-    minHeight: '100vh',
-    fontFamily: 'Arial, sans-serif',
-  },
-  title: {
-    fontSize: '2rem',
-    color: '#333',
-    marginBottom: '1rem',
-  },
-  subtitle: {
-    fontSize: '1.5rem',
-    color: '#555',
-    marginBottom: '1rem',
-  },
-  invite: {
-    display: 'flex',
-    gap: '1rem',
-    marginBottom: '2rem',
-  },
-  input: {
-    padding: '0.5rem',
-    fontSize: '1rem',
-    border: '1px solid #ccc',
-    borderRadius: '5px',
-    flexGrow: 1,
-  },
-  button: {
-    padding: '0.75rem 1.5rem',
-    fontSize: '1rem',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    transition: 'background-color 0.3s',
-  },
-  voteButton: {
-    padding: '0.5rem 1rem',
-    fontSize: '0.9rem',
-    backgroundColor: '#28a745',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-  },
-  leaveButton: {
-    padding: '0.75rem 1.5rem',
-    fontSize: '1rem',
-    backgroundColor: '#dc3545',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    marginTop: '2rem',
-  },
-  playerList: {
-    listStyle: 'none',
-    padding: 0,
-    marginBottom: '2rem',
-  },
-  playerItem: {
-    padding: '0.5rem',
-    backgroundColor: '#fff',
-    marginBottom: '0.5rem',
-    borderRadius: '5px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-  },
-  submissionList: {
-    listStyle: 'none',
-    padding: 0,
-  },
-  submissionItem: {
-    padding: '0.5rem',
-    backgroundColor: '#fff',
-    marginBottom: '0.5rem',
-    borderRadius: '5px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  section: {
-    marginBottom: '2rem',
-  },
-  note: {
-    color: '#777',
-    fontSize: '0.9rem',
-  },
-  loading: {
-    fontSize: '1.2rem',
-    textAlign: 'center',
-    marginTop: '20vh',
-  },
+  container: { padding: '2rem', backgroundColor: '#f0f4f8', minHeight: '100vh', fontFamily: 'Arial, sans-serif' },
+  title: { fontSize: '2rem', color: '#333', marginBottom: '1rem' },
+  subtitle: { fontSize: '1.5rem', color: '#555', marginBottom: '1rem' },
+  invite: { display: 'flex', gap: '1rem', marginBottom: '2rem' },
+  input: { padding: '0.5rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: '5px', flexGrow: 1 },
+  button: { padding: '0.75rem 1.5rem', fontSize: '1rem', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' },
+  voteButton: { padding: '0.5rem 1rem', fontSize: '0.9rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' },
+  leaveButton: { padding: '0.75rem 1.5rem', fontSize: '1rem', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginTop: '2rem' },
+  playerList: { listStyle: 'none', padding: 0, marginBottom: '2rem' },
+  playerItem: { padding: '0.5rem', backgroundColor: '#fff', marginBottom: '0.5rem', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' },
+  submissionList: { listStyle: 'none', padding: 0 },
+  submissionItem: { padding: '0.5rem', backgroundColor: '#fff', marginBottom: '0.5rem', borderRadius: '5px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  section: { marginBottom: '2rem' },
+  note: { color: '#777', fontSize: '0.9rem' },
+  loading: { fontSize: '1.2rem', textAlign: 'center', marginTop: '20vh' },
 };
 
 export default GameRoom;
