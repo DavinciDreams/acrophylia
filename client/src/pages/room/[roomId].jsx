@@ -4,11 +4,11 @@ import io from 'socket.io-client';
 
 const socket = io('https://acrophylia.onrender.com', {
   withCredentials: true,
-  transports: ['websocket', 'polling'], // Fallback to polling if WebSocket fails
+  transports: ['polling', 'websocket'], // Prefer polling due to WebSocket issues
   reconnection: true,
-  reconnectionAttempts: 10,
+  reconnectionAttempts: 15,
   reconnectionDelay: 1000,
-  timeout: 20000, // Increase timeout for slow server wake-up
+  timeout: 30000, // Longer timeout for Render wake-up
 });
 
 const GameRoom = () => {
@@ -27,6 +27,7 @@ const GameRoom = () => {
   const [isCreator, setIsCreator] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -39,10 +40,16 @@ const GameRoom = () => {
 
     socket.on('connect', () => {
       console.debug('Socket connected, ID:', socket.id);
+      setIsConnected(true);
       if (urlRoomId && !hasJoined) {
-        console.debug('Rejoining room:', urlRoomId, 'with creatorId:', creatorId);
+        console.debug('Joining/Rejoining room:', urlRoomId, 'with creatorId:', creatorId);
         socket.emit('joinRoom', { roomId: urlRoomId, creatorId });
       }
+    });
+
+    socket.on('disconnect', () => {
+      console.debug('Socket disconnected');
+      setIsConnected(false);
     });
 
     socket.on('connect_error', (err) => console.error('Socket connect error:', err.message));
@@ -90,10 +97,7 @@ const GameRoom = () => {
     socket.on('roundResults', (roundResults) => {
       console.debug('Round results received:', JSON.stringify(roundResults));
       setResults(roundResults);
-      setPlayers(prevPlayers => {
-        console.debug('Updating players with scores:', roundResults.updatedPlayers);
-        return roundResults.updatedPlayers;
-      });
+      setPlayers(roundResults.updatedPlayers);
       setGameState('results');
     });
 
@@ -103,12 +107,13 @@ const GameRoom = () => {
       setGameState('ended');
     });
 
-    console.debug('Joining room:', urlRoomId, 'with creatorId:', creatorId);
+    console.debug('Initial join room:', urlRoomId, 'with creatorId:', creatorId);
     socket.emit('joinRoom', { roomId: urlRoomId, creatorId });
     setHasJoined(true);
 
     return () => {
       socket.off('connect');
+      socket.off('disconnect');
       socket.off('connect_error');
       socket.off('reconnect');
       socket.off('reconnect_error');
@@ -122,6 +127,19 @@ const GameRoom = () => {
       socket.off('gameEnd');
     };
   }, [urlRoomId, router, creatorId]);
+
+  // Fallback to poll results if not received after voting
+  useEffect(() => {
+    if (gameState === 'voting' && hasVoted) {
+      const timeout = setTimeout(() => {
+        if (!results && roomId) {
+          console.debug('No results received, retrying...');
+          socket.emit('requestResults', roomId); // Custom event to fetch results
+        }
+      }, 5000); // Wait 5s for results
+      return () => clearTimeout(timeout);
+    }
+  }, [gameState, hasVoted, results, roomId]);
 
   const debounce = (func, delay) => {
     let timeout;
@@ -181,12 +199,13 @@ const GameRoom = () => {
 
   const inviteLink = roomId ? `${window.location.origin}/room/${roomId}` : '';
 
-  console.debug('Rendering - gameState:', gameState, 'isCreator:', isCreator);
+  console.debug('Rendering - gameState:', gameState, 'isCreator:', isCreator, 'isConnected:', isConnected);
 
   return (
     <div style={styles.container}>
       {roomId ? (
         <>
+          {!isConnected && <p style={styles.warning}>Reconnecting to server...</p>}
           <h2 style={styles.title}>Room: {roomId}</h2>
           <div style={styles.invite}>
             <input style={styles.input} type="text" value={inviteLink} readOnly />
@@ -289,6 +308,7 @@ const GameRoom = () => {
 
 const styles = {
   container: { padding: '2rem', backgroundColor: '#f0f4f8', minHeight: '100vh', fontFamily: 'Arial, sans-serif' },
+  warning: { color: '#ff4500', textAlign: 'center', marginBottom: '1rem' },
   title: { fontSize: '2rem', color: '#333', marginBottom: '1rem' },
   subtitle: { fontSize: '1.5rem', color: '#555', marginBottom: '1rem' },
   invite: { display: 'flex', gap: '1rem', marginBottom: '2rem' },
