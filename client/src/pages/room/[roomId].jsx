@@ -20,9 +20,16 @@ const GameRoom = () => {
   const [hasVoted, setHasVoted] = useState(false);
   const [results, setResults] = useState(null);
   const [winner, setWinner] = useState(null);
-  const [isCreator, setIsCreator] = useState(() => sessionStorage.getItem('isCreator') === 'true');
+  const [isCreator, setIsCreator] = useState(false); // Default to false
 
   useEffect(() => {
+    // Set isCreator from sessionStorage only on client-side
+    if (typeof window !== 'undefined') {
+      const storedCreator = sessionStorage.getItem('isCreator') === 'true';
+      setIsCreator(storedCreator);
+      console.log('Initial isCreator from sessionStorage:', storedCreator);
+    }
+
     if (!urlRoomId) return;
 
     socket.on('connect', () => console.log('Socket connected'));
