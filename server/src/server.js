@@ -44,7 +44,7 @@ io.on('connection', (socket) => {
     rooms.set(roomId, {
       name: roomName,
       creatorId: socket.id,
-      players: [{ id: socket.id, score: 0, isBot: false }],
+      players: [{ id: socket.id, name: '', score: 0, isBot: false }],
       round: 0,
       submissions: new Map(),
       votes: new Map(),
@@ -69,7 +69,7 @@ io.on('connection', (socket) => {
         }
         socket.join(roomId);
       } else if (!playerExists) {
-        room.players.push({ id: socket.id, score: 0, isBot: false });
+        room.players.push({ id: socket.id, name: '', score: 0, isBot: false });
         socket.join(roomId);
       }
 
@@ -78,6 +78,18 @@ io.on('connection', (socket) => {
       io.to(roomId).emit('playerUpdate', room.players);
     } else {
       socket.emit('roomNotFound');
+    }
+  });
+
+  socket.on('setName', ({ roomId, name }) => {
+    const room = rooms.get(roomId);
+    if (room) {
+      const player = room.players.find(p => p.id === socket.id);
+      if (player && !player.isBot) {
+        player.name = name.trim().substring(0, 20); // Limit to 20 chars
+        console.debug(`Player ${socket.id} set name to: ${player.name}`);
+        io.to(roomId).emit('playerUpdate', room.players);
+      }
     }
   });
 
@@ -159,7 +171,7 @@ function startGame(roomId) {
   const room = rooms.get(roomId);
   console.debug('Starting game for room:', roomId, 'Current players:', room.players.length);
   while (room.players.length < 4) {
-    room.players = addBotPlayers(room.players, 1);
+    room.players = addBotPlayers(room.players, 1); // Bot names assigned in addBotPlayers
   }
   io.to(roomId).emit('playerUpdate', room.players);
   startRound(roomId);
@@ -191,7 +203,7 @@ function simulateBotVotes(roomId) {
     const submissionIds = Array.from(room.submissions.keys());
     room.players.forEach(player => {
       if (player.isBot && !room.votes.has(player.id)) {
-        const validVoteOptions = submissionIds.filter(id => id !== player.id); // Exclude self
+        const validVoteOptions = submissionIds.filter(id => id !== player.id);
         if (validVoteOptions.length > 0) {
           const randomVote = validVoteOptions[Math.floor(Math.random() * validVoteOptions.length)];
           room.votes.set(player.id, randomVote);
