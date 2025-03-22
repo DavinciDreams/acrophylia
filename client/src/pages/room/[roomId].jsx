@@ -31,6 +31,8 @@ const GameRoom = () => {
   const [isConnected, setIsConnected] = useState(true);
   const [playerName, setPlayerName] = useState('');
   const [nameSet, setNameSet] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -112,6 +114,11 @@ const GameRoom = () => {
       setGameState('ended');
     });
 
+    socket.on('chatMessage', ({ senderId, senderName, message }) => {
+      console.debug('Chat message received:', { senderId, senderName, message });
+      setChatMessages((prev) => [...prev, { senderId, senderName, message }]);
+    });
+
     console.debug('Initial join room:', urlRoomId, 'with creatorId:', creatorId);
     socket.emit('joinRoom', { roomId: urlRoomId, creatorId });
     setHasJoined(true);
@@ -130,6 +137,7 @@ const GameRoom = () => {
       socket.off('votingStart');
       socket.off('roundResults');
       socket.off('gameEnd');
+      socket.off('chatMessage');
     };
   }, [urlRoomId, router, creatorId]);
 
@@ -209,6 +217,15 @@ const GameRoom = () => {
       socket.emit('setName', { roomId, name: playerName });
       setNameSet(true);
       setPlayerName('');
+    }
+  };
+
+  const sendChatMessage = () => {
+    if (chatInput.trim() && roomId) {
+      const senderName = players.find(p => p.id === socket.id)?.name || socket.id;
+      socket.emit('sendMessage', { roomId, message: chatInput });
+      setChatMessages((prev) => [...prev, { senderId: socket.id, senderName, message: chatInput }]);
+      setChatInput('');
     }
   };
 
@@ -333,6 +350,31 @@ const GameRoom = () => {
             <button style={styles.leaveButton} onClick={leaveRoom}>
               Leave Room
             </button>
+
+            {/* Chat Section */}
+            <div style={styles.chatContainer}>
+              <h3 style={styles.subtitle}>Chat</h3>
+              <ul style={styles.chatList}>
+                {chatMessages.map((msg, index) => (
+                  <li key={index} style={styles.chatItem}>
+                    <strong>{msg.senderName}:</strong> {msg.message}
+                  </li>
+                ))}
+              </ul>
+              <div style={styles.chatInputContainer}>
+                <input
+                  style={styles.input}
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Type a message..."
+                  maxLength={100}
+                />
+                <button style={styles.button} onClick={sendChatMessage}>
+                  Send
+                </button>
+              </div>
+            </div>
           </>
         ) : (
           <p style={styles.loading}>Loading room...</p>
@@ -394,7 +436,7 @@ const styles = {
     transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
     ':focus': {
       borderColor: '#1976D6',
-      boxShadow: '0 1px 4px rgba(25, 118, 210, 0.5)',
+      box CucumberShadow: '0 1px 4px rgba(25, 118, 210, 0.5)',
     },
   },
   button: {
@@ -523,6 +565,37 @@ const styles = {
     textAlign: 'center',
     marginTop: '20vh',
     color: '#212121',
+  },
+  chatContainer: {
+    marginTop: '2rem',
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    padding: '1rem',
+    borderRadius: '8px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+  },
+  chatList: {
+    listStyle: 'none',
+    padding: 0,
+    maxHeight: '200px',
+    overflowY: 'auto',
+    marginBottom: '1rem',
+    width: '100%',
+  },
+  chatItem: {
+    padding: '0.5rem',
+    backgroundColor: '#FAFAFA',
+    marginBottom: '0.5rem',
+    borderRadius: '4px',
+    textAlign: 'left',
+    color: '#212121',
+    wordBreak: 'break-word',
+  },
+  chatInputContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    width: '100%',
   },
 };
 
