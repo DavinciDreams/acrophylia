@@ -169,7 +169,7 @@ const GameRoom = () => {
   };
 
   const submitVote = (submissionId) => {
-    if (!hasVoted && roomId && submissionId !== socket.id) { // Prevent self-voting
+    if (!hasVoted && roomId && submissionId !== socket.id) {
       console.debug('Submitting vote for:', submissionId);
       socket.emit('vote', { roomId, submissionId });
       setHasVoted(true);
@@ -308,22 +308,129 @@ const GameRoom = () => {
 };
 
 const styles = {
-  container: { padding: '2rem', backgroundColor: '#f0f4f8', minHeight: '100vh', fontFamily: 'Arial, sans-serif' },
-  warning: { color: '#ff4500', textAlign: 'center', marginBottom: '1rem' },
-  title: { fontSize: '2rem', color: '#333', marginBottom: '1rem' },
-  subtitle: { fontSize: '1.5rem', color: '#555', marginBottom: '1rem' },
-  invite: { display: 'flex', gap: '1rem', marginBottom: '2rem' },
-  input: { padding: '0.5rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: '5px', flexGrow: 1 },
-  button: { padding: '0.75rem 1.5rem', fontSize: '1rem', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' },
-  voteButton: { padding: '0.5rem 1rem', fontSize: '0.9rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' },
-  leaveButton: { padding: '0.75rem 1.5rem', fontSize: '1rem', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginTop: '2rem' },
-  playerList: { listStyle: 'none', padding: 0, marginBottom: '2rem' },
-  playerItem: { padding: '0.5rem', backgroundColor: '#fff', marginBottom: '0.5rem', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' },
-  submissionList: { listStyle: 'none', padding: 0 },
-  submissionItem: { padding: '0.5rem', backgroundColor: '#fff', marginBottom: '0.5rem', borderRadius: '5px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  section: { marginBottom: '2rem' },
-  note: { color: '#777', fontSize: '0.9rem' },
-  loading: { fontSize: '1.2rem', textAlign: 'center', marginTop: '20vh' },
+  container: { 
+    padding: '1rem', 
+    backgroundColor: '#f0f4f8', 
+    minHeight: '100vh', 
+    fontFamily: 'Arial, sans-serif', 
+    display: 'flex', 
+    flexDirection: 'column', 
+    alignItems: 'center', 
+    textAlign: 'center', 
+    maxWidth: '480px', 
+    margin: '0 auto' 
+  },
+  warning: { 
+    color: '#ff4500', 
+    marginBottom: '1rem', 
+    fontSize: '0.9rem' 
+  },
+  title: { 
+    fontSize: '1.5rem', 
+    color: '#333', 
+    marginBottom: '1rem' 
+  },
+  subtitle: { 
+    fontSize: '1.25rem', 
+    color: '#555', 
+    marginBottom: '1rem' 
+  },
+  invite: { 
+    display: 'flex', 
+    flexDirection: 'column', 
+    gap: '0.5rem', 
+    marginBottom: '1.5rem', 
+    width: '100%' 
+  },
+  input: { 
+    padding: '0.5rem', 
+    fontSize: '1rem', 
+    border: '1px solid #ccc', 
+    borderRadius: '5px', 
+    width: '100%', 
+    boxSizing: 'border-box' 
+  },
+  button: { 
+    padding: '0.75rem', 
+    fontSize: '1rem', 
+    backgroundColor: '#007bff', 
+    color: 'white', 
+    border: 'none', 
+    borderRadius: '5px', 
+    cursor: 'pointer', 
+    width: '100%', 
+    maxWidth: '200px', 
+    margin: '0 auto' 
+  },
+  voteButton: { 
+    padding: '0.5rem 1rem', 
+    fontSize: '0.9rem', 
+    backgroundColor: '#28a745', 
+    color: 'white', 
+    border: 'none', 
+    borderRadius: '5px', 
+    cursor: 'pointer' 
+  },
+  leaveButton: { 
+    padding: '0.75rem', 
+    fontSize: '1rem', 
+    backgroundColor: '#dc3545', 
+    color: 'white', 
+    border: 'none', 
+    borderRadius: '5px', 
+    cursor: 'pointer', 
+    width: '100%', 
+    maxWidth: '200px', 
+    margin: '2rem auto 0' 
+  },
+  playerList: { 
+    listStyle: 'none', 
+    padding: 0, 
+    marginBottom: '1.5rem', 
+    width: '100%' 
+  },
+  playerItem: { 
+    padding: '0.5rem', 
+    backgroundColor: '#fff', 
+    marginBottom: '0.5rem', 
+    borderRadius: '5px', 
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)', 
+    textAlign: 'center' 
+  },
+  submissionList: { 
+    listStyle: 'none', 
+    padding: 0, 
+    width: '100%' 
+  },
+  submissionItem: { 
+    padding: '0.5rem', 
+    backgroundColor: '#fff', 
+    marginBottom: '0.5rem', 
+    borderRadius: '5px', 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    maxWidth: '300px', 
+    marginLeft: 'auto', 
+    marginRight: 'auto' 
+  },
+  section: { 
+    marginBottom: '1.5rem', 
+    width: '100%', 
+    display: 'flex', 
+    flexDirection: 'column', 
+    alignItems: 'center' 
+  },
+  note: { 
+    color: '#777', 
+    fontSize: '0.85rem', 
+    marginTop: '0.5rem' 
+  },
+  loading: { 
+    fontSize: '1.2rem', 
+    textAlign: 'center', 
+    marginTop: '20vh' 
+  },
 };
 
 export default GameRoom;
