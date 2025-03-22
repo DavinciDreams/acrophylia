@@ -9,7 +9,7 @@ const socket = io('https://acrophylia.onrender.com', {
 
 const GameRoom = () => {
   const router = useRouter();
-  const { roomId: urlRoomId } = router.query;
+  const { roomId: urlRoomId, creatorId } = router.query;
   const [roomId, setRoomId] = useState(urlRoomId || null);
   const [players, setPlayers] = useState([]);
   const [roundNum, setRoundNum] = useState(0);
@@ -21,7 +21,7 @@ const GameRoom = () => {
   const [results, setResults] = useState(null);
   const [winner, setWinner] = useState(null);
   const [isCreator, setIsCreator] = useState(false);
-  const [hasJoined, setHasJoined] = useState(false); // Track join to prevent duplicates
+  const [hasJoined, setHasJoined] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -42,13 +42,12 @@ const GameRoom = () => {
       setRoomId(newRoomId);
       setIsCreator(true);
       sessionStorage.setItem('isCreator', 'true');
-      router.push(`/room/${newRoomId}`);
+      router.push(`/room/${newRoomId}?creatorId=${socket.id}`);
     });
 
     socket.on('roomJoined', ({ roomId, isCreator: serverIsCreator }) => {
       console.log('Room joined, roomId:', roomId, 'serverIsCreator:', serverIsCreator, 'socket.id:', socket.id);
       setRoomId(roomId);
-      // Only set isCreator from server if not already set from sessionStorage
       if (!isCreator && serverIsCreator) setIsCreator(serverIsCreator);
     });
 
@@ -96,9 +95,9 @@ const GameRoom = () => {
       setGameState('ended');
     });
 
-    console.log('Joining room:', urlRoomId);
-    socket.emit('joinRoom', urlRoomId);
-    setHasJoined(true); // Prevent duplicate joins
+    console.log('Joining room:', urlRoomId, 'with creatorId:', creatorId);
+    socket.emit('joinRoom', { roomId: urlRoomId, creatorId });
+    setHasJoined(true);
 
     return () => {
       socket.off('connect');
@@ -113,7 +112,7 @@ const GameRoom = () => {
       socket.off('roundResults');
       socket.off('gameEnd');
     };
-  }, [urlRoomId, router]);
+  }, [urlRoomId, router, creatorId]);
 
   const submitAcronym = () => {
     if (acronym && roomId) {
