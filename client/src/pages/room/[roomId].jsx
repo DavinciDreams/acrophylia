@@ -20,7 +20,7 @@ const GameRoom = () => {
   const [hasVoted, setHasVoted] = useState(false);
   const [results, setResults] = useState(null);
   const [winner, setWinner] = useState(null);
-  const [isCreator, setIsCreator] = useState(false);
+  const [isCreator, setIsCreator] = useState(() => sessionStorage.getItem('isCreator') === 'true');
 
   useEffect(() => {
     if (!urlRoomId) return;
@@ -31,14 +31,14 @@ const GameRoom = () => {
     socket.on('roomCreated', (newRoomId) => {
       console.log('Room created, I am creator, roomId:', newRoomId);
       setRoomId(newRoomId);
-      setIsCreator(true); // Set as creator
+      setIsCreator(true);
+      sessionStorage.setItem('isCreator', 'true');
       router.push(`/room/${newRoomId}`);
     });
 
     socket.on('roomJoined', ({ roomId, isCreator: serverIsCreator }) => {
       console.log('Room joined, roomId:', roomId, 'serverIsCreator:', serverIsCreator);
       setRoomId(roomId);
-      // Only update isCreator if not already set (prevents overwrite for creator)
       if (!isCreator) setIsCreator(serverIsCreator);
     });
 
@@ -122,7 +122,7 @@ const GameRoom = () => {
 
   const startGame = () => {
     if (roomId && isCreator) {
-      console.log('Starting game for room:', roomId);
+      console.log('Starting game for room:', roomId, 'with players:', players.length);
       socket.emit('startGame', roomId);
     }
   };
@@ -146,8 +146,9 @@ const GameRoom = () => {
 
           {gameState === 'waiting' && (
             <div>
-              <p>Waiting for players to join...</p>
-              {isCreator && <button onClick={startGame}>Start Game</button>}
+              <p>Waiting for players to join... (Game starts with 4 players, bots added if needed)</p>
+              <button onClick={startGame} disabled={!isCreator}>Start Game</button>
+              {!isCreator && <p>(Only the room creator can start the game)</p>}
             </div>
           )}
 
