@@ -149,11 +149,9 @@ io.on('connection', (socket) => {
             room.votes.clear()
             startRound(roomId)
           } else {
-            const winner = room.players.reduce((prev, curr) => 
-              prev.score > curr.score ? prev : curr
-            )
-            console.debug('Game ended, winner:', winner.id)
-            io.to(roomId).emit('gameEnd', { winner })
+            const winners = calculateWinners(room.players)
+            console.debug('Game ended, winners:', winners.map(w => w.id))
+            io.to(roomId).emit('gameEnd', { winners })
           }
         }
       } else {
@@ -230,11 +228,9 @@ function simulateBotVotes(roomId) {
         room.votes.clear()
         startRound(roomId)
       } else {
-        const winner = room.players.reduce((prev, curr) => 
-          prev.score > curr.score ? prev : curr
-        )
-        console.debug('Game ended, winner:', winner.id)
-        io.to(roomId).emit('gameEnd', { winner })
+        const winners = calculateWinners(room.players)
+        console.debug('Game ended, winners:', winners.map(w => w.id))
+        io.to(roomId).emit('gameEnd', { winners })
       }
     }
   }
@@ -246,25 +242,45 @@ function calculateResults(room) {
     voteCounts.set(votedId, (voteCounts.get(votedId) || 0) + 1)
   })
   
-  let winnerId = null
   let maxVotes = 0
+  const roundWinners = []
   voteCounts.forEach((count, id) => {
     if (count > maxVotes) {
       maxVotes = count
-      winnerId = id
+      roundWinners.length = 0
+      roundWinners.push(id)
+    } else if (count === maxVotes) {
+      roundWinners.push(id)
     }
   })
 
-  const winner = room.players.find(p => p.id === winnerId)
-  if (winner) winner.score += 1
+  roundWinners.forEach(winnerId => {
+    const winner = room.players.find(p => p.id === winnerId)
+    if (winner) winner.score += 1
+  })
 
-  console.debug('Calculated results for room:', room.name, 'winner:', winnerId)
+  console.debug('Round results for room:', room.name, 'winners:', roundWinners, 'scores:', room.players.map(p => ({ id: p.id, score: p.score })))
   return {
     submissions: Array.from(room.submissions),
     votes: Array.from(room.votes),
-    winnerId,
+    winnerIds: roundWinners, // Plural for ties
     updatedPlayers: room.players
   }
+}
+
+function calculateWinners(players) {
+  let maxScore = 0
+  const winners = []
+  players.forEach(player => {
+    if (player.score > maxScore) {
+      maxScore = player.score
+      winners.length = 0
+      winners.push(player)
+    } else if (player.score === maxScore) {
+      winners.push(player)
+    }
+  })
+  return winners
 }
 
 const PORT = process.env.PORT || 3001
