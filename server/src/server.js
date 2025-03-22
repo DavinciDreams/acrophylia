@@ -2,7 +2,7 @@ const express = require('express')
 const http = require('http')
 const { Server } = require('socket.io')
 const cors = require('cors')
-const { generateLetters, checkMinPlayers } = require('./utils/gameLogic')
+const { generateLetters } = require('./utils/gameLogic')
 const { addBotPlayers } = require('./utils/botLogic')
 
 const app = express()
@@ -37,10 +37,10 @@ app.get('/', (req, res) => {
 const rooms = new Map()
 
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id)
+  console.debug('New client connected:', socket.id)
 
   socket.on('createRoom', (roomName) => {
-    console.log('Received createRoom event with name:', roomName, 'from:', socket.id)
+    console.debug('Received createRoom event with name:', roomName, 'from:', socket.id)
     const roomId = Math.random().toString(36).substr(2, 9)
     rooms.set(roomId, {
       name: roomName,
@@ -52,42 +52,40 @@ io.on('connection', (socket) => {
       started: false
     })
     socket.join(roomId)
-    console.log('Created room:', roomId, 'creatorId:', socket.id, 'Rooms size:', rooms.size)
+    console.debug('Created room:', roomId, 'creatorId:', socket.id, 'Rooms size:', rooms.size)
     socket.emit('roomCreated', roomId)
     io.to(roomId).emit('playerUpdate', rooms.get(roomId).players)
   })
 
   socket.on('joinRoom', ({ roomId, creatorId }) => {
-    console.log('Received joinRoom event for room:', roomId, 'from:', socket.id, 'creatorId provided:', creatorId)
+    console.debug('Received joinRoom event for room:', roomId, 'from:', socket.id, 'creatorId provided:', creatorId)
     const room = rooms.get(roomId)
     if (room) {
       const isOriginalCreator = creatorId && creatorId === room.creatorId
       const playerExists = room.players.some(player => player.id === socket.id)
 
       if (isOriginalCreator && room.creatorId !== socket.id) {
-        // Creator reconnected with a new socket ID
         const oldCreatorIndex = room.players.findIndex(p => p.id === room.creatorId)
         if (oldCreatorIndex !== -1) {
-          console.log('Updating creator ID from:', room.creatorId, 'to:', socket.id)
-          room.players[oldCreatorIndex].id = socket.id // Update player ID
-          room.creatorId = socket.id // Update creator ID
+          console.debug('Updating creator ID from:', room.creatorId, 'to:', socket.id)
+          room.players[oldCreatorIndex].id = socket.id
+          room.creatorId = socket.id
         }
         socket.join(roomId)
       } else if (!playerExists) {
-        // New player joining
         room.players.push({ id: socket.id, score: 0, isBot: false })
         socket.join(roomId)
-        console.log('Player joined room:', roomId, 'Total players:', room.players.length)
+        console.debug('Player joined room:', roomId, 'Total players:', room.players.length)
       } else {
-        console.log('Player', socket.id, 'already in room:', roomId)
+        console.debug('Player', socket.id, 'already in room:', roomId)
       }
 
       const isCreator = socket.id === room.creatorId
-      console.log('Sending roomJoined, roomId:', roomId, 'socket.id:', socket.id, 'room.creatorId:', room.creatorId, 'creatorId from client:', creatorId, 'isCreator:', isCreator)
+      console.debug('Sending roomJoined, roomId:', roomId, 'socket.id:', socket.id, 'room.creatorId:', room.creatorId, 'isCreator:', isCreator)
       socket.emit('roomJoined', { roomId, isCreator })
       io.to(roomId).emit('playerUpdate', room.players)
     } else {
-      console.log('Room not found on join:', roomId, 'Available rooms:', Array.from(rooms.keys()))
+      console.warn('Room not found on join:', roomId, 'Available rooms:', Array.from(rooms.keys()))
       socket.emit('roomNotFound')
     }
   })
@@ -95,22 +93,38 @@ io.on('connection', (socket) => {
   socket.on('startGame', (roomId) => {
     const room = rooms.get(roomId)
     if (room && socket.id === room.creatorId && !room.started) {
-      console.log('Received startGame event for room:', roomId, 'from:', socket.id)
+      console.debug('Received startGame event for room:', roomId, 'from:', socket.id)
       room.started = true
       startGame(roomId)
     } else {
-      console.log('Start game rejected:', socket.id, 'not creator or game already started')
+      console.warn('Start game rejected:', socket.id, 'not creator or game already started')
+    }
+  })
+
+  socket.on('resetGame', (roomId) => {
+    const room = rooms.get(roomId)
+    if (room && socket.id === room.creatorId) {
+      console.debug('Resetting game for room:', roomId, 'from:', socket.id)
+      room.round = 0
+      room.submissions.clear()
+      room.votes.clear()
+      room.started = false
+      room.players.forEach(player => { player.score = 0 })
+      io.to(roomId).emit('playerUpdate', room.players)
+      io.to(roomId).emit('gameReset')
+    } else {
+      console.warn('Reset game rejected:', socket.id, 'not creator')
     }
   })
 
   socket.on('submitAcronym', ({ roomId, acronym }) => {
-    console.log('Received submitAcronym for room:', roomId, 'acronym:', acronym)
+    console.debug('Received submitAcronym for room:', roomId, 'acronym:', acronym)
     const room = rooms.get(roomId)
     if (room && room.started) {
       room.submissions.set(socket.id, acronym)
-      console.log('Current submissions:', room.submissions.size, 'Players:', room.players.length)
+      console.debug('Current submissions:', room.submissions.size, 'Players:', room.players.length)
       if (room.submissions.size === room.players.length) {
-        console.log('All submissions received for room:', roomId)
+        console.debug('All submissions received for room:', roomId)
         io.to(roomId).emit('submissionsReceived', Array.from(room.submissions))
         io.to(roomId).emit('votingStart')
         simulateBotVotes(roomId)
@@ -119,14 +133,14 @@ io.on('connection', (socket) => {
   })
 
   socket.on('vote', ({ roomId, submissionId }) => {
-    console.log('Received vote for room:', roomId, 'submission:', submissionId)
+    console.debug('Received vote for room:', roomId, 'submission:', submissionId)
     const room = rooms.get(roomId)
     if (room && room.started) {
       if (!room.votes.has(socket.id)) {
         room.votes.set(socket.id, submissionId)
-        console.log('Current votes:', room.votes.size, 'Players:', room.players.length)
+        console.debug('Current votes:', room.votes.size, 'Players:', room.players.length)
         if (room.votes.size === room.players.length) {
-          console.log('All votes received for room:', roomId)
+          console.debug('All votes received for room:', roomId)
           const results = calculateResults(room)
           io.to(roomId).emit('roundResults', results)
           
@@ -138,27 +152,27 @@ io.on('connection', (socket) => {
             const winner = room.players.reduce((prev, curr) => 
               prev.score > curr.score ? prev : curr
             )
-            console.log('Game ended, winner:', winner.id)
+            console.debug('Game ended, winner:', winner.id)
             io.to(roomId).emit('gameEnd', { winner })
           }
         }
       } else {
-        console.log('Player', socket.id, 'already voted in room:', roomId)
+        console.debug('Player', socket.id, 'already voted in room:', roomId)
       }
     }
   })
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id)
+    console.debug('Client disconnected:', socket.id)
     rooms.forEach((room, roomId) => {
       const playerIndex = room.players.findIndex(p => p.id === socket.id)
       if (playerIndex !== -1) {
         room.players.splice(playerIndex, 1)
-        console.log('Player removed from room:', roomId, 'Remaining players:', room.players.length)
+        console.debug('Player removed from room:', roomId, 'Remaining players:', room.players.length)
         io.to(roomId).emit('playerUpdate', room.players)
         if (room.players.length === 0) {
           rooms.delete(roomId)
-          console.log('Room deleted:', roomId)
+          console.debug('Room deleted:', roomId)
         }
       }
     })
@@ -167,10 +181,10 @@ io.on('connection', (socket) => {
 
 function startGame(roomId) {
   const room = rooms.get(roomId)
-  console.log('Starting game for room:', roomId, 'Current players:', room.players.length)
+  console.debug('Starting game for room:', roomId, 'Current players:', room.players.length)
   while (room.players.length < 4) {
     room.players = addBotPlayers(room.players, 1)
-    console.log('Added bot, new player count:', room.players.length)
+    console.debug('Added bot, new player count:', room.players.length)
   }
   io.to(roomId).emit('playerUpdate', room.players)
   startRound(roomId)
@@ -180,7 +194,7 @@ function startRound(roomId) {
   const room = rooms.get(roomId)
   room.round++
   const letters = generateLetters(room.round)
-  console.log('Starting round', room.round, 'for room:', roomId, 'letters:', letters)
+  console.debug('Starting round', room.round, 'for room:', roomId, 'letters:', letters)
   
   room.submissions.clear()
   
@@ -188,12 +202,11 @@ function startRound(roomId) {
     if (player.isBot) {
       const botAcronym = letters.join('')
       room.submissions.set(player.id, botAcronym)
-      console.log('Bot', player.id, 'submitted:', botAcronym)
+      console.debug('Bot', player.id, 'submitted:', botAcronym)
     }
   })
   
   io.to(roomId).emit('newRound', { roundNum: room.round, letterSet: letters })
-  console.log('Emitted newRound event to room:', roomId, 'with letters:', letters)
 }
 
 function simulateBotVotes(roomId) {
@@ -204,11 +217,11 @@ function simulateBotVotes(roomId) {
       if (player.isBot && !room.votes.has(player.id)) {
         const randomVote = submissionIds[Math.floor(Math.random() * submissionIds.length)]
         room.votes.set(player.id, randomVote)
-        console.log('Bot', player.id, 'voted for:', randomVote)
+        console.debug('Bot', player.id, 'voted for:', randomVote)
       }
     })
     if (room.votes.size === room.players.length) {
-      console.log('All votes received for room:', roomId)
+      console.debug('All votes received for room:', roomId)
       const results = calculateResults(room)
       io.to(roomId).emit('roundResults', results)
       
@@ -220,7 +233,7 @@ function simulateBotVotes(roomId) {
         const winner = room.players.reduce((prev, curr) => 
           prev.score > curr.score ? prev : curr
         )
-        console.log('Game ended, winner:', winner.id)
+        console.debug('Game ended, winner:', winner.id)
         io.to(roomId).emit('gameEnd', { winner })
       }
     }
@@ -245,7 +258,7 @@ function calculateResults(room) {
   const winner = room.players.find(p => p.id === winnerId)
   if (winner) winner.score += 1
 
-  console.log('Calculated results for room:', room.name, 'winner:', winnerId)
+  console.debug('Calculated results for room:', room.name, 'winner:', winnerId)
   return {
     submissions: Array.from(room.submissions),
     votes: Array.from(room.votes),
