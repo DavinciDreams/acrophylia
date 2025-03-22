@@ -21,6 +21,7 @@ const GameRoom = () => {
   const [results, setResults] = useState(null);
   const [winner, setWinner] = useState(null);
   const [isCreator, setIsCreator] = useState(false);
+  const [hasJoined, setHasJoined] = useState(false); // Track join to prevent duplicates
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -29,9 +30,11 @@ const GameRoom = () => {
       console.log('Initial isCreator from sessionStorage:', storedCreator);
     }
 
-    if (!urlRoomId) return;
+    if (!urlRoomId || hasJoined) return;
 
-    socket.on('connect', () => console.log('Socket connected'));
+    socket.on('connect', () => {
+      console.log('Socket connected, ID:', socket.id);
+    });
     socket.on('connect_error', (err) => console.log('Socket connect error:', err.message));
 
     socket.on('roomCreated', (newRoomId) => {
@@ -43,9 +46,10 @@ const GameRoom = () => {
     });
 
     socket.on('roomJoined', ({ roomId, isCreator: serverIsCreator }) => {
-      console.log('Room joined, roomId:', roomId, 'serverIsCreator:', serverIsCreator);
+      console.log('Room joined, roomId:', roomId, 'serverIsCreator:', serverIsCreator, 'socket.id:', socket.id);
       setRoomId(roomId);
-      if (!isCreator) setIsCreator(serverIsCreator);
+      // Only set isCreator from server if not already set from sessionStorage
+      if (!isCreator && serverIsCreator) setIsCreator(serverIsCreator);
     });
 
     socket.on('roomNotFound', () => {
@@ -94,6 +98,7 @@ const GameRoom = () => {
 
     console.log('Joining room:', urlRoomId);
     socket.emit('joinRoom', urlRoomId);
+    setHasJoined(true); // Prevent duplicate joins
 
     return () => {
       socket.off('connect');
@@ -108,7 +113,7 @@ const GameRoom = () => {
       socket.off('roundResults');
       socket.off('gameEnd');
     };
-  }, [urlRoomId, router]); // Dependencies ensure single run per roomId change
+  }, [urlRoomId, router]);
 
   const submitAcronym = () => {
     if (acronym && roomId) {
