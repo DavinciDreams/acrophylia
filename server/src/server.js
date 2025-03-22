@@ -215,7 +215,6 @@ function simulateBotVotes(roomId) {
     const submissionIds = Array.from(room.submissions.keys())
     room.players.forEach(player => {
       if (player.isBot && !room.votes.has(player.id)) {
-        // Filter out the bot's own submission
         const validVoteOptions = submissionIds.filter(id => id !== player.id)
         if (validVoteOptions.length > 0) {
           const randomVote = validVoteOptions[Math.floor(Math.random() * validVoteOptions.length)]
@@ -264,13 +263,14 @@ function calculateResults(room) {
   const winner = room.players.find(p => p.id === winnerId)
   if (winner) winner.score += 1
 
-  console.debug('Calculated results for room:', room.name, 'winner:', winnerId)
-  return {
+  const results = {
     submissions: Array.from(room.submissions),
     votes: Array.from(room.votes),
     winnerId,
     updatedPlayers: room.players
   }
+  console.debug('Calculated results for room:', room.name, 'results:', JSON.stringify(results))
+  return results
 }
 
 const PORT = process.env.PORT || 3001
