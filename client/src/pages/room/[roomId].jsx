@@ -20,10 +20,9 @@ const GameRoom = () => {
   const [hasVoted, setHasVoted] = useState(false);
   const [results, setResults] = useState(null);
   const [winner, setWinner] = useState(null);
-  const [isCreator, setIsCreator] = useState(false); // Default to false
+  const [isCreator, setIsCreator] = useState(false);
 
   useEffect(() => {
-    // Set isCreator from sessionStorage only on client-side
     if (typeof window !== 'undefined') {
       const storedCreator = sessionStorage.getItem('isCreator') === 'true';
       setIsCreator(storedCreator);
@@ -109,7 +108,7 @@ const GameRoom = () => {
       socket.off('roundResults');
       socket.off('gameEnd');
     };
-  }, [urlRoomId, router]);
+  }, [urlRoomId, router]); // Dependencies ensure single run per roomId change
 
   const submitAcronym = () => {
     if (acronym && roomId) {
