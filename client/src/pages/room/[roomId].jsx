@@ -315,7 +315,7 @@ const GameRoom = () => {
                     </li>
                   ))}
                 </ul>
-              </div>
+            </div>
             )}
 
             {gameState === 'results' && results && (
@@ -436,7 +436,7 @@ const styles = {
     transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
     ':focus': {
       borderColor: '#1976D6',
-      box CucumberShadow: '0 1px 4px rgba(25, 118, 210, 0.5)',
+      boxShadow: '0 1px 4px rgba(25, 118, 210, 0.5)',
     },
   },
   button: {
