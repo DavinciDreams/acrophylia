@@ -242,7 +242,8 @@ async function startRound(roomId) {
   const room = rooms.get(roomId);
   room.round++;
   const letters = generateLetters(room.round);
-  const category = await generateCategory(); // Generate category
+  const category = await generateCategory();
+  room.category = category; // Store it here
   console.debug('Starting round', room.round, 'for room:', roomId, 'letters:', letters, 'category:', category);
 
   room.submissions.clear();
@@ -252,7 +253,7 @@ async function startRound(roomId) {
   const timeLimit = letterCount <= 4 ? 30 : letterCount <= 6 ? 60 : 90;
   let timeLeft = timeLimit;
 
-  io.to(roomId).emit('newRound', { roundNum: room.round, letterSet: letters, timeLeft, category }); // Include category
+  io.to(roomId).emit('newRound', { roundNum: room.round, letterSet: letters, timeLeft, category });
 
   for (const player of room.players) {
     if (player.isBot) {
