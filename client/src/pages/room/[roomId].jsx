@@ -23,6 +23,7 @@ const GameRoom = () => {
   const [submissions, setSubmissions] = useState([]);
   const [gameState, setGameState] = useState('waiting');
   const [hasVoted, setHasVoted] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false); // New state for submission
   const [results, setResults] = useState(null);
   const [winner, setWinner] = useState(null);
   const [isCreator, setIsCreator] = useState(false);
@@ -87,6 +88,7 @@ const GameRoom = () => {
       setGameState('submitting');
       setSubmissions([]);
       setHasVoted(false);
+      setHasSubmitted(false); // Reset submission state
       setResults(null);
     });
 
@@ -174,9 +176,10 @@ const GameRoom = () => {
   );
 
   const submitAcronym = () => {
-    if (acronym && roomId) {
+    if (acronym && roomId && !hasSubmitted) {
       console.debug('Submitting acronym:', acronym);
       socket.emit('submitAcronym', { roomId, acronym });
+      setHasSubmitted(true); // Disable submit button
       setAcronym('');
     }
   };
@@ -207,6 +210,7 @@ const GameRoom = () => {
       setGameState('waiting');
       setSubmissions([]);
       setHasVoted(false);
+      setHasSubmitted(false);
       setResults(null);
       setWinner(null);
     }
@@ -289,10 +293,12 @@ const GameRoom = () => {
                   style={styles.input}
                   type="text"
                   value={acronym}
-                  onChange={(e) => setAcronym(e.target.value.toUpperCase())}
+                  onChange={(e) => setAcronym(e.target.value)} // Removed toUpperCase
                   placeholder="Enter acronym"
                 />
-                <button style={styles.button} onClick={submitAcronym}>Submit</button>
+                <button style={styles.button} onClick={submitAcronym} disabled={hasSubmitted}>
+                  Submit
+                </button>
               </div>
             )}
 
@@ -306,7 +312,7 @@ const GameRoom = () => {
                       <button
                         style={styles.voteButton}
                         onClick={() => submitVote(playerId)}
-                        disabled={hasVoted}
+                        disabled={hasVoted || playerId === socket.id} // Gray out after vote or if own submission
                       >
                         Vote
                       </button>
@@ -349,7 +355,6 @@ const GameRoom = () => {
               Leave Room
             </button>
 
-            {/* Chat Section */}
             <div style={styles.chatContainer}>
               <h3 style={styles.subtitle}>Chat</h3>
               <ul style={styles.chatList}>
