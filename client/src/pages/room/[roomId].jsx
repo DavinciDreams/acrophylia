@@ -19,6 +19,7 @@ const GameRoom = () => {
   const [players, setPlayers] = useState([]);
   const [roundNum, setRoundNum] = useState(0);
   const [letterSet, setLetterSet] = useState([]);
+  const [category, setCategory] = useState(''); // New state
   const [acronym, setAcronym] = useState('');
   const [submissions, setSubmissions] = useState([]);
   const [gameState, setGameState] = useState('waiting');
@@ -88,10 +89,11 @@ const GameRoom = () => {
       setGameStarted(true);
     });
 
-    socket.on('newRound', ({ roundNum, letterSet, timeLeft: initialTime }) => {
-      console.debug('New round started:', roundNum, letterSet, 'timeLeft:', initialTime);
+    socket.on('newRound', ({ roundNum, letterSet, timeLeft: initialTime, category }) => {
+      console.debug('New round started:', roundNum, letterSet, 'timeLeft:', initialTime, 'category:', category);
       setRoundNum(roundNum);
       setLetterSet(letterSet);
+      setCategory(category); // Set category
       setGameState('submitting');
       setSubmissions([]);
       setHasVoted(false);
@@ -230,6 +232,7 @@ const GameRoom = () => {
       setWinner(null);
       setTimeLeft(null);
       setGameStarted(false);
+      setCategory(''); // Reset category
     }
   };
 
@@ -308,7 +311,7 @@ const GameRoom = () => {
             {gameState === 'submitting' && (
               <div style={styles.section}>
                 <h3 style={styles.subtitle}>
-                  Round {roundNum} of 5 - Letters: {letterSet.join(', ')}
+                  Round {roundNum} of 5 - Category: {category} - Letters: {letterSet.join(', ')}
                 </h3>
                 <p style={{ ...styles.timer, color: timeLeft <= 10 ? '#D32F2F' : '#757575' }}>
                   Time Left: {timeLeft !== null ? `${timeLeft}s` : 'Waiting...'}
