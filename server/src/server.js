@@ -226,4 +226,108 @@ async function startRound(roomId) {
   const room = rooms.get(roomId);
   room.round++;
   const letters = generateLetters(room.round);
-  console.debug('Starting
+  console.debug('Starting round', room.round, 'for room:', roomId, 'letters:', letters);
+
+  room.submissions.clear();
+  room.votes.clear();
+
+  // Bot acronym generation with xAI Grok
+  for (const player of room.players) {
+    if (player.isBot) {
+      const prompt = `Generate a creative acronym phrase using the letters ${letters.join(', ')}. Return only the phrase, no explanation.`;
+      try {
+        const acronym = await callLLM(prompt);
+        room.submissions.set(player.id, acronym);
+        console.debug(`Bot ${player.name} submitted Grok acronym: ${acronym}`);
+      } catch (error) {
+        console.error(`Grok error for bot ${player.id}:`, error);
+        room.submissions.set(player.id, letters.join('')); // Fallback
+      }
+    }
+  }
+
+  io.to(roomId).emit('newRound', { roundNum: room.round, letterSet: letters });
+}
+
+async function simulateBotVotes(roomId) {
+  const room = rooms.get(roomId);
+  if (room) {
+    const submissionList = Array.from(room.submissions).map(([id, acronym]) => ({
+      id,
+      acronym,
+      playerName: room.players.find(p => p.id === id)?.name || id
+    }));
+
+    for (const player of room.players) {
+      if (player.isBot && !room.votes.has(player.id)) {
+        const validOptions = submissionList.filter(s => s.id !== player.id);
+        if (validOptions.length > 0) {
+          const prompt = `Rate these acronyms for creativity and humor: ${validOptions.map((s, i) => `${i + 1}. ${s.acronym}`).join(', ')}. Return the number (1-${validOptions.length}) of the one you like best.`;
+          try {
+            const llmResponse = await callLLM(prompt);
+            const choiceIndex = Math.min(parseInt(llmResponse) - 1 || 0, validOptions.length - 1);
+            const votedId = validOptions[choiceIndex].id;
+            room.votes.set(player.id, votedId);
+            console.debug(`Bot ${player.name} voted for: ${validOptions[choiceIndex].acronym} by ${validOptions[choiceIndex].playerName}`);
+          } catch (error) {
+            console.error(`Grok voting error for bot ${player.id}:`, error);
+            const randomVote = validOptions[Math.floor(Math.random() * validOptions.length)].id;
+            room.votes.set(player.id, randomVote); // Fallback to random
+          }
+        } else {
+          console.debug(`Bot ${player.name} found no valid vote options`);
+        }
+      }
+    }
+    console.debug('After bot votes - Current votes:', room.votes.size, 'Players:', room.players.length);
+    checkAllVotes(roomId);
+  }
+}
+
+function checkAllVotes(roomId) {
+  const room = rooms.get(roomId);
+  if (room && room.votes.size === room.players.length) {
+    console.debug('All votes received for room:', roomId);
+    const results = calculateResults(room);
+    io.to(roomId).emit('roundResults', results);
+
+    if (room.round < 3) {
+      room.submissions.clear();
+      room.votes.clear();
+      startRound(roomId);
+    } else {
+      const winner = room.players.reduce((prev, curr) =>
+        prev.score > curr.score ? prev : curr
+      );
+      console.debug('Game ended, winner:', winner.id, 'with score:', winner.score);
+      io.to(roomId).emit('gameEnd', { winner });
+    }
+  }
+}
+
+function calculateResults(room) {
+  const voteCounts = new Map();
+  room.votes.forEach((votedId) => {
+    voteCounts.set(votedId, (voteCounts.get(votedId) || 0) + 1);
+  });
+
+  voteCounts.forEach((count, playerId) => {
+    const player = room.players.find(p => p.id === playerId);
+    if (player) {
+      player.score += count;
+    }
+  });
+
+  const results = {
+    submissions: Array.from(room.submissions),
+    votes: Array.from(room.votes),
+    updatedPlayers: room.players
+  };
+  console.debug('Calculated results for room:', room.name, 'results:', JSON.stringify(results));
+  return results;
+}
+
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT} - v1.0 with bots, chat, and xAI Grok`);
+});
