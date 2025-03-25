@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const axios = require('axios'); // Add for API calls
 const { generateLetters } = require('./utils/gameLogic');
 const { addBotPlayers } = require('./utils/botLogic');
 
@@ -35,6 +36,22 @@ app.get('/', (req, res) => {
 });
 
 const rooms = new Map();
+
+// Mock LLM function (replace with real API call)
+async function callLLM(prompt) {
+  // Simulate LLM response for now
+  // Real implementation: axios.post('https://api.x.ai/v1/completions', { prompt, ... })
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      if (prompt.includes('Generate an acronym')) {
+        const letters = prompt.match(/[A-Z]/g).join('');
+        resolve(`${letters} means "${letters.split('').map(l => `${l}omething`).join(' ')}"`);
+      } else if (prompt.includes('Rate these acronyms')) {
+        resolve('I like the second one best!');
+      }
+    }, 500); // Fake delay
+  });
+}
 
 io.on('connection', (socket) => {
   console.debug('New client connected:', socket.id);
@@ -179,7 +196,7 @@ io.on('connection', (socket) => {
   });
 });
 
-function startGame(roomId) {
+async function startGame(roomId) {
   const room = rooms.get(roomId);
   console.debug('Starting game for room:', roomId, 'Current players:', room.players.length);
   while (room.players.length < 4) {
@@ -192,46 +209,71 @@ function startGame(roomId) {
     });
   }
   io.to(roomId).emit('playerUpdate', room.players);
-  startRound(roomId);
+  await startRound(roomId);
 }
 
-function startRound(roomId) {
+async function startRound(roomId) {
   const room = rooms.get(roomId);
   room.round++;
   const letters = generateLetters(room.round);
   console.debug('Starting round', room.round, 'for room:', roomId, 'letters:', letters);
-  
+
   room.submissions.clear();
   room.votes.clear();
-  
-  room.players.forEach(player => {
+
+  // Bot acronym generation with LLM
+  for (const player of room.players) {
     if (player.isBot) {
-      const botAcronym = letters.join('');
-      room.submissions.set(player.id, botAcronym);
-      console.debug('Bot', player.id, 'submitted:', botAcronym);
+      const prompt = `Generate an acronym using the letters ${letters.join(', ')}. Provide a creative phrase.`;
+      try {
+        const llmResponse = await callLLM(prompt);
+        const acronymMatch = llmResponse.match(/"([^"]+)"/); // Extract phrase from mock response
+        const acronym = acronymMatch ? acronymMatch[1] : letters.join(''); // Fallback to letters
+        room.submissions.set(player.id, acronym);
+        console.debug(`Bot ${player.name} submitted LLM acronym: ${acronym}`);
+      } catch (error) {
+        console.error(`LLM error for bot ${player.id}:`, error);
+        room.submissions.set(player.id, letters.join('')); // Fallback
+      }
     }
-  });
-  
+  }
+
   io.to(roomId).emit('newRound', { roundNum: room.round, letterSet: letters });
 }
 
-function simulateBotVotes(roomId) {
+async function simulateBotVotes(roomId) {
   const room = rooms.get(roomId);
   if (room) {
-    const submissionIds = Array.from(room.submissions.keys());
-    room.players.forEach(player => {
+    const submissionList = Array.from(room.submissions).map(([id, acronym]) => ({
+      id,
+      acronym,
+      playerName: room.players.find(p => p.id === id)?.name || id
+    }));
+
+    for (const player of room.players) {
       if (player.isBot && !room.votes.has(player.id)) {
-        const validVoteOptions = submissionIds.filter(id => id !== player.id);
-        if (validVoteOptions.length > 0) {
-          const randomVote = validVoteOptions[Math.floor(Math.random() * validVoteOptions.length)];
-          room.votes.set(player.id, randomVote);
-          console.debug('Bot', player.id, 'voted for:', randomVote);
+        const validOptions = submissionList.filter(s => s.id !== player.id);
+        if (validOptions.length > 0) {
+          const prompt = `Rate these acronyms for creativity and humor: ${validOptions.map((s, i) => `${i + 1}. ${s.acronym}`).join(', ')}. Which one do you like best?`;
+          try {
+            const llmResponse = await callLLM(prompt);
+            const choiceMatch = llmResponse.match(/second|first|third|[0-9]+/i); // Parse response
+            const choiceIndex = choiceMatch ? (parseInt(choiceMatch[0]) - 1) || 1 : 0; // Default to first if unclear
+            const votedId = validOptions[Math.min(choiceIndex, validOptions.length - 1)].id;
+            room.votes.set(player.id, votedId);
+            console.debug(`Bot ${player.name} voted for: ${validOptions[choiceIndex]?.acronym} by ${validOptions[choiceIndex]?.playerName}`);
+          } catch (error) {
+            console.error(`LLM voting error for bot ${player.id}:`, error);
+            const randomVote = validOptions[Math.floor(Math.random() * validOptions.length)].id;
+            room.votes.set(player.id, randomVote); // Fallback to random
+          }
         } else {
-          console.debug('Bot', player.id, 'found no valid vote options');
+          console.debug(`Bot ${player.name} found no valid vote options`);
         }
       }
-    });
+    }
     console.debug('After bot votes - Current votes:', room.votes.size, 'Players:', room.players.length);
+    checkAllVotes(roomId);
   }
 }
 
@@ -241,13 +283,13 @@ function checkAllVotes(roomId) {
     console.debug('All votes received for room:', roomId);
     const results = calculateResults(room);
     io.to(roomId).emit('roundResults', results);
-    
+
     if (room.round < 3) {
       room.submissions.clear();
       room.votes.clear();
       startRound(roomId);
     } else {
-      const winner = room.players.reduce((prev, curr) => 
+      const winner = room.players.reduce((prev, curr) =>
         prev.score > curr.score ? prev : curr
       );
       console.debug('Game ended, winner:', winner.id, 'with score:', winner.score);
@@ -280,5 +322,5 @@ function calculateResults(room) {
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} - v1.0 with bots and chat`);
+  console.log(`Server running on port ${PORT} - v1.0 with bots, chat, and LLM`);
 });
