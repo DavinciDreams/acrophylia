@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import io from 'socket.io-client';
 import Head from 'next/head';
@@ -19,7 +19,7 @@ const GameRoom = () => {
   const [players, setPlayers] = useState([]);
   const [roundNum, setRoundNum] = useState(0);
   const [letterSet, setLetterSet] = useState([]);
-  const [category, setCategory] = useState(''); // New state
+  const [category, setCategory] = useState('');
   const [acronym, setAcronym] = useState('');
   const [submissions, setSubmissions] = useState([]);
   const [gameState, setGameState] = useState('waiting');
@@ -37,6 +37,7 @@ const GameRoom = () => {
   const [chatInput, setChatInput] = useState('');
   const [timeLeft, setTimeLeft] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
+  const chatListRef = useRef(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -93,7 +94,7 @@ const GameRoom = () => {
       console.debug('New round started:', roundNum, letterSet, 'timeLeft:', initialTime, 'category:', category);
       setRoundNum(roundNum);
       setLetterSet(letterSet);
-      setCategory(category); // Set category
+      setCategory(category);
       setGameState('submitting');
       setSubmissions([]);
       setHasVoted(false);
@@ -159,6 +160,12 @@ const GameRoom = () => {
       socket.off('chatMessage');
     };
   }, [urlRoomId, router, creatorId]);
+
+  useEffect(() => {
+    if (chatListRef.current) {
+      chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
 
   useEffect(() => {
     if (gameState === 'voting' && hasVoted) {
@@ -232,7 +239,7 @@ const GameRoom = () => {
       setWinner(null);
       setTimeLeft(null);
       setGameStarted(false);
-      setCategory(''); // Reset category
+      setCategory('');
     }
   };
 
@@ -259,12 +266,39 @@ const GameRoom = () => {
     <>
       <Head>
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+        <style>{`
+          @media (max-width: 480px) {
+            .container { padding: 0.5rem; }
+            .title { font-size: 1.5rem; }
+            .subtitle { font-size: 1.25rem; }
+            .input { padding: 0.5rem; }
+            .button { padding: 0.5rem 1rem; max-width: 150px; }
+          }
+          @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+          }
+        `}</style>
       </Head>
       <div style={styles.container}>
         {roomId ? (
           <>
-            {!isConnected && <p style={styles.warning}>Reconnecting to server...</p>}
-            <h2 style={styles.title}>Room: {roomId}</h2>
+            <header style={styles.header}>
+              <h2 style={styles.title}>Room: {roomId}</h2>
+              <div style={styles.statusContainer}>
+                {!isConnected && <span style={styles.warning}>Reconnecting...</span>}
+                <span
+                  style={{
+                    ...styles.gameStatus,
+                    color: gameState === 'waiting' ? '#FF9800' : gameState === 'submitting' ? '#4CAF50' : '#1976D6',
+                  }}
+                >
+                  {gameState.charAt(0).toUpperCase() + gameState.slice(1)}
+                </span>
+              </div>
+            </header>
+
             {!gameStarted && (
               <div style={styles.invite}>
                 <input style={styles.input} type="text" value={inviteLink} readOnly />
@@ -292,7 +326,15 @@ const GameRoom = () => {
             <h3 style={styles.subtitle}>Players ({players.length}):</h3>
             <ul style={styles.playerList}>
               {players.map((player) => (
-                <li key={player.id} style={styles.playerItem}>
+                <li
+                  key={player.id}
+                  style={{
+                    ...styles.playerItem,
+                    backgroundColor: player.id === socket.id ? '#E3F2FD' : '#FFFFFF',
+                    fontStyle: player.isBot ? 'italic' : 'normal',
+                    borderLeft: player.id === (isCreator ? socket.id : players[0]?.id) ? '4px solid #1976D6' : 'none',
+                  }}
+                >
                   {player.name || (player.isBot ? player.name : player.id)} - Score: {player.score}
                 </li>
               ))}
@@ -311,9 +353,16 @@ const GameRoom = () => {
             {gameState === 'submitting' && (
               <div style={styles.section}>
                 <h3 style={styles.subtitle}>
-                  Round {roundNum} of 5 - Category: {category} - Letters: {letterSet.join(', ')}
+                  Round {roundNum} of 5 - Category: <span style={styles.category}>{category}</span> - Letters:{' '}
+                  {letterSet.join(', ')}
                 </h3>
-                <p style={{ ...styles.timer, color: timeLeft <= 10 ? '#D32F2F' : '#757575' }}>
+                <p
+                  style={{
+                    ...styles.timer,
+                    color: timeLeft <= 10 ? '#D32F2F' : '#757575',
+                    animation: timeLeft <= 10 ? 'pulse 1s infinite' : 'none',
+                  }}
+                >
                   Time Left: {timeLeft !== null ? `${timeLeft}s` : 'Waiting...'}
                 </p>
                 <input
@@ -359,7 +408,8 @@ const GameRoom = () => {
                     const player = players.find(p => p.id === playerId);
                     return (
                       <li key={playerId} style={styles.submissionItem}>
-                        {acronym || '(No submission)'} by {player?.name || (player?.isBot ? player.name : playerId)} - Votes: {voteCount}
+                        {acronym || '(No submission)'} by{' '}
+                        {player?.name || (player?.isBot ? player.name : playerId)} - Votes: {voteCount}
                       </li>
                     );
                   })}
@@ -370,7 +420,9 @@ const GameRoom = () => {
             {gameState === 'ended' && winner && (
               <div style={styles.section}>
                 <h3 style={styles.subtitle}>Game Over!</h3>
-                <p>Winner: {winner.name || winner.id} with {winner.score} points</p>
+                <p>
+                  Winner: {winner.name || winner.id} with {winner.score} points
+                </p>
                 {isCreator && (
                   <button style={styles.button} onClick={resetGame}>
                     Reset Game
@@ -386,10 +438,13 @@ const GameRoom = () => {
             {gameStarted && (
               <div style={styles.chatContainer}>
                 <h3 style={styles.subtitle}>Chat</h3>
-                <ul style={styles.chatList}>
+                <ul style={styles.chatList} ref={chatListRef}>
                   {chatMessages.map((msg, index) => (
                     <li key={index} style={styles.chatItem}>
-                      <strong>{msg.senderName}:</strong> {msg.message}
+                      <strong style={{ color: msg.senderId === socket.id ? '#1976D6' : '#757575' }}>
+                        {msg.senderName}:
+                      </strong>{' '}
+                      {msg.message}
                     </li>
                   ))}
                 </ul>
@@ -419,7 +474,7 @@ const GameRoom = () => {
 
 const styles = {
   container: {
-    padding: '1.5rem',
+    padding: '1rem',
     backgroundColor: '#FFFFFF',
     minHeight: '100vh',
     fontFamily: "'Roboto', sans-serif",
@@ -430,17 +485,43 @@ const styles = {
     maxWidth: '480px',
     margin: '0 auto',
     color: '#212121',
+    gap: '1rem',
+    fontSize: 'calc(14px + 0.5vw)',
+  },
+  header: {
+    position: 'sticky',
+    top: 0,
+    backgroundColor: '#F5F5F5',
+    padding: '1rem',
+    width: '100%',
+    maxWidth: '480px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    zIndex: 10,
+  },
+  statusContainer: {
+    display: 'flex',
+    gap: '0.5rem',
+    alignItems: 'center',
+  },
+  gameStatus: {
+    fontSize: '0.9rem',
+    fontWeight: '500',
+    padding: '0.25rem 0.5rem',
+    borderRadius: '12px',
+    backgroundColor: '#E0E0E0',
   },
   warning: {
     color: '#D32F2F',
-    marginBottom: '1rem',
-    fontSize: '1rem',
+    fontSize: '0.9rem',
     fontWeight: '500',
   },
   title: {
     fontSize: '1.75rem',
     color: '#1976D6',
-    marginBottom: '1.25rem',
+    margin: 0,
     fontWeight: '500',
   },
   subtitle: {
@@ -448,6 +529,10 @@ const styles = {
     color: '#212121',
     marginBottom: '1rem',
     fontWeight: '500',
+  },
+  category: {
+    fontWeight: '700',
+    color: '#F57C00',
   },
   timer: {
     fontSize: '1rem',
@@ -457,7 +542,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
-    marginBottom: '1.5rem',
+    marginBottom: '1rem',
     width: '100%',
   },
   input: {
@@ -471,13 +556,9 @@ const styles = {
     color: '#212121',
     boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
     transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-    ':focus': {
-      borderColor: '#1976D6',
-      boxShadow: '0 1px 4px rgba(25, 118, 210, 0.5)',
-    },
   },
   button: {
-    padding: '0.75rem',
+    padding: '0.75rem 1.5rem',
     fontSize: '1rem',
     backgroundColor: '#1976D6',
     color: '#FFFFFF',
@@ -485,43 +566,25 @@ const styles = {
     borderRadius: '4px',
     cursor: 'pointer',
     width: '100%',
-    maxWidth: '200px',
-    margin: '0 auto',
+    maxWidth: '180px',
+    margin: '0.5rem auto',
     fontWeight: '500',
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
-    ':hover': {
-      backgroundColor: '#1565C0',
-      boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-    },
-    ':disabled': {
-      backgroundColor: '#B0BEC5',
-      boxShadow: 'none',
-      cursor: 'not-allowed',
-    },
+    transition: 'background-color 0.2s ease, transform 0.1s ease',
   },
   voteButton: {
     padding: '0.5rem 1rem',
     fontSize: '0.9rem',
-    backgroundColor: '#1976D6',
+    backgroundColor: '#4CAF50',
     color: '#FFFFFF',
     border: 'none',
     borderRadius: '4px',
     cursor: 'pointer',
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
-    ':hover': {
-      backgroundColor: '#1565C0',
-      boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-    },
-    ':disabled': {
-      backgroundColor: '#B0BEC5',
-      boxShadow: 'none',
-      cursor: 'not-allowed',
-    },
+    transition: 'background-color 0.2s ease, transform 0.1s ease',
   },
   leaveButton: {
-    padding: '0.75rem',
+    padding: '0.75rem 1.5rem',
     fontSize: '1rem',
     backgroundColor: '#D32F2F',
     color: '#FFFFFF',
@@ -529,34 +592,26 @@ const styles = {
     borderRadius: '4px',
     cursor: 'pointer',
     width: '100%',
-    maxWidth: '200px',
+    maxWidth: '180px',
     margin: '2rem auto 0',
     fontWeight: '500',
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
-    ':hover': {
-      backgroundColor: '#C62828',
-      boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-    },
+    transition: 'background-color 0.2s ease, transform 0.1s ease',
   },
   playerList: {
     listStyle: 'none',
     padding: 0,
-    marginBottom: '1.5rem',
+    marginBottom: '1rem',
     width: '100%',
   },
   playerItem: {
     padding: '0.75rem',
-    backgroundColor: '#FFFFFF',
     marginBottom: '0.75rem',
     borderRadius: '4px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
     textAlign: 'center',
     color: '#212121',
     transition: 'box-shadow 0.2s ease',
-    ':hover': {
-      boxShadow: '0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)',
-    },
   },
   submissionList: {
     listStyle: 'none',
@@ -577,12 +632,9 @@ const styles = {
     boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
     color: '#212121',
     transition: 'box-shadow 0.2s ease',
-    ':hover': {
-      boxShadow: '0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)',
-    },
   },
   section: {
-    marginBottom: '1.5rem',
+    marginBottom: '1rem',
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
@@ -591,6 +643,7 @@ const styles = {
     padding: '1rem',
     borderRadius: '8px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+    borderTop: '1px solid #E0E0E0',
   },
   note: {
     color: '#757575',
@@ -604,7 +657,7 @@ const styles = {
     color: '#212121',
   },
   chatContainer: {
-    marginTop: '2rem',
+    marginTop: '1rem',
     width: '100%',
     backgroundColor: '#FFFFFF',
     padding: '1rem',
@@ -613,15 +666,16 @@ const styles = {
   },
   chatList: {
     listStyle: 'none',
-    padding: 0,
+    padding: '0.5rem',
     maxHeight: '200px',
     overflowY: 'auto',
     marginBottom: '1rem',
     width: '100%',
+    backgroundColor: '#FAFAFA',
+    borderRadius: '4px',
   },
   chatItem: {
     padding: '0.5rem',
-    backgroundColor: '#FAFAFA',
     marginBottom: '0.5rem',
     borderRadius: '4px',
     textAlign: 'left',
