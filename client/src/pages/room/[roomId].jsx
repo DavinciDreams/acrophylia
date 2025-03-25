@@ -34,7 +34,7 @@ const GameRoom = () => {
   const [nameSet, setNameSet] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
-  const [timeLeft, setTimeLeft] = useState(null); // New state for countdown
+  const [timeLeft, setTimeLeft] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -102,7 +102,7 @@ const GameRoom = () => {
       console.debug('Submissions received:', submissionList);
       setSubmissions(submissionList);
       setGameState('voting');
-      setTimeLeft(null); // Clear timer display
+      setTimeLeft(null);
     });
 
     socket.on('votingStart', () => {
@@ -300,7 +300,9 @@ const GameRoom = () => {
                 <h3 style={styles.subtitle}>
                   Round {roundNum} of 5 - Letters: {letterSet.join(', ')}
                 </h3>
-                <p style={styles.timer}>Time Left: {timeLeft !== null ? `${timeLeft}s` : 'Waiting...'}</p>
+                <p style={{ ...styles.timer, color: timeLeft <= 10 ? '#D32F2F' : '#757575' }}>
+                  Time Left: {timeLeft !== null ? `${timeLeft}s` : 'Waiting...'}
+                </p>
                 <input
                   style={styles.input}
                   type="text"
@@ -434,7 +436,6 @@ const styles = {
   },
   timer: {
     fontSize: '1rem',
-    color: timeLeft <= 10 ? '#D32F2F' : '#757575', // Red when 10s or less
     marginBottom: '0.75rem',
   },
   invite: {
