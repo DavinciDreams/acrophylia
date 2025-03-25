@@ -288,7 +288,7 @@ const GameRoom = () => {
 
             {gameState === 'submitting' && (
               <div style={styles.section}>
-                <h3 style={styles.subtitle}>Round {roundNum} - Letters: {letterSet.join(', ')}</h3>
+              <h3 style={styles.subtitle}>Round {roundNum} of 5 - Letters: {letterSet.join(', ')}</h3>
                 <input
                   style={styles.input}
                   type="text"
