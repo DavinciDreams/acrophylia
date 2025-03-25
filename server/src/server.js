@@ -2,9 +2,11 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const axios = require('axios'); // Add for API calls
+const { OpenAI } = require('openai'); // Add OpenAI SDK
 const { generateLetters } = require('./utils/gameLogic');
 const { addBotPlayers } = require('./utils/botLogic');
+
+require('dotenv').config(); // Load .env variables
 
 const app = express();
 const server = http.createServer(app);
@@ -37,20 +39,28 @@ app.get('/', (req, res) => {
 
 const rooms = new Map();
 
-// Mock LLM function (replace with real API call)
+// Initialize xAI Grok client
+const grokClient = new OpenAI({
+  apiKey: process.env.XAI_API_KEY,
+  baseURL: 'https://api.x.ai/v1', // xAI API endpoint
+});
+
 async function callLLM(prompt) {
-  // Simulate LLM response for now
-  // Real implementation: axios.post('https://api.x.ai/v1/completions', { prompt, ... })
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      if (prompt.includes('Generate an acronym')) {
-        const letters = prompt.match(/[A-Z]/g).join('');
-        resolve(`${letters} means "${letters.split('').map(l => `${l}omething`).join(' ')}"`);
-      } else if (prompt.includes('Rate these acronyms')) {
-        resolve('I like the second one best!');
-      }
-    }, 500); // Fake delay
-  });
+  try {
+    const response = await grokClient.chat.completions.create({
+      model: 'grok-beta', // Adjust to your available model (e.g., grok-2 if accessible)
+      messages: [
+        { role: 'system', content: 'You are a creative assistant helping generate acronyms or rate them.' },
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: 100,
+      temperature: 0.7,
+    });
+    return response.choices[0].message.content.trim();
+  } catch (error) {
+    console.error('xAI API error:', error.message);
+    throw error;
+  }
 }
 
 io.on('connection', (socket) => {
@@ -216,111 +226,4 @@ async function startRound(roomId) {
   const room = rooms.get(roomId);
   room.round++;
   const letters = generateLetters(room.round);
-  console.debug('Starting round', room.round, 'for room:', roomId, 'letters:', letters);
-
-  room.submissions.clear();
-  room.votes.clear();
-
-  // Bot acronym generation with LLM
-  for (const player of room.players) {
-    if (player.isBot) {
-      const prompt = `Generate an acronym using the letters ${letters.join(', ')}. Provide a creative phrase.`;
-      try {
-        const llmResponse = await callLLM(prompt);
-        const acronymMatch = llmResponse.match(/"([^"]+)"/); // Extract phrase from mock response
-        const acronym = acronymMatch ? acronymMatch[1] : letters.join(''); // Fallback to letters
-        room.submissions.set(player.id, acronym);
-        console.debug(`Bot ${player.name} submitted LLM acronym: ${acronym}`);
-      } catch (error) {
-        console.error(`LLM error for bot ${player.id}:`, error);
-        room.submissions.set(player.id, letters.join('')); // Fallback
-      }
-    }
-  }
-
-  io.to(roomId).emit('newRound', { roundNum: room.round, letterSet: letters });
-}
-
-async function simulateBotVotes(roomId) {
-  const room = rooms.get(roomId);
-  if (room) {
-    const submissionList = Array.from(room.submissions).map(([id, acronym]) => ({
-      id,
-      acronym,
-      playerName: room.players.find(p => p.id === id)?.name || id
-    }));
-
-    for (const player of room.players) {
-      if (player.isBot && !room.votes.has(player.id)) {
-        const validOptions = submissionList.filter(s => s.id !== player.id);
-        if (validOptions.length > 0) {
-          const prompt = `Rate these acronyms for creativity and humor: ${validOptions.map((s, i) => `${i + 1}. ${s.acronym}`).join(', ')}. Which one do you like best?`;
-          try {
-            const llmResponse = await callLLM(prompt);
-            const choiceMatch = llmResponse.match(/second|first|third|[0-9]+/i); // Parse response
-            const choiceIndex = choiceMatch ? (parseInt(choiceMatch[0]) - 1) || 1 : 0; // Default to first if unclear
-            const votedId = validOptions[Math.min(choiceIndex, validOptions.length - 1)].id;
-            room.votes.set(player.id, votedId);
-            console.debug(`Bot ${player.name} voted for: ${validOptions[choiceIndex]?.acronym} by ${validOptions[choiceIndex]?.playerName}`);
-          } catch (error) {
-            console.error(`LLM voting error for bot ${player.id}:`, error);
-            const randomVote = validOptions[Math.floor(Math.random() * validOptions.length)].id;
-            room.votes.set(player.id, randomVote); // Fallback to random
-          }
-        } else {
-          console.debug(`Bot ${player.name} found no valid vote options`);
-        }
-      }
-    }
-    console.debug('After bot votes - Current votes:', room.votes.size, 'Players:', room.players.length);
-    checkAllVotes(roomId);
-  }
-}
-
-function checkAllVotes(roomId) {
-  const room = rooms.get(roomId);
-  if (room && room.votes.size === room.players.length) {
-    console.debug('All votes received for room:', roomId);
-    const results = calculateResults(room);
-    io.to(roomId).emit('roundResults', results);
-
-    if (room.round < 3) {
-      room.submissions.clear();
-      room.votes.clear();
-      startRound(roomId);
-    } else {
-      const winner = room.players.reduce((prev, curr) =>
-        prev.score > curr.score ? prev : curr
-      );
-      console.debug('Game ended, winner:', winner.id, 'with score:', winner.score);
-      io.to(roomId).emit('gameEnd', { winner });
-    }
-  }
-}
-
-function calculateResults(room) {
-  const voteCounts = new Map();
-  room.votes.forEach((votedId) => {
-    voteCounts.set(votedId, (voteCounts.get(votedId) || 0) + 1);
-  });
-
-  voteCounts.forEach((count, playerId) => {
-    const player = room.players.find(p => p.id === playerId);
-    if (player) {
-      player.score += count;
-    }
-  });
-
-  const results = {
-    submissions: Array.from(room.submissions),
-    votes: Array.from(room.votes),
-    updatedPlayers: room.players
-  };
-  console.debug('Calculated results for room:', room.name, 'results:', JSON.stringify(results));
-  return results;
-}
-
-const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} - v1.0 with bots, chat, and LLM`);
-});
+  console.debug('Starting
