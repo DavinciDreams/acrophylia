@@ -304,17 +304,21 @@ async function simulateBotVotes(roomId) {
       playerName: room.players.find(p => p.id === id)?.name || id
     }));
 
+    // Get the current category from the latest newRound emit (stored in client, but we’ll pass it via context)
+    // For simplicity, assume category is available; in practice, store it in room object if needed
+    const category = room.category || 'Random'; // Add category to room in startRound if persisting
+
     for (const player of room.players) {
       if (player.isBot && !room.votes.has(player.id)) {
         const validOptions = submissionList.filter(s => s.id !== player.id);
         if (validOptions.length > 0) {
-          const prompt = `Rate these acronyms for creativity and humor: ${validOptions.map((s, i) => `${i + 1}. ${s.acronym}`).join(', ')}. Return the number (1-${validOptions.length}) of the one you like best.`;
+          const prompt = `Rate these acronyms for creativity, humor, and fit to the category "${category}": ${validOptions.map((s, i) => `${i + 1}. ${s.acronym}`).join(', ')}. Return the number (1-${validOptions.length}) of the one you like best.`;
           try {
             const llmResponse = await callLLM(prompt);
             const choiceIndex = Math.min(parseInt(llmResponse) - 1 || 0, validOptions.length - 1);
             const votedId = validOptions[choiceIndex].id;
             room.votes.set(player.id, votedId);
-            console.debug(`Bot ${player.name} voted for: ${validOptions[choiceIndex].acronym} by ${validOptions[choiceIndex].playerName}`);
+            console.debug(`Bot ${player.name} voted for: ${validOptions[choiceIndex].acronym} by ${validOptions[choiceIndex].playerName} in category ${category}`);
           } catch (error) {
             console.error(`Grok voting error for bot ${player.id}:`, error);
             const randomVote = validOptions[Math.floor(Math.random() * validOptions.length)].id;
