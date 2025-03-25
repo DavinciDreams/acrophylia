@@ -23,7 +23,7 @@ const GameRoom = () => {
   const [submissions, setSubmissions] = useState([]);
   const [gameState, setGameState] = useState('waiting');
   const [hasVoted, setHasVoted] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState(false); // New state for submission
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [results, setResults] = useState(null);
   const [winner, setWinner] = useState(null);
   const [isCreator, setIsCreator] = useState(false);
@@ -34,6 +34,7 @@ const GameRoom = () => {
   const [nameSet, setNameSet] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
+  const [timeLeft, setTimeLeft] = useState(null); // New state for countdown
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -81,21 +82,27 @@ const GameRoom = () => {
       if (currentPlayer && currentPlayer.name) setNameSet(true);
     });
 
-    socket.on('newRound', ({ roundNum, letterSet }) => {
-      console.debug('New round started:', roundNum, letterSet);
+    socket.on('newRound', ({ roundNum, letterSet, timeLeft: initialTime }) => {
+      console.debug('New round started:', roundNum, letterSet, 'timeLeft:', initialTime);
       setRoundNum(roundNum);
       setLetterSet(letterSet);
       setGameState('submitting');
       setSubmissions([]);
       setHasVoted(false);
-      setHasSubmitted(false); // Reset submission state
+      setHasSubmitted(false);
       setResults(null);
+      setTimeLeft(initialTime);
+    });
+
+    socket.on('timeUpdate', ({ timeLeft }) => {
+      setTimeLeft(timeLeft);
     });
 
     socket.on('submissionsReceived', (submissionList) => {
       console.debug('Submissions received:', submissionList);
       setSubmissions(submissionList);
       setGameState('voting');
+      setTimeLeft(null); // Clear timer display
     });
 
     socket.on('votingStart', () => {
@@ -135,6 +142,7 @@ const GameRoom = () => {
       socket.off('roomNotFound');
       socket.off('playerUpdate');
       socket.off('newRound');
+      socket.off('timeUpdate');
       socket.off('submissionsReceived');
       socket.off('votingStart');
       socket.off('roundResults');
@@ -179,7 +187,7 @@ const GameRoom = () => {
     if (acronym && roomId && !hasSubmitted) {
       console.debug('Submitting acronym:', acronym);
       socket.emit('submitAcronym', { roomId, acronym });
-      setHasSubmitted(true); // Disable submit button
+      setHasSubmitted(true);
       setAcronym('');
     }
   };
@@ -213,6 +221,7 @@ const GameRoom = () => {
       setHasSubmitted(false);
       setResults(null);
       setWinner(null);
+      setTimeLeft(null);
     }
   };
 
@@ -288,15 +297,19 @@ const GameRoom = () => {
 
             {gameState === 'submitting' && (
               <div style={styles.section}>
-              <h3 style={styles.subtitle}>Round {roundNum} of 5 - Letters: {letterSet.join(', ')}</h3>
+                <h3 style={styles.subtitle}>
+                  Round {roundNum} of 5 - Letters: {letterSet.join(', ')}
+                </h3>
+                <p style={styles.timer}>Time Left: {timeLeft !== null ? `${timeLeft}s` : 'Waiting...'}</p>
                 <input
                   style={styles.input}
                   type="text"
                   value={acronym}
-                  onChange={(e) => setAcronym(e.target.value)} // Removed toUpperCase
+                  onChange={(e) => setAcronym(e.target.value)}
                   placeholder="Enter acronym"
+                  disabled={hasSubmitted || timeLeft === 0}
                 />
-                <button style={styles.button} onClick={submitAcronym} disabled={hasSubmitted}>
+                <button style={styles.button} onClick={submitAcronym} disabled={hasSubmitted || timeLeft === 0}>
                   Submit
                 </button>
               </div>
@@ -308,11 +321,11 @@ const GameRoom = () => {
                 <ul style={styles.submissionList}>
                   {submissions.map(([playerId, acronym]) => (
                     <li key={playerId} style={styles.submissionItem}>
-                      {acronym} -{' '}
+                      {acronym || '(No submission)'} -{' '}
                       <button
                         style={styles.voteButton}
                         onClick={() => submitVote(playerId)}
-                        disabled={hasVoted || playerId === socket.id} // Gray out after vote or if own submission
+                        disabled={hasVoted || playerId === socket.id}
                       >
                         Vote
                       </button>
@@ -331,7 +344,7 @@ const GameRoom = () => {
                     const player = players.find(p => p.id === playerId);
                     return (
                       <li key={playerId} style={styles.submissionItem}>
-                        {acronym} by {player?.name || (player?.isBot ? player.name : playerId)} - Votes: {voteCount}
+                        {acronym || '(No submission)'} by {player?.name || (player?.isBot ? player.name : playerId)} - Votes: {voteCount}
                       </li>
                     );
                   })}
@@ -418,6 +431,11 @@ const styles = {
     color: '#212121',
     marginBottom: '1rem',
     fontWeight: '500',
+  },
+  timer: {
+    fontSize: '1rem',
+    color: timeLeft <= 10 ? '#D32F2F' : '#757575', // Red when 10s or less
+    marginBottom: '0.75rem',
   },
   invite: {
     display: 'flex',
