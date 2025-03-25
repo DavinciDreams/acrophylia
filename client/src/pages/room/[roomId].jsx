@@ -35,7 +35,7 @@ const GameRoom = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [timeLeft, setTimeLeft] = useState(null);
-  const [gameStarted, setGameStarted] = useState(false); // New state
+  const [gameStarted, setGameStarted] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -229,7 +229,7 @@ const GameRoom = () => {
       setResults(null);
       setWinner(null);
       setTimeLeft(null);
-      setGameStarted(false); // Reset gameStarted
+      setGameStarted(false);
     }
   };
 
@@ -262,12 +262,14 @@ const GameRoom = () => {
           <>
             {!isConnected && <p style={styles.warning}>Reconnecting to server...</p>}
             <h2 style={styles.title}>Room: {roomId}</h2>
-            <div style={styles.invite}>
-              <input style={styles.input} type="text" value={inviteLink} readOnly />
-              <button style={styles.button} onClick={() => navigator.clipboard.writeText(inviteLink)}>
-                Copy Link
-              </button>
-            </div>
+            {!gameStarted && (
+              <div style={styles.invite}>
+                <input style={styles.input} type="text" value={inviteLink} readOnly />
+                <button style={styles.button} onClick={() => navigator.clipboard.writeText(inviteLink)}>
+                  Copy Link
+                </button>
+              </div>
+            )}
 
             {!nameSet && gameState === 'waiting' && (
               <div style={styles.section}>
