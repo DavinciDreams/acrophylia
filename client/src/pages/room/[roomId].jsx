@@ -222,9 +222,7 @@ const GameRoom = () => {
 
   const sendChatMessage = () => {
     if (chatInput.trim() && roomId) {
-      const senderName = players.find(p => p.id === socket.id)?.name || socket.id;
       socket.emit('sendMessage', { roomId, message: chatInput });
-      setChatMessages((prev) => [...prev, { senderId: socket.id, senderName, message: chatInput }]);
       setChatInput('');
     }
   };
@@ -315,7 +313,7 @@ const GameRoom = () => {
                     </li>
                   ))}
                 </ul>
-            </div>
+              </div>
             )}
 
             {gameState === 'results' && results && (
