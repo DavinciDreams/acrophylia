@@ -35,6 +35,7 @@ const GameRoom = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [timeLeft, setTimeLeft] = useState(null);
+  const [gameStarted, setGameStarted] = useState(false); // New state
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -80,6 +81,11 @@ const GameRoom = () => {
       setPlayers(updatedPlayers);
       const currentPlayer = updatedPlayers.find(p => p.id === socket.id);
       if (currentPlayer && currentPlayer.name) setNameSet(true);
+    });
+
+    socket.on('gameStarted', () => {
+      console.debug('Game has started');
+      setGameStarted(true);
     });
 
     socket.on('newRound', ({ roundNum, letterSet, timeLeft: initialTime }) => {
@@ -141,6 +147,7 @@ const GameRoom = () => {
       socket.off('roomJoined');
       socket.off('roomNotFound');
       socket.off('playerUpdate');
+      socket.off('gameStarted');
       socket.off('newRound');
       socket.off('timeUpdate');
       socket.off('submissionsReceived');
@@ -222,6 +229,7 @@ const GameRoom = () => {
       setResults(null);
       setWinner(null);
       setTimeLeft(null);
+      setGameStarted(false); // Reset gameStarted
     }
   };
 
@@ -370,29 +378,31 @@ const GameRoom = () => {
               Leave Room
             </button>
 
-            <div style={styles.chatContainer}>
-              <h3 style={styles.subtitle}>Chat</h3>
-              <ul style={styles.chatList}>
-                {chatMessages.map((msg, index) => (
-                  <li key={index} style={styles.chatItem}>
-                    <strong>{msg.senderName}:</strong> {msg.message}
-                  </li>
-                ))}
-              </ul>
-              <div style={styles.chatInputContainer}>
-                <input
-                  style={styles.input}
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Type a message..."
-                  maxLength={100}
-                />
-                <button style={styles.button} onClick={sendChatMessage}>
-                  Send
-                </button>
+            {gameStarted && (
+              <div style={styles.chatContainer}>
+                <h3 style={styles.subtitle}>Chat</h3>
+                <ul style={styles.chatList}>
+                  {chatMessages.map((msg, index) => (
+                    <li key={index} style={styles.chatItem}>
+                      <strong>{msg.senderName}:</strong> {msg.message}
+                    </li>
+                  ))}
+                </ul>
+                <div style={styles.chatInputContainer}>
+                  <input
+                    style={styles.input}
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Type a message..."
+                    maxLength={100}
+                  />
+                  <button style={styles.button} onClick={sendChatMessage}>
+                    Send
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </>
         ) : (
           <p style={styles.loading}>Loading room...</p>
