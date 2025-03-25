@@ -74,7 +74,8 @@ io.on('connection', (socket) => {
       round: 0,
       submissions: new Map(),
       votes: new Map(),
-      started: false
+      started: false,
+      timer: null // Add timer reference
     });
     socket.join(roomId);
     socket.emit('roomCreated', roomId);
@@ -130,6 +131,7 @@ io.on('connection', (socket) => {
   socket.on('resetGame', (roomId) => {
     const room = rooms.get(roomId);
     if (room && socket.id === room.creatorId) {
+      if (room.timer) clearInterval(room.timer);
       room.round = 0;
       room.submissions.clear();
       room.votes.clear();
@@ -147,6 +149,7 @@ io.on('connection', (socket) => {
       room.submissions.set(socket.id, acronym);
       console.debug('Current submissions:', room.submissions.size, 'Players:', room.players.length);
       if (room.submissions.size === room.players.length) {
+        if (room.timer) clearInterval(room.timer);
         console.debug('All submissions received for room:', roomId);
         io.to(roomId).emit('submissionsReceived', Array.from(room.submissions));
         io.to(roomId).emit('votingStart');
@@ -198,6 +201,7 @@ io.on('connection', (socket) => {
         room.players.splice(playerIndex, 1);
         io.to(roomId).emit('playerUpdate', room.players);
         if (room.players.length === 0) {
+          if (room.timer) clearInterval(room.timer);
           rooms.delete(roomId);
         }
       }
@@ -230,6 +234,13 @@ async function startRound(roomId) {
   room.submissions.clear();
   room.votes.clear();
 
+  // Set timer based on letter count
+  const letterCount = letters.length;
+  const timeLimit = letterCount <= 4 ? 30 : letterCount <= 6 ? 60 : 90; // 30s, 60s, 90s
+  let timeLeft = timeLimit;
+
+  io.to(roomId).emit('newRound', { roundNum: room.round, letterSet: letters, timeLeft });
+
   for (const player of room.players) {
     if (player.isBot) {
       const prompt = `Generate a creative acronym phrase using the letters ${letters.join(', ')}. Return only the phrase, no explanation.`;
@@ -244,7 +255,33 @@ async function startRound(roomId) {
     }
   }
 
-  io.to(roomId).emit('newRound', { roundNum: room.round, letterSet: letters });
+  // Start countdown
+  room.timer = setInterval(() => {
+    timeLeft--;
+    io.to(roomId).emit('timeUpdate', { timeLeft });
+    if (timeLeft <= 0) {
+      clearInterval(room.timer);
+      room.timer = null;
+      // Auto-submit blank for non-submitters
+      for (const player of room.players) {
+        if (!room.submissions.has(player.id)) {
+          room.submissions.set(player.id, '');
+          console.debug(`Auto-submitted blank for ${player.name || player.id} in room ${roomId}`);
+        }
+      }
+      console.debug('Time up! All submissions received for room:', roomId);
+      io.to(roomId).emit('submissionsReceived', Array.from(room.submissions));
+      io.to(roomId).emit('votingStart');
+      simulateBotVotes(roomId);
+    } else if (room.submissions.size === room.players.length) {
+      clearInterval(room.timer);
+      room.timer = null;
+      console.debug('All submissions received early for room:', roomId);
+      io.to(roomId).emit('submissionsReceived', Array.from(room.submissions));
+      io.to(roomId).emit('votingStart');
+      simulateBotVotes(roomId);
+    }
+  }, 1000);
 }
 
 async function simulateBotVotes(roomId) {
@@ -289,7 +326,7 @@ function checkAllVotes(roomId) {
     const results = calculateResults(room);
     io.to(roomId).emit('roundResults', results);
 
-    if (room.round < 5) { // Changed from 3 to 5
+    if (room.round < 5) {
       room.submissions.clear();
       room.votes.clear();
       startRound(roomId);
