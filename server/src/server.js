@@ -2,11 +2,11 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const { OpenAI } = require('openai'); // Add OpenAI SDK
+const { OpenAI } = require('openai');
 const { generateLetters } = require('./utils/gameLogic');
 const { addBotPlayers } = require('./utils/botLogic');
 
-require('dotenv').config(); // Load .env variables
+require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
@@ -39,18 +39,17 @@ app.get('/', (req, res) => {
 
 const rooms = new Map();
 
-// Initialize xAI Grok client
 const grokClient = new OpenAI({
   apiKey: process.env.XAI_API_KEY,
-  baseURL: 'https://api.x.ai/v1', // xAI API endpoint
+  baseURL: 'https://api.x.ai/v1',
 });
 
 async function callLLM(prompt) {
   try {
     const response = await grokClient.chat.completions.create({
-      model: 'grok-beta', // Adjust to your available model (e.g., grok-2 if accessible)
+      model: 'grok-beta',
       messages: [
-        { role: 'system', content: 'You are a playing a game generating acronyms or rating them.' },
+        { role: 'system', content: 'You are a creative assistant helping generate acronyms or rate them.' },
         { role: 'user', content: prompt }
       ],
       max_tokens: 100,
@@ -231,7 +230,6 @@ async function startRound(roomId) {
   room.submissions.clear();
   room.votes.clear();
 
-  // Bot acronym generation with xAI Grok
   for (const player of room.players) {
     if (player.isBot) {
       const prompt = `Generate a creative acronym phrase using the letters ${letters.join(', ')}. Return only the phrase, no explanation.`;
@@ -241,7 +239,7 @@ async function startRound(roomId) {
         console.debug(`Bot ${player.name} submitted Grok acronym: ${acronym}`);
       } catch (error) {
         console.error(`Grok error for bot ${player.id}:`, error);
-        room.submissions.set(player.id, letters.join('')); // Fallback
+        room.submissions.set(player.id, letters.join(''));
       }
     }
   }
@@ -272,7 +270,7 @@ async function simulateBotVotes(roomId) {
           } catch (error) {
             console.error(`Grok voting error for bot ${player.id}:`, error);
             const randomVote = validOptions[Math.floor(Math.random() * validOptions.length)].id;
-            room.votes.set(player.id, randomVote); // Fallback to random
+            room.votes.set(player.id, randomVote);
           }
         } else {
           console.debug(`Bot ${player.name} found no valid vote options`);
@@ -291,7 +289,7 @@ function checkAllVotes(roomId) {
     const results = calculateResults(room);
     io.to(roomId).emit('roundResults', results);
 
-    if (room.round < 3) {
+    if (room.round < 5) { // Changed from 3 to 5
       room.submissions.clear();
       room.votes.clear();
       startRound(roomId);
