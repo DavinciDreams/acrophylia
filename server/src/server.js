@@ -49,7 +49,7 @@ async function callLLM(prompt) {
     const response = await grokClient.chat.completions.create({
       model: 'grok-beta',
       messages: [
-        { role: 'system', content: 'You are playing a word game where you generate acronyms and then vote for the funniest one. Do not use special characters, only text.' },
+        { role: 'system', content: 'You are a creative assistant helping generate acronyms or rate them.' },
         { role: 'user', content: prompt }
       ],
       max_tokens: 100,
@@ -59,6 +59,17 @@ async function callLLM(prompt) {
   } catch (error) {
     console.error('xAI API error:', error.message);
     throw error;
+  }
+}
+
+async function generateCategory() {
+  const prompt = 'Generate a single-word category for an acronym game (e.g., "Space", "Animals", "Tech"). Return only the word, no explanation.';
+  try {
+    const category = await callLLM(prompt);
+    return category;
+  } catch (error) {
+    console.error('Category generation error:', error);
+    return 'Random'; // Fallback category
   }
 }
 
@@ -223,7 +234,7 @@ async function startGame(roomId) {
   }
   io.to(roomId).emit('playerUpdate', room.players);
   room.started = true;
-  io.to(roomId).emit('gameStarted'); // This is the new line
+  io.to(roomId).emit('gameStarted');
   await startRound(roomId);
 }
 
@@ -231,7 +242,8 @@ async function startRound(roomId) {
   const room = rooms.get(roomId);
   room.round++;
   const letters = generateLetters(room.round);
-  console.debug('Starting round', room.round, 'for room:', roomId, 'letters:', letters);
+  const category = await generateCategory(); // Generate category
+  console.debug('Starting round', room.round, 'for room:', roomId, 'letters:', letters, 'category:', category);
 
   room.submissions.clear();
   room.votes.clear();
@@ -240,11 +252,11 @@ async function startRound(roomId) {
   const timeLimit = letterCount <= 4 ? 30 : letterCount <= 6 ? 60 : 90;
   let timeLeft = timeLimit;
 
-  io.to(roomId).emit('newRound', { roundNum: room.round, letterSet: letters, timeLeft });
+  io.to(roomId).emit('newRound', { roundNum: room.round, letterSet: letters, timeLeft, category }); // Include category
 
   for (const player of room.players) {
     if (player.isBot) {
-      const prompt = `Generate a creative acronym phrase using the letters ${letters.join(', ')}. Return only the phrase, no explanation.`;
+      const prompt = `Generate a creative acronym phrase using the letters ${letters.join(', ')} for the category "${category}". Return only the phrase, no explanation.`;
       try {
         const acronym = await callLLM(prompt);
         room.submissions.set(player.id, acronym);
