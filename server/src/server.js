@@ -75,7 +75,7 @@ io.on('connection', (socket) => {
       submissions: new Map(),
       votes: new Map(),
       started: false,
-      timer: null // Add timer reference
+      timer: null
     });
     socket.join(roomId);
     socket.emit('roomCreated', roomId);
@@ -222,6 +222,8 @@ async function startGame(roomId) {
     });
   }
   io.to(roomId).emit('playerUpdate', room.players);
+  room.started = true;
+  io.to(roomId).emit('gameStarted'); // This is the new line
   await startRound(roomId);
 }
 
@@ -234,9 +236,8 @@ async function startRound(roomId) {
   room.submissions.clear();
   room.votes.clear();
 
-  // Set timer based on letter count
   const letterCount = letters.length;
-  const timeLimit = letterCount <= 4 ? 30 : letterCount <= 6 ? 60 : 90; // 30s, 60s, 90s
+  const timeLimit = letterCount <= 4 ? 30 : letterCount <= 6 ? 60 : 90;
   let timeLeft = timeLimit;
 
   io.to(roomId).emit('newRound', { roundNum: room.round, letterSet: letters, timeLeft });
@@ -255,14 +256,12 @@ async function startRound(roomId) {
     }
   }
 
-  // Start countdown
   room.timer = setInterval(() => {
     timeLeft--;
     io.to(roomId).emit('timeUpdate', { timeLeft });
     if (timeLeft <= 0) {
       clearInterval(room.timer);
       room.timer = null;
-      // Auto-submit blank for non-submitters
       for (const player of room.players) {
         if (!room.submissions.has(player.id)) {
           room.submissions.set(player.id, '');
