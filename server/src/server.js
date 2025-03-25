@@ -50,7 +50,7 @@ async function callLLM(prompt) {
     const response = await grokClient.chat.completions.create({
       model: 'grok-beta', // Adjust to your available model (e.g., grok-2 if accessible)
       messages: [
-        { role: 'system', content: 'You are a creative assistant helping generate acronyms or rate them.' },
+        { role: 'system', content: 'You are a playing a game generating acronyms or rating them.' },
         { role: 'user', content: prompt }
       ],
       max_tokens: 100,
