@@ -69,7 +69,7 @@ async function generateCategory() {
     return category;
   } catch (error) {
     console.error('Category generation error:', error);
-    return 'Random'; // Fallback category
+    return 'Random';
   }
 }
 
@@ -86,7 +86,8 @@ io.on('connection', (socket) => {
       submissions: new Map(),
       votes: new Map(),
       started: false,
-      timer: null
+      timer: null,
+      category: '',
     });
     socket.join(roomId);
     socket.emit('roomCreated', roomId);
@@ -94,28 +95,59 @@ io.on('connection', (socket) => {
   });
 
   socket.on('joinRoom', ({ roomId, creatorId }) => {
-    const room = rooms.get(roomId);
-    if (room) {
-      const isOriginalCreator = creatorId && creatorId === room.creatorId;
-      const playerExists = room.players.some(player => player.id === socket.id);
+    let room = rooms.get(roomId);
+    if (!room) {
+      room = {
+        name: `Room ${roomId}`,
+        creatorId: null,
+        players: [],
+        round: 0,
+        submissions: new Map(),
+        votes: new Map(),
+        started: false,
+        timer: null,
+        category: '',
+      };
+      rooms.set(roomId, room);
+    }
 
-      if (isOriginalCreator && room.creatorId !== socket.id) {
-        const oldCreatorIndex = room.players.findIndex(p => p.id === room.creatorId);
-        if (oldCreatorIndex !== -1) {
-          room.players[oldCreatorIndex].id = socket.id;
-          room.creatorId = socket.id;
-        }
-        socket.join(roomId);
-      } else if (!playerExists) {
-        room.players.push({ id: socket.id, name: '', score: 0, isBot: false });
-        socket.join(roomId);
+    const isOriginalCreator = creatorId && creatorId === room.creatorId;
+    const playerExists = room.players.some(player => player.id === socket.id);
+
+    if (isOriginalCreator && room.creatorId !== socket.id) {
+      const oldCreatorIndex = room.players.findIndex(p => p.id === room.creatorId);
+      if (oldCreatorIndex !== -1) {
+        room.players[oldCreatorIndex].id = socket.id;
+        room.creatorId = socket.id;
       }
+    } else if (!playerExists) {
+      room.players.push({ id: socket.id, name: '', score: 0, isBot: false });
+    }
 
-      const isCreator = socket.id === room.creatorId;
-      socket.emit('roomJoined', { roomId, isCreator });
-      io.to(roomId).emit('playerUpdate', room.players);
-    } else {
-      socket.emit('roomNotFound');
+    if (!room.creatorId && room.players.length > 0) {
+      room.creatorId = room.players[0].id; // Assign first player as creator if none
+    }
+
+    socket.join(roomId);
+    const isCreator = socket.id === room.creatorId;
+    socket.emit('roomJoined', { roomId, isCreator });
+
+    // Sync new player with current game state
+    io.to(roomId).emit('playerUpdate', room.players);
+    if (room.started) {
+      socket.emit('gameStarted');
+      if (room.round > 0) {
+        socket.emit('newRound', {
+          roundNum: room.round,
+          letterSet: generateLetters(room.round), // Regenerate for simplicity; ideally store
+          timeLeft: room.timer ? Math.max(0, Math.floor((room.timer._idleStart + room.timer._idleTimeout - Date.now()) / 1000)) : 0,
+          category: room.category,
+        });
+        if (room.submissions.size > 0) {
+          socket.emit('submissionsReceived', Array.from(room.submissions));
+          if (room.votes.size > 0) socket.emit('votingStart');
+        }
+      }
     }
   });
 
@@ -147,6 +179,7 @@ io.on('connection', (socket) => {
       room.submissions.clear();
       room.votes.clear();
       room.started = false;
+      room.category = '';
       room.players.forEach(player => { player.score = 0 });
       io.to(roomId).emit('playerUpdate', room.players);
       io.to(roomId).emit('gameReset');
@@ -154,14 +187,12 @@ io.on('connection', (socket) => {
   });
 
   socket.on('submitAcronym', ({ roomId, acronym }) => {
-    console.debug('Received submitAcronym for room:', roomId, 'acronym:', acronym);
     const room = rooms.get(roomId);
     if (room && room.started) {
       room.submissions.set(socket.id, acronym);
       console.debug('Current submissions:', room.submissions.size, 'Players:', room.players.length);
       if (room.submissions.size === room.players.length) {
         if (room.timer) clearInterval(room.timer);
-        console.debug('All submissions received for room:', roomId);
         io.to(roomId).emit('submissionsReceived', Array.from(room.submissions));
         io.to(roomId).emit('votingStart');
         simulateBotVotes(roomId);
@@ -170,21 +201,17 @@ io.on('connection', (socket) => {
   });
 
   socket.on('vote', ({ roomId, submissionId }) => {
-    console.debug('Received vote for room:', roomId, 'submission:', submissionId);
     const room = rooms.get(roomId);
     if (room && room.started) {
       if (!room.votes.has(socket.id)) {
         room.votes.set(socket.id, submissionId);
         console.debug('Current votes:', room.votes.size, 'Players:', room.players.length);
         checkAllVotes(roomId);
-      } else {
-        console.debug('Player', socket.id, 'already voted in room:', roomId);
       }
     }
   });
 
   socket.on('requestResults', (roomId) => {
-    console.debug('Client requested results for room:', roomId);
     const room = rooms.get(roomId);
     if (room && room.votes.size === room.players.length) {
       const results = calculateResults(room);
@@ -198,8 +225,24 @@ io.on('connection', (socket) => {
       const player = room.players.find(p => p.id === socket.id);
       if (player) {
         const senderName = player.name || socket.id;
-        console.debug(`Chat message from ${senderName} in room ${roomId}: ${message}`);
         io.to(roomId).emit('chatMessage', { senderId: socket.id, senderName, message });
+      }
+    }
+  });
+
+  socket.on('leaveRoom', (roomId) => {
+    const room = rooms.get(roomId);
+    if (room) {
+      const playerIndex = room.players.findIndex(p => p.id === socket.id);
+      if (playerIndex !== -1) {
+        room.players.splice(playerIndex, 1);
+        socket.leave(roomId);
+        io.to(roomId).emit('playerUpdate', room.players);
+        if (socket.id === room.creatorId && room.players.length > 0) {
+          room.creatorId = room.players[0].id;
+          io.to(roomId).emit('creatorUpdate', room.creatorId);
+        }
+        // Don’t delete room even if empty
       }
     }
   });
@@ -211,9 +254,9 @@ io.on('connection', (socket) => {
       if (playerIndex !== -1) {
         room.players.splice(playerIndex, 1);
         io.to(roomId).emit('playerUpdate', room.players);
-        if (room.players.length === 0) {
-          if (room.timer) clearInterval(room.timer);
-          rooms.delete(roomId);
+        if (socket.id === room.creatorId && room.players.length > 0) {
+          room.creatorId = room.players[0].id;
+          io.to(roomId).emit('creatorUpdate', room.creatorId);
         }
       }
     });
@@ -222,7 +265,6 @@ io.on('connection', (socket) => {
 
 async function startGame(roomId) {
   const room = rooms.get(roomId);
-  console.debug('Starting game for room:', roomId, 'Current players:', room.players.length);
   while (room.players.length < 4) {
     room.players = addBotPlayers(room.players, 1);
     const newBot = room.players[room.players.length - 1];
@@ -243,7 +285,7 @@ async function startRound(roomId) {
   room.round++;
   const letters = generateLetters(room.round);
   const category = await generateCategory();
-  room.category = category; // Store it here
+  room.category = category;
   console.debug('Starting round', room.round, 'for room:', roomId, 'letters:', letters, 'category:', category);
 
   room.submissions.clear();
@@ -261,9 +303,7 @@ async function startRound(roomId) {
       try {
         const acronym = await callLLM(prompt);
         room.submissions.set(player.id, acronym);
-        console.debug(`Bot ${player.name} submitted Grok acronym: ${acronym}`);
       } catch (error) {
-        console.error(`Grok error for bot ${player.id}:`, error);
         room.submissions.set(player.id, letters.join(''));
       }
     }
@@ -272,23 +312,12 @@ async function startRound(roomId) {
   room.timer = setInterval(() => {
     timeLeft--;
     io.to(roomId).emit('timeUpdate', { timeLeft });
-    if (timeLeft <= 0) {
+    if (timeLeft <= 0 || room.submissions.size === room.players.length) {
       clearInterval(room.timer);
       room.timer = null;
       for (const player of room.players) {
-        if (!room.submissions.has(player.id)) {
-          room.submissions.set(player.id, '');
-          console.debug(`Auto-submitted blank for ${player.name || player.id} in room ${roomId}`);
-        }
+        if (!room.submissions.has(player.id)) room.submissions.set(player.id, '');
       }
-      console.debug('Time up! All submissions received for room:', roomId);
-      io.to(roomId).emit('submissionsReceived', Array.from(room.submissions));
-      io.to(roomId).emit('votingStart');
-      simulateBotVotes(roomId);
-    } else if (room.submissions.size === room.players.length) {
-      clearInterval(room.timer);
-      room.timer = null;
-      console.debug('All submissions received early for room:', roomId);
       io.to(roomId).emit('submissionsReceived', Array.from(room.submissions));
       io.to(roomId).emit('votingStart');
       simulateBotVotes(roomId);
@@ -305,32 +334,23 @@ async function simulateBotVotes(roomId) {
       playerName: room.players.find(p => p.id === id)?.name || id
     }));
 
-    // Get the current category from the latest newRound emit (stored in client, but we’ll pass it via context)
-    // For simplicity, assume category is available; in practice, store it in room object if needed
-    const category = room.category || 'Random'; // Add category to room in startRound if persisting
-
     for (const player of room.players) {
       if (player.isBot && !room.votes.has(player.id)) {
         const validOptions = submissionList.filter(s => s.id !== player.id);
         if (validOptions.length > 0) {
-          const prompt = `Rate these acronyms for creativity, humor, and fit to the category "${category}": ${validOptions.map((s, i) => `${i + 1}. ${s.acronym}`).join(', ')}. Return the number (1-${validOptions.length}) of the one you like best.`;
+          const prompt = `Rate these acronyms for creativity, humor, and fit to the category "${room.category}": ${validOptions.map((s, i) => `${i + 1}. ${s.acronym}`).join(', ')}. Return the number (1-${validOptions.length}) of the one you like best.`;
           try {
             const llmResponse = await callLLM(prompt);
             const choiceIndex = Math.min(parseInt(llmResponse) - 1 || 0, validOptions.length - 1);
             const votedId = validOptions[choiceIndex].id;
             room.votes.set(player.id, votedId);
-            console.debug(`Bot ${player.name} voted for: ${validOptions[choiceIndex].acronym} by ${validOptions[choiceIndex].playerName} in category ${category}`);
           } catch (error) {
-            console.error(`Grok voting error for bot ${player.id}:`, error);
             const randomVote = validOptions[Math.floor(Math.random() * validOptions.length)].id;
             room.votes.set(player.id, randomVote);
           }
-        } else {
-          console.debug(`Bot ${player.name} found no valid vote options`);
         }
       }
     }
-    console.debug('After bot votes - Current votes:', room.votes.size, 'Players:', room.players.length);
     checkAllVotes(roomId);
   }
 }
@@ -338,7 +358,6 @@ async function simulateBotVotes(roomId) {
 function checkAllVotes(roomId) {
   const room = rooms.get(roomId);
   if (room && room.votes.size === room.players.length) {
-    console.debug('All votes received for room:', roomId);
     const results = calculateResults(room);
     io.to(roomId).emit('roundResults', results);
 
@@ -347,10 +366,7 @@ function checkAllVotes(roomId) {
       room.votes.clear();
       startRound(roomId);
     } else {
-      const winner = room.players.reduce((prev, curr) =>
-        prev.score > curr.score ? prev : curr
-      );
-      console.debug('Game ended, winner:', winner.id, 'with score:', winner.score);
+      const winner = room.players.reduce((prev, curr) => prev.score > curr.score ? prev : curr);
       io.to(roomId).emit('gameEnd', { winner });
     }
   }
@@ -364,21 +380,17 @@ function calculateResults(room) {
 
   voteCounts.forEach((count, playerId) => {
     const player = room.players.find(p => p.id === playerId);
-    if (player) {
-      player.score += count;
-    }
+    if (player) player.score += count;
   });
 
-  const results = {
+  return {
     submissions: Array.from(room.submissions),
     votes: Array.from(room.votes),
     updatedPlayers: room.players
   };
-  console.debug('Calculated results for room:', room.name, 'results:', JSON.stringify(results));
-  return results;
 }
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} - v1.0 with bots, chat, and xAI Grok`);
+  console.log(`Server running on port ${PORT} - v1.0 with stable rooms`);
 });
