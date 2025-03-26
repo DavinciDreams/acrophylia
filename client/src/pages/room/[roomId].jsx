@@ -102,8 +102,6 @@ const GameRoom = () => {
 
     socket.on('submissionsReceived', (submissionList) => {
       setSubmissions(submissionList);
-      setGameState('voting');
-      setTimeLeft(null);
     });
 
     socket.on('votingStart', () => {
@@ -114,6 +112,7 @@ const GameRoom = () => {
       setResults(roundResults);
       setPlayers(roundResults.updatedPlayers);
       setGameState('results');
+      setTimeLeft(null);
     });
 
     socket.on('gameEnd', ({ winner }) => {
@@ -367,6 +366,15 @@ const GameRoom = () => {
             {gameState === 'voting' && (
               <div style={styles.section}>
                 <h3 style={styles.subtitle}>Vote for an Acronym:</h3>
+                <p
+                  style={{
+                    ...styles.timer,
+                    color: timeLeft <= 10 ? '#D32F2F' : '#757575',
+                    animation: timeLeft <= 10 ? 'pulse 1s infinite' : 'none',
+                  }}
+                >
+                  Time Left: {timeLeft !== null ? `${timeLeft}s` : 'Waiting...'}
+                </p>
                 <ul style={styles.submissionList}>
                   {submissions.map(([playerId, acronym]) => (
                     <li key={playerId} style={styles.submissionItem}>
@@ -374,7 +382,7 @@ const GameRoom = () => {
                       <button
                         style={styles.voteButton}
                         onClick={() => submitVote(playerId)}
-                        disabled={hasVoted || playerId === socket.id}
+                        disabled={hasVoted || playerId === socket.id || timeLeft === 0}
                       >
                         Vote
                       </button>
