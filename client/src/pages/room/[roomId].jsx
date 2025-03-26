@@ -43,55 +43,48 @@ const GameRoom = () => {
     if (typeof window !== 'undefined') {
       const storedCreator = sessionStorage.getItem('isCreator') === 'true';
       setIsCreator(storedCreator);
-      console.debug('Initial isCreator from sessionStorage:', storedCreator);
     }
 
     if (!urlRoomId || hasJoined) return;
 
     socket.on('connect', () => {
-      console.debug('Socket connected, ID:', socket.id);
       setIsConnected(true);
       if (urlRoomId && !hasJoined) {
-        console.debug('Joining/Rejoining room:', urlRoomId, 'with creatorId:', creatorId);
         socket.emit('joinRoom', { roomId: urlRoomId, creatorId });
       }
     });
 
     socket.on('disconnect', () => {
-      console.debug('Socket disconnected');
       setIsConnected(false);
     });
 
-    socket.on('connect_error', (err) => console.error('Socket connect error:', err.message));
-    socket.on('reconnect', (attempt) => console.debug('Socket reconnected after attempt:', attempt));
-    socket.on('reconnect_error', (err) => console.error('Socket reconnect error:', err.message));
-
     socket.on('roomJoined', ({ roomId, isCreator: serverIsCreator }) => {
-      console.debug('Room joined, roomId:', roomId, 'serverIsCreator:', serverIsCreator, 'socket.id:', socket.id);
       setRoomId(roomId);
-      if (!isCreator && serverIsCreator) setIsCreator(serverIsCreator);
+      setIsCreator(serverIsCreator);
+      sessionStorage.setItem('isCreator', serverIsCreator);
     });
 
     socket.on('roomNotFound', () => {
-      console.warn('Room not found for roomId:', urlRoomId);
       alert('Room not found!');
       router.push('/');
     });
 
     socket.on('playerUpdate', (updatedPlayers) => {
-      console.debug('Players updated:', updatedPlayers);
       setPlayers(updatedPlayers);
       const currentPlayer = updatedPlayers.find(p => p.id === socket.id);
       if (currentPlayer && currentPlayer.name) setNameSet(true);
     });
 
+    socket.on('creatorUpdate', (newCreatorId) => {
+      setIsCreator(socket.id === newCreatorId);
+      sessionStorage.setItem('isCreator', socket.id === newCreatorId);
+    });
+
     socket.on('gameStarted', () => {
-      console.debug('Game has started');
       setGameStarted(true);
     });
 
     socket.on('newRound', ({ roundNum, letterSet, timeLeft: initialTime, category }) => {
-      console.debug('New round started:', roundNum, letterSet, 'timeLeft:', initialTime, 'category:', category);
       setRoundNum(roundNum);
       setLetterSet(letterSet);
       setCategory(category);
@@ -108,48 +101,53 @@ const GameRoom = () => {
     });
 
     socket.on('submissionsReceived', (submissionList) => {
-      console.debug('Submissions received:', submissionList);
       setSubmissions(submissionList);
       setGameState('voting');
       setTimeLeft(null);
     });
 
     socket.on('votingStart', () => {
-      console.debug('Voting started');
       setGameState('voting');
     });
 
     socket.on('roundResults', (roundResults) => {
-      console.debug('Round results received:', JSON.stringify(roundResults));
       setResults(roundResults);
       setPlayers(roundResults.updatedPlayers);
       setGameState('results');
     });
 
     socket.on('gameEnd', ({ winner }) => {
-      console.debug('Game ended, winner:', winner);
       setWinner(winner);
       setGameState('ended');
     });
 
+    socket.on('gameReset', () => {
+      setRoundNum(0);
+      setGameState('waiting');
+      setSubmissions([]);
+      setHasVoted(false);
+      setHasSubmitted(false);
+      setResults(null);
+      setWinner(null);
+      setTimeLeft(null);
+      setGameStarted(false);
+      setCategory('');
+    });
+
     socket.on('chatMessage', ({ senderId, senderName, message }) => {
-      console.debug('Chat message received:', { senderId, senderName, message });
       setChatMessages((prev) => [...prev, { senderId, senderName, message }]);
     });
 
-    console.debug('Initial join room:', urlRoomId, 'with creatorId:', creatorId);
     socket.emit('joinRoom', { roomId: urlRoomId, creatorId });
     setHasJoined(true);
 
     return () => {
       socket.off('connect');
       socket.off('disconnect');
-      socket.off('connect_error');
-      socket.off('reconnect');
-      socket.off('reconnect_error');
       socket.off('roomJoined');
       socket.off('roomNotFound');
       socket.off('playerUpdate');
+      socket.off('creatorUpdate');
       socket.off('gameStarted');
       socket.off('newRound');
       socket.off('timeUpdate');
@@ -157,6 +155,7 @@ const GameRoom = () => {
       socket.off('votingStart');
       socket.off('roundResults');
       socket.off('gameEnd');
+      socket.off('gameReset');
       socket.off('chatMessage');
     };
   }, [urlRoomId, router, creatorId]);
@@ -170,10 +169,7 @@ const GameRoom = () => {
   useEffect(() => {
     if (gameState === 'voting' && hasVoted) {
       const timeout = setTimeout(() => {
-        if (!results && roomId) {
-          console.debug('No results received, retrying...');
-          socket.emit('requestResults', roomId);
-        }
+        if (!results && roomId) socket.emit('requestResults', roomId);
       }, 5000);
       return () => clearTimeout(timeout);
     }
@@ -191,17 +187,15 @@ const GameRoom = () => {
     debounce(() => {
       if (roomId && isCreator && !isStarting) {
         setIsStarting(true);
-        console.debug('Starting game for room:', roomId, 'with players:', players.length);
         socket.emit('startGame', roomId);
         setTimeout(() => setIsStarting(false), 1000);
       }
     }, 500),
-    [roomId, isCreator, players.length, isStarting]
+    [roomId, isCreator, isStarting]
   );
 
   const submitAcronym = () => {
     if (acronym && roomId && !hasSubmitted) {
-      console.debug('Submitting acronym:', acronym);
       socket.emit('submitAcronym', { roomId, acronym });
       setHasSubmitted(true);
       setAcronym('');
@@ -210,36 +204,29 @@ const GameRoom = () => {
 
   const submitVote = (submissionId) => {
     if (!hasVoted && roomId && submissionId !== socket.id) {
-      console.debug('Submitting vote for:', submissionId);
       socket.emit('vote', { roomId, submissionId });
       setHasVoted(true);
     } else if (submissionId === socket.id) {
-      console.debug('Cannot vote for your own submission');
       alert('You cannot vote for your own submission!');
     }
   };
 
   const leaveRoom = () => {
-    console.debug('Leaving room:', roomId);
-    socket.disconnect();
-    sessionStorage.clear();
-    router.push('/');
+    if (roomId) {
+      socket.emit('leaveRoom', roomId);
+      setRoomId(null);
+      setPlayers([]);
+      setGameState('waiting');
+      setGameStarted(false);
+      setHasJoined(false);
+      sessionStorage.clear();
+      router.push('/');
+    }
   };
 
   const resetGame = () => {
     if (isCreator && roomId) {
-      console.debug('Resetting game for room:', roomId);
       socket.emit('resetGame', roomId);
-      setRoundNum(0);
-      setGameState('waiting');
-      setSubmissions([]);
-      setHasVoted(false);
-      setHasSubmitted(false);
-      setResults(null);
-      setWinner(null);
-      setTimeLeft(null);
-      setGameStarted(false);
-      setCategory('');
     }
   };
 
@@ -259,8 +246,6 @@ const GameRoom = () => {
   };
 
   const inviteLink = roomId ? `${window.location.origin}/room/${roomId}` : '';
-
-  console.debug('Rendering - gameState:', gameState, 'isCreator:', isCreator, 'isConnected:', isConnected);
 
   return (
     <>
@@ -425,7 +410,7 @@ const GameRoom = () => {
                 </p>
                 {isCreator && (
                   <button style={styles.button} onClick={resetGame}>
-                    Reset Game
+                    New Game
                   </button>
                 )}
               </div>
