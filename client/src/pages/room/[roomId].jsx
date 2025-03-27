@@ -328,7 +328,7 @@ const GameRoom = () => {
                     COPY LINK
                   </button>
                 </div>
-                <div style={styles.inviteInfo}>
+                <div className="info-box">
                   Share this link with friends to invite them to your game room!
                 </div>
               </div>
@@ -336,16 +336,13 @@ const GameRoom = () => {
 
             {!nameSet && gameState === 'waiting' && (
               <div style={styles.section}>
-                <div style={styles.nameSetHeader}>
-                  <h3 style={styles.nameSetTitle}>SET YOUR NAME</h3>
-                </div>
                 <div style={styles.nameSetForm}>
                   <input
                     style={styles.nameInput}
                     type="text"
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value)}
-                    placeholder="ENTER YOUR NAME"
+                    placeholder="Enter your name"
                     maxLength={20}
                     onKeyPress={(e) => e.key === 'Enter' && playerName.trim() && setName()}
                   />
@@ -357,7 +354,7 @@ const GameRoom = () => {
                     Set Name
                   </button>
                 </div>
-                <div style={styles.nameSetInfo}>
+                <div className="info-box">
                   Enter a name to join the game. You'll be able to play once the room creator starts the game.
                 </div>
               </div>
@@ -372,7 +369,7 @@ const GameRoom = () => {
                 </div>
                 
                 <div style={styles.waitingInfo}>
-                  <div style={styles.waitingMessage}>
+                  <div className="info-box">
                     Game starts with 4 players. Bots will be added if needed.
                   </div>
                   <div style={styles.playerCount}>
@@ -599,7 +596,7 @@ const GameRoom = () => {
                       START NEW GAME
                     </button>
                   ) : (
-                    <div style={styles.waitingMessage}>
+                    <div className="info-box">
                       Waiting for room creator to start a new game...
                     </div>
                   )}
@@ -660,7 +657,7 @@ const GameRoom = () => {
 const styles = {
   container: {
     padding: '1.5rem',
-    backgroundColor: '#ffde59', // Bright yellow background
+    backgroundColor: 'var(--secondary)',
     minHeight: '100vh',
     fontFamily: "'Space Grotesk', sans-serif",
     display: 'flex',
@@ -1033,14 +1030,7 @@ const styles = {
     transition: 'transform 0.1s, box-shadow 0.1s',
     textTransform: 'uppercase',
   },
-  waitingMessage: {
-    backgroundColor: '#ffffff',
-    padding: '1rem',
-    border: '3px solid #000000',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontFamily: "'Space Grotesk', sans-serif",
-  },
+ 
   
   // Name set styles
   nameSetHeader: {
@@ -1070,7 +1060,7 @@ const styles = {
   nameInput: {
     width: '100%',
     padding: '1rem',
-    fontSize: '1.25rem',
+    fontSize: 'var(--fontSecondarySize)',
     fontFamily: "'Space Grotesk', sans-serif",
     border: '3px solid #000000',
     boxShadow: '4px 4px 0px #000000',
@@ -1080,20 +1070,20 @@ const styles = {
     padding: '1rem',
     fontSize: '1.25rem',
     fontFamily: "'Space Mono', monospace",
-    backgroundColor: '#ff3c00', // Bright red
-    color: '#ffffff',
-    border: '3px solid #000000',
+    backgroundColor: 'var(--primary)',
+    color: 'var(--text)',
+    border: '3px solid var(--text)',
     cursor: 'pointer',
     fontWeight: 'bold',
-    boxShadow: '4px 4px 0px #000000',
+    boxShadow: '4px 4px 0px var(--text)',
     transition: 'transform 0.1s, box-shadow 0.1s',
     textTransform: 'uppercase',
   },
   nameSetInfo: {
-    backgroundColor: '#ffde59', // Bright yellow
+    backgroundColor: 'var(--backgroundSecondary)',
     padding: '1rem',
-    border: '3px solid #000000',
-    fontWeight: 'bold',
+    border: '3px solid var(--text)',
+    fontSize: 'var(--fontSecondarySize)',
     textAlign: 'center',
     fontFamily: "'Space Grotesk', sans-serif",
   },
@@ -1102,10 +1092,10 @@ const styles = {
   waitingHeader: {
     width: '100%',
     marginBottom: '1.5rem',
-    backgroundColor: '#00c2ff', // Bright blue
+    backgroundColor: 'var(--accent)',
     padding: '1rem',
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
+    border: '3px solid var(--text)',
+    boxShadow: '4px 4px 0px var(--text)',
   },
   waitingTitle: {
     fontFamily: "'Space Mono', monospace",
@@ -1123,22 +1113,15 @@ const styles = {
     gap: '1rem',
     marginBottom: '1.5rem',
   },
-  waitingMessage: {
-    backgroundColor: '#ffffff',
-    padding: '1rem',
-    border: '3px solid #000000',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontFamily: "'Space Grotesk', sans-serif",
-  },
+
   playerCount: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#ffde59', // Bright yellow
+    backgroundColor: 'var(--background)',
     padding: '1rem',
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
+    border: '3px solid var(--text)',
+    boxShadow: '4px 4px 0px var(--text)',
   },
   playerCountLabel: {
     fontFamily: "'Space Mono', monospace",
@@ -1157,12 +1140,12 @@ const styles = {
     padding: '1.25rem',
     fontSize: '1.5rem',
     fontFamily: "'Space Mono', monospace",
-    backgroundColor: '#ff3c00', // Bright red
+    backgroundColor: 'var(--primary)',
     color: '#ffffff',
-    border: '3px solid #000000',
+    border: '3px solid var(--text)',
     cursor: 'pointer',
     fontWeight: 'bold',
-    boxShadow: '4px 4px 0px #000000',
+    boxShadow: '4px 4px 0px var(--text)',
     transition: 'transform 0.1s, box-shadow 0.1s',
     textTransform: 'uppercase',
     width: '100%',
@@ -1198,10 +1181,10 @@ const styles = {
   inviteHeader: {
     width: '100%',
     marginBottom: '1.5rem',
-    backgroundColor: '#ffde59', // Bright yellow
+    backgroundColor: 'var(--accent)',
     padding: '1rem',
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
+    border: '3px solid var(--text)',
+    boxShadow: '4px 4px 0px var(--text)',
   },
   inviteTitle: {
     fontFamily: "'Space Mono', monospace",
@@ -1224,8 +1207,8 @@ const styles = {
     padding: '1rem',
     fontSize: '1rem',
     fontFamily: "'Space Mono', monospace",
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
+    border: '3px solid var(--text)',
+    boxShadow: '4px 4px 0px var(--text)',
     backgroundColor: '#f0f0f0',
     color: '#000000',
     outline: 'none',
@@ -1244,9 +1227,10 @@ const styles = {
     textTransform: 'uppercase',
   },
   inviteInfo: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: 'var(--backgroundSecondary)',
     padding: '1rem',
-    border: '3px solid #000000',
+    border: '3px solid var(--text)',
+    fontSize: 'var(--fontSecondarySize)',
     fontWeight: 'bold',
     textAlign: 'center',
     fontFamily: "'Space Grotesk', sans-serif",
@@ -1684,16 +1668,7 @@ const styles = {
     textTransform: 'uppercase',
     width: '100%',
   },
-  waitingMessage: {
-    backgroundColor: 'var(--background)',
-    padding: '1.25rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 'bold',
-    fontSize: '1.1rem',
-    textAlign: 'center',
-  },
+
   resultPlayerLabel: {
     fontFamily: "'Space Grotesk', sans-serif",
     fontSize: '0.9rem',
