@@ -409,37 +409,31 @@ const styles = {
   },
   title: {
     fontFamily: '"Space Mono", monospace',
-    fontSize: '4.5rem',
+    fontSize: 'clamp(2rem, 8vw, 4.5rem)',  // Fluid typography that scales with viewport width
     fontWeight: 'bold',
     color: 'var(--text)',
     textTransform: 'uppercase',
     margin: '0 0 5px 0',
     position: 'relative',
-    textShadow: `2px 0 0 var(--primary), -2px 0 0 var(--accent)`,
-    letterSpacing: '-2px',
-    '@media (max-width: 768px)': {
-      fontSize: '3.5rem'
-    },
-    '@media (max-width: 480px)': {
-      fontSize: '2.5rem',
-      letterSpacing: '-1px',
-      textShadow: `1px 0 0 var(--primary), -1px 0 0 var(--accent)`
-    }
+    textShadow: `clamp(1px, 0.3vw, 2px) 0 0 var(--primary), clamp(-1px, -0.3vw, -2px) 0 0 var(--accent)`,
+    letterSpacing: 'clamp(-2px, -0.5vw, -1px)',
+    wordBreak: 'break-word',  // Allows words to break if needed
+    width: '100%',  // Ensures the title stays within its container
+    overflowWrap: 'break-word',  // Alternative to word-break for better text wrapping
+    hyphens: 'auto',  // Adds hyphens when breaking words if supported by browser
   },
   subtitle: {
     fontFamily: '"Space Mono", monospace',
-    fontSize: '1.2rem',
+    fontSize: 'clamp(0.9rem, 3vw, 1.2rem)',
     fontWeight: 'bold',
     backgroundColor: 'var(--primary)',
     color: 'white',
-    padding: '5px 10px',
+    padding: 'clamp(4px, 1vw, 5px) clamp(8px, 2vw, 10px)',
     display: 'inline-block',
     transform: 'rotate(-1deg)',
     border: '2px solid var(--text)',
-    '@media (max-width: 480px)': {
-      fontSize: '1rem',
-      padding: '4px 8px'
-    }
+    maxWidth: '100%',
+    boxSizing: 'border-box',
   },
   inputContainer: {
     marginBottom: '30px',
