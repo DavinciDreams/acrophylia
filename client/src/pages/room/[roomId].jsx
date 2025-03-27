@@ -16,7 +16,8 @@ const GameRoom = () => {
   const router = useRouter();
   const { roomId: urlRoomId, creatorId } = router.query;
   const [roomId, setRoomId] = useState(urlRoomId || null);
-  const [roomName, setRoomName] = useState(''); // New state for room name
+  const [roomName, setRoomName] = useState(''); // Room name state
+  const [roomNameSet, setRoomNameSet] = useState(false); // Track if room name is set
   const [players, setPlayers] = useState([]);
   const [roundNum, setRoundNum] = useState(0);
   const [letterSet, setLetterSet] = useState([]);
@@ -62,7 +63,8 @@ const GameRoom = () => {
     socket.on('roomJoined', ({ roomId, isCreator: serverIsCreator, roomName }) => {
       setRoomId(roomId);
       setIsCreator(serverIsCreator);
-      setRoomName(roomName); // Set room name on join
+      setRoomName(roomName);
+      setRoomNameSet(!!roomName && roomName !== `Room ${roomId}`); // Set if not default
       sessionStorage.setItem('isCreator', serverIsCreator);
     });
 
@@ -73,7 +75,8 @@ const GameRoom = () => {
 
     socket.on('playerUpdate', ({ players, roomName }) => {
       setPlayers(players);
-      setRoomName(roomName); // Update room name with player updates
+      setRoomName(roomName);
+      setRoomNameSet(!!roomName && roomName !== `Room ${roomId}`);
       const currentPlayer = players.find(p => p.id === socket.id);
       if (currentPlayer && currentPlayer.name) setNameSet(true);
     });
@@ -196,6 +199,13 @@ const GameRoom = () => {
     [roomId, isCreator, isStarting]
   );
 
+  const setRoomNameHandler = () => {
+    if (roomName.trim() && roomId && isCreator && !roomNameSet) {
+      socket.emit('setRoomName', { roomId, roomName });
+      setRoomNameSet(true);
+    }
+  };
+
   const submitAcronym = () => {
     if (acronym && roomId && !hasSubmitted) {
       socket.emit('submitAcronym', { roomId, acronym });
@@ -218,6 +228,7 @@ const GameRoom = () => {
       socket.emit('leaveRoom', roomId);
       setRoomId(null);
       setRoomName('');
+      setRoomNameSet(false);
       setPlayers([]);
       setGameState('waiting');
       setGameStarted(false);
@@ -273,7 +284,7 @@ const GameRoom = () => {
         {roomId ? (
           <>
             <header style={styles.header}>
-              <h2 style={styles.title}>{roomName}</h2> {/* Display roomName instead of roomId */}
+              <h2 style={styles.title}>{roomName || `Room ${roomId}`}</h2>
               <div style={styles.statusContainer}>
                 {!isConnected && <span style={styles.warning}>Reconnecting...</span>}
                 <span
@@ -292,6 +303,23 @@ const GameRoom = () => {
                 <input style={styles.input} type="text" value={inviteLink} readOnly />
                 <button style={styles.button} onClick={() => navigator.clipboard.writeText(inviteLink)}>
                   Copy Link
+                </button>
+              </div>
+            )}
+
+            {isCreator && !roomNameSet && gameState === 'waiting' && (
+              <div style={styles.section}>
+                <h3 style={styles.subtitle}>Set Room Name</h3>
+                <input
+                  style={styles.input}
+                  type="text"
+                  value={roomName}
+                  onChange={(e) => setRoomName(e.target.value)}
+                  placeholder="Enter room name"
+                  maxLength={20}
+                />
+                <button style={styles.button} onClick={setRoomNameHandler}>
+                  Set Room Name
                 </button>
               </div>
             )}
