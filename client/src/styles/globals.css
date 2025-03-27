@@ -93,7 +93,7 @@ h1:after {
   font-weight: bold;
 }
 
-.submission-form, .voting-panel {
+.voting-panel {
   margin: 20px 0;
   padding: 1.5rem;
   background-color: var(--accent);
@@ -1183,14 +1183,7 @@ button:disabled {
   border: 2px solid var(--text);
 }
 
-/* Submission form styles */
-.submission-form {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
+
 
 .submitted-message {
   background-color: var(--accent);
