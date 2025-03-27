@@ -233,11 +233,88 @@ button:disabled {
   text-transform: uppercase;
   margin: 0;
   text-align: center;
+}
+
+/* Button styles */
+.btn {
+  font-family: 'Space Mono', monospace;
+  font-weight: bold;
+  border: 3px solid var(--text);
+  cursor: pointer;
+  box-shadow: 4px 4px 0px var(--text);
+  transition: transform 0.1s, box-shadow 0.1s;
+  text-transform: uppercase;
+}
+
+.btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--text);
+}
+
+.btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--text);
+}
+
+.btn:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Button sizes */
+.btn-lg {
+  padding: 1.25rem;
+  font-size: 1.5rem;
+}
+
+.btn-md {
   padding: 1rem;
-  border: 3px solid #000000;
-  box-shadow: 4px 4px 0px #000000;
-  margin-bottom: 1.5rem;
+  font-size: 1.25rem;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+}
+
+.btn-xs {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Button colors */
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--background);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--text);
+}
+
+.btn-accent {
   background-color: var(--accent);
+  color: var(--text);
+}
+
+.btn-blue {
+  background-color: #00c2ff;
+  color: var(--text);
+}
+
+/* Special button variants */
+.btn-wide {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+/* Button animations */
+.pulse-animation {
+  animation: pulse 1.5s infinite;
 }
 
 .timer-warning {
