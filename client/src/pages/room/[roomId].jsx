@@ -65,7 +65,7 @@ const GameRoom = () => {
       setRoomId(roomId);
       setIsCreator(serverIsCreator);
       setRoomName(roomName);
-      setRoomNameSet(!!roomName); // Set if not default
+      setRoomNameSet(!!roomName && roomName !== `Room ${roomId}`); // Set if not default
       sessionStorage.setItem('isCreator', serverIsCreator);
     });
 
@@ -454,15 +454,8 @@ const GameRoom = () => {
                   </div>
                 </div>
                 
-                <div style={{
-                  ...styles.timerContainer,
-                  backgroundColor: timeLeft <= 10 ? '#ff3c00' : '#00c2ff',
-                  animation: timeLeft <= 10 ? 'shake 0.5s infinite' : 'none',
-                }}>
-                  <span style={styles.timerLabel}>TIME LEFT:</span>
-                  <span style={styles.timerValue}>
-                    {timeLeft !== null ? `${timeLeft}s` : 'WAITING...'}
-                  </span>
+                <div className={`timer-container ${timeLeft <= 10 ? 'timer-warning' : ''}`}>
+                  <span className="timer-label">TIME LEFT: {timeLeft !== null ? `${timeLeft}s` : 'WAITING...'}</span>
                 </div>
                 
                 <div style={styles.submissionForm}>
@@ -474,7 +467,7 @@ const GameRoom = () => {
                     type="text"
                     value={acronym}
                     onChange={(e) => setAcronym(e.target.value)}
-                    placeholder="ENTER YOUR ACRONYM"
+                    placeholder="Enter your acronym"
                     disabled={hasSubmitted || timeLeft === 0}
                     onKeyPress={(e) => e.key === 'Enter' && !hasSubmitted && timeLeft > 0 && submitAcronym()}
                   />
@@ -504,13 +497,9 @@ const GameRoom = () => {
                   <h3 style={styles.roundTitle}>VOTE FOR AN ACRONYM</h3>
                 </div>
                 
-                <div style={{
-                  ...styles.timerContainer,
-                  backgroundColor: timeLeft <= 10 ? '#ff3c00' : '#00c2ff',
-                  animation: timeLeft <= 10 ? 'shake 0.5s infinite' : 'none',
-                }}>
-                  <span style={styles.timerLabel}>TIME LEFT:</span>
-                  <span style={styles.timerValue}>
+                <div className={`timer-container ${timeLeft <= 10 ? 'timer-warning' : ''}`}>
+                  <span className="timer-label">TIME LEFT:</span>
+                  <span className="timer-value">
                     {timeLeft !== null ? `${timeLeft}s` : 'WAITING...'}
                   </span>
                 </div>
@@ -707,17 +696,16 @@ const styles = {
   roundHeader: {
     width: '100%',
     marginBottom: '1.5rem',
-    backgroundColor: '#ff3c00', // Bright red
+    backgroundColor: 'var(--accent)', 
     padding: '1rem',
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
+    border: '3px solid var(--text)',
+    boxShadow: '4px 4px 0px var(--text)',
   },
   roundTitle: {
     fontFamily: "'Space Mono', monospace",
     fontSize: '1.5rem',
     fontWeight: 'bold',
     textTransform: 'uppercase',
-    color: '#ffffff',
     margin: 0,
     textAlign: 'center',
   },
@@ -730,29 +718,7 @@ const styles = {
     gap: '1rem',
     marginBottom: '1.5rem',
   },
-  categoryContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-    padding: '1rem',
-    backgroundColor: '#ffffff',
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
-  },
-  categoryLabel: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '1rem',
-  },
-  categoryValue: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 'bold',
-    fontSize: '1.5rem',
-    backgroundColor: '#00c2ff', // Bright blue
-    padding: '0.5rem',
-    border: '2px solid #000000',
-    display: 'inline-block',
-  },
+
   lettersContainer: {
     display: 'flex',
     flexDirection: 'column',
@@ -826,21 +792,9 @@ const styles = {
     boxShadow: '4px 4px 0px #000000',
     outline: 'none',
   },
-  submissionButton: {
-    padding: '1rem',
-    fontSize: '1.25rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: '#ff3c00', // Bright red
-    color: '#ffffff',
-    border: '3px solid #000000',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '4px 4px 0px #000000',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-  },
+
   submittedMessage: {
-    backgroundColor: '#ffde59', // Bright yellow
+    backgroundColor: 'var(--accent)',
     padding: '1rem',
     border: '3px solid #000000',
     fontWeight: 'bold',
@@ -1337,24 +1291,6 @@ const styles = {
     fontSize: '1rem',
   },
   
-  // Game section styles
-  roundHeader: {
-    width: '100%',
-    marginBottom: '1.5rem',
-    backgroundColor: 'var(--primary)', // Bright red
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-  },
-  roundTitle: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    color: 'var(--background)',
-    margin: 0,
-    textAlign: 'center',
-  },
   gameInfo: {
     width: '100%',
     display: 'flex',
@@ -1382,7 +1318,8 @@ const styles = {
     fontSize: '1.25rem',
     backgroundColor: 'var(--secondary)', // Bright yellow
     padding: '0.5rem 1rem',
-    border: '2px solid var(--text)',
+    border: '2px solid var(--text)',  
+    boxShadow: '2px 2px 0px var(--text)', 
   },
   lettersContainer: {
     display: 'flex',
@@ -1460,7 +1397,7 @@ const styles = {
     padding: '1rem',
     fontSize: '1.5rem',
     fontFamily: "'Space Mono', monospace",
-    backgroundColor: 'var(--secondary)', // Bright yellow
+    backgroundColor: 'var(--primary)',
     color: 'var(--text)',
     border: '3px solid var(--text)',
     cursor: 'pointer',

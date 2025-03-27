@@ -2,7 +2,7 @@
 
 :root {
   --primary: #1cafec;
-  --secondary: #91bf7e;
+  --secondary: #1bbf9a;
   --accent: #fdd413;
   --background: #ffffff;
   --backgroundSecondary: #f0f0f0;
@@ -193,6 +193,47 @@ button:disabled {
   padding: 1rem;
   background-color: #fff;
   border: 3px solid #000;
+}
+
+.timer-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+  margin-bottom: 1.5rem;
+  background-color: var(--accent);
+}
+
+.timer-warning {
+  background-color: #ff3c00;
+  animation: shake 0.5s infinite;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}
+
+.timer-label {
+  font-family: 'Space Mono', monospace;
+  font-weight: bold;
+  font-size: 1.25rem;
+  color: #000000;
+}
+
+.timer-value {
+  font-family: 'Space Mono', monospace;
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: #000000;
+  background-color: #ffffff;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #000000;
 }
 
 .invite-link {
