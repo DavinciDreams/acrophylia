@@ -372,7 +372,14 @@ const GameRoom = () => {
                     className="button"
                     onClick={() => {
                       navigator.clipboard.writeText(inviteLink);
-                      alert('Link copied to clipboard!');
+                      const btn = event.target;
+                      const originalText = btn.textContent;
+                      btn.textContent = 'COPIED';
+                      btn.disabled = true;
+                      setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                      }, 3000);
                     }}
                   >
                     COPY LINK
