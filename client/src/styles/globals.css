@@ -203,13 +203,21 @@ button:disabled {
   word-break: break-all;
 }
 
+.main-input {
+  width:  100%;
+  padding: 1rem;
+  font-size: var(--fontSecondarySize);
+  font-family: 'Space Grotesk', sans-serif;
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+  outline: none;
+}
 
 .info-box {
-  background-color: '#ffffff';
-  padding: '1rem';
-  font-size: 'var(--fontSecondarySize)';
-  border: '3px solid #000000';
-  font-weight: 'bold';
-  text-align: 'center';
-  font-family: "'Space Grotesk', sans-serif";
+  background-color: #ffffff;
+  padding: 1rem;
+  font-size: var(--fontSecondarySize);
+  font-weight: bold;
+  text-align: center;
+  font-family: 'Space Grotesk', sans-serif;
 }

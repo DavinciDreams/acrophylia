@@ -65,7 +65,7 @@ const GameRoom = () => {
       setRoomId(roomId);
       setIsCreator(serverIsCreator);
       setRoomName(roomName);
-      setRoomNameSet(!!roomName && roomName !== `Room ${roomId}`); // Set if not default
+      setRoomNameSet(!!roomName); // Set if not default
       sessionStorage.setItem('isCreator', serverIsCreator);
     });
 
@@ -349,18 +349,20 @@ const GameRoom = () => {
 
             {isCreator && !roomNameSet && gameState === 'waiting' && (
               <div style={styles.section}>
-                <h3 style={styles.subtitle}>Set Room Name</h3>
-                <input
-                  style={styles.input}
-                  type="text"
-                  value={roomName}
-                  onChange={(e) => setRoomName(e.target.value)}
-                  placeholder="Enter room name"
-                  maxLength={20}
-                />
-                <button style={styles.button} onClick={setRoomNameHandler}>
-                  Set Room Name
-                </button>
+                <div style={styles.nameSetForm}>
+                  <input
+                    className="main-input"
+                    type="text"
+                    value={roomName}
+                    onChange={(e) => setRoomName(e.target.value)}
+                    placeholder="Enter room name"
+                    maxLength={20}
+                    onKeyDown={(e) => e.key === 'Enter' && roomName.trim() && setRoomNameHandler()}
+                  />
+                  <button style={styles.button} onClick={setRoomNameHandler}>
+                    Set Room Name
+                  </button>
+                </div>
               </div>
             )}
 
@@ -368,7 +370,7 @@ const GameRoom = () => {
               <div style={styles.section}>
                 <div style={styles.nameSetForm}>
                   <input
-                    style={styles.nameInput}
+                    className="main-input"
                     type="text"
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value)}
@@ -390,7 +392,6 @@ const GameRoom = () => {
               </div>
             )}
 
-            <PlayerList players={players} />
 
             {gameState === 'waiting' && nameSet && (
               <div style={styles.section}>
@@ -514,7 +515,7 @@ const GameRoom = () => {
                   </span>
                 </div>
                 
-                <div style={styles.votingInstructions}>
+                <div className="info-box">
                   {hasVoted ? 
                     'You have cast your vote! Waiting for others...' : 
                     'Choose your favorite acronym below:'}
@@ -633,6 +634,9 @@ const GameRoom = () => {
                 </div>
               </div>
             )}
+
+<PlayerList players={players} />
+
 
             <button style={styles.leaveButton} onClick={leaveRoom}>
               Leave Room
@@ -1874,15 +1878,15 @@ const styles = {
     outline: 'none',
   },
   button: {
-    padding: '0.75rem 1.5rem',
-    fontSize: '1rem',
+    padding: '1rem',
+    fontSize: '1.25rem',
     fontFamily: "'Space Mono', monospace",
-    backgroundColor: 'var(--accent)', // Bright blue
-    color: 'var(--text)',
-    border: '3px solid var(--text)',
+    backgroundColor: '#00c2ff', // Bright blue
+    color: '#000000',
+    border: '3px solid #000000',
     cursor: 'pointer',
     fontWeight: 'bold',
-    boxShadow: '4px 4px 0px var(--text)',
+    boxShadow: '4px 4px 0px #000000',
     transition: 'transform 0.1s, box-shadow 0.1s',
     textTransform: 'uppercase',
   },
@@ -1891,7 +1895,7 @@ const styles = {
     fontSize: '0.9rem',
     fontFamily: "'Space Mono', monospace",
     backgroundColor: 'var(--primary)', // Bright red
-    color: 'var(--background)',
+    color: 'var(--text)',
     border: '3px solid var(--text)',
     cursor: 'pointer',
     fontWeight: 'bold',
@@ -1904,7 +1908,7 @@ const styles = {
     fontSize: '1rem',
     fontFamily: "'Space Mono', monospace",
     backgroundColor: 'var(--primary)', // Bright red
-    color: 'var(--background)',
+    color: 'var(--text)',
     border: '3px solid var(--text)',
     cursor: 'pointer',
     fontWeight: 'bold',
