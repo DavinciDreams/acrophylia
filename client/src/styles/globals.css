@@ -160,6 +160,11 @@ button:disabled {
   transform: none;
 }
 
+button:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 .chat-container {
   border: var(--border);
   box-shadow: var(--shadow);
@@ -179,6 +184,10 @@ button:disabled {
 
 .chat-input-container {
   display: flex;
+}
+
+.chat-item {
+  margin-left: 1rem;
 }
 
 .results-container {
@@ -1034,7 +1043,7 @@ button:disabled {
 }
 
 .chat-list-wrapper {
-  margin: 20px;
+  margin: 20px 0;
   width: 100%;
 
   max-height: 350px;
@@ -1049,6 +1058,11 @@ button:disabled {
 .chat-pill {
   background-color: var(--secondary);
 }
+
+.own-message .chat-pill {
+  background-color: #E8752A;
+}
+
 .chat-messages {
   width: 100%;
   display: flex;
@@ -1064,15 +1078,12 @@ button:disabled {
 .chat-message {
   padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
-  max-width: 80%;
   font-family: 'Space Grotesk', sans-serif;
 }
 
-.chat-message-own {
-  align-self: flex-end;
-  background-color: var(--primary);
-  color: var(--background);
-  border: 2px solid var(--text);
+.own-message{
+  text-align: right;
+  margin-right: 1rem;
 }
 
 .chat-message-other {
