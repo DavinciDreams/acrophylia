@@ -16,7 +16,8 @@ const allowedOrigins = [
   "https://urban-succotash-p9rqv5qxxg5cr4v4-3000.app.github.dev",
   "https://acrophylia-5sij2fzvc-davincidreams-projects.vercel.app",
   "https://acrophylia.vercel.app",
-  "https://*.vercel.app"
+  "https://*.vercel.app",
+  "https://acrophylia-plum.vercel.app"
 ];
 
 app.use(cors({
