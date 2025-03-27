@@ -16,7 +16,9 @@ const allowedOrigins = [
   "https://urban-succotash-p9rqv5qxxg5cr4v4-3000.app.github.dev",
   "https://acrophylia-5sij2fzvc-davincidreams-projects.vercel.app",
   "https://acrophylia.vercel.app",
-  "https://*.vercel.app"
+  "https://*.vercel.app",
+  "https://acrophylia-plum.vercel.app"
+
 ];
 
 app.use(cors({
@@ -76,14 +78,14 @@ async function generateCategory() {
 io.on('connection', (socket) => {
   console.debug('New client connected:', socket.id);
 
-  socket.on('createRoom', (roomName) => {
+  socket.on('createRoom', () => { // Removed roomName parameter
     const roomId = Math.random().toString(36).substr(2, 9);
     rooms.set(roomId, {
-      name: roomName,
+      name: `Room ${roomId}`, // Default name
       creatorId: socket.id,
       players: [{ id: socket.id, name: '', score: 0, isBot: false }],
       round: 0,
-      letters: [], // Add letters to room state
+      letters: [],
       submissions: new Map(),
       votes: new Map(),
       started: false,
@@ -93,7 +95,7 @@ io.on('connection', (socket) => {
     });
     socket.join(roomId);
     socket.emit('roomCreated', roomId);
-    io.to(roomId).emit('playerUpdate', rooms.get(roomId).players);
+    io.to(roomId).emit('playerUpdate', { players: rooms.get(roomId).players, roomName: rooms.get(roomId).name });
   });
 
   socket.on('joinRoom', ({ roomId, creatorId }) => {
@@ -134,15 +136,15 @@ io.on('connection', (socket) => {
 
     socket.join(roomId);
     const isCreator = socket.id === room.creatorId;
-    socket.emit('roomJoined', { roomId, isCreator });
+    socket.emit('roomJoined', { roomId, isCreator, roomName: room.name });
 
-    io.to(roomId).emit('playerUpdate', room.players);
+    io.to(roomId).emit('playerUpdate', { players: room.players, roomName: room.name });
     if (room.started) {
       socket.emit('gameStarted');
       if (room.round > 0) {
         socket.emit('newRound', {
           roundNum: room.round,
-          letterSet: room.letters, // Use stored letters
+          letterSet: room.letters,
           timeLeft: room.submissionTimer
             ? Math.max(0, Math.floor((room.submissionTimer._idleStart + room.submissionTimer._idleTimeout - Date.now()) / 1000))
             : room.votingTimer
@@ -158,13 +160,21 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('setRoomName', ({ roomId, roomName }) => {
+    const room = rooms.get(roomId);
+    if (room && socket.id === room.creatorId && !room.started) {
+      room.name = roomName.trim().substring(0, 20); // Sanitize and limit length
+      io.to(roomId).emit('playerUpdate', { players: room.players, roomName: room.name });
+    }
+  });
+
   socket.on('setName', ({ roomId, name }) => {
     const room = rooms.get(roomId);
     if (room) {
       const player = room.players.find(p => p.id === socket.id);
       if (player && !player.isBot) {
         player.name = name.trim().substring(0, 20);
-        io.to(roomId).emit('playerUpdate', room.players);
+        io.to(roomId).emit('playerUpdate', { players: room.players, roomName: room.name });
       }
     }
   });
@@ -183,13 +193,13 @@ io.on('connection', (socket) => {
       if (room.submissionTimer) clearInterval(room.submissionTimer);
       if (room.votingTimer) clearInterval(room.votingTimer);
       room.round = 0;
-      room.letters = []; // Clear letters on reset
+      room.letters = [];
       room.submissions.clear();
       room.votes.clear();
       room.started = false;
       room.category = '';
       room.players.forEach(player => { player.score = 0 });
-      io.to(roomId).emit('playerUpdate', room.players);
+      io.to(roomId).emit('playerUpdate', { players: room.players, roomName: room.name });
       io.to(roomId).emit('gameReset');
     }
   });
@@ -244,7 +254,7 @@ io.on('connection', (socket) => {
       if (playerIndex !== -1) {
         room.players.splice(playerIndex, 1);
         socket.leave(roomId);
-        io.to(roomId).emit('playerUpdate', room.players);
+        io.to(roomId).emit('playerUpdate', { players: room.players, roomName: room.name });
         if (socket.id === room.creatorId && room.players.length > 0) {
           room.creatorId = room.players[0].id;
           io.to(roomId).emit('creatorUpdate', room.creatorId);
@@ -258,7 +268,7 @@ io.on('connection', (socket) => {
       const playerIndex = room.players.findIndex(p => p.id === socket.id);
       if (playerIndex !== -1) {
         room.players.splice(playerIndex, 1);
-        io.to(roomId).emit('playerUpdate', room.players);
+        io.to(roomId).emit('playerUpdate', { players: room.players, roomName: room.name });
         if (socket.id === room.creatorId && room.players.length > 0) {
           room.creatorId = room.players[0].id;
           io.to(roomId).emit('creatorUpdate', room.creatorId);
@@ -279,7 +289,7 @@ async function startGame(roomId) {
       message: `${newBot.name} has joined the chat!`
     });
   }
-  io.to(roomId).emit('playerUpdate', room.players);
+  io.to(roomId).emit('playerUpdate', { players: room.players, roomName: room.name });
   room.started = true;
   io.to(roomId).emit('gameStarted');
   await startRound(roomId);
@@ -288,7 +298,7 @@ async function startGame(roomId) {
 async function startRound(roomId) {
   const room = rooms.get(roomId);
   room.round++;
-  room.letters = generateLetters(room.round); // Store letters in room
+  room.letters = generateLetters(room.round);
   const category = await generateCategory();
   room.category = category;
   console.debug('Starting round', room.round, 'for room:', roomId, 'letters:', room.letters, 'category:', category);
@@ -427,5 +437,5 @@ function calculateResults(room) {
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} - v1.0 with letter sync`);
+  console.log(`Server running on port ${PORT} - v1.0 with custom room name UI`);
 });

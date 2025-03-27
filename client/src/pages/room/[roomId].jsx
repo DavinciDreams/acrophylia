@@ -17,6 +17,8 @@ const GameRoom = () => {
   const router = useRouter();
   const { roomId: urlRoomId, creatorId } = router.query;
   const [roomId, setRoomId] = useState(urlRoomId || null);
+  const [roomName, setRoomName] = useState(''); // Room name state
+  const [roomNameSet, setRoomNameSet] = useState(false); // Track if room name is set
   const [players, setPlayers] = useState([]);
   const [roundNum, setRoundNum] = useState(0);
   const [letterSet, setLetterSet] = useState([]);
@@ -59,9 +61,11 @@ const GameRoom = () => {
       setIsConnected(false);
     });
 
-    socket.on('roomJoined', ({ roomId, isCreator: serverIsCreator }) => {
+    socket.on('roomJoined', ({ roomId, isCreator: serverIsCreator, roomName }) => {
       setRoomId(roomId);
       setIsCreator(serverIsCreator);
+      setRoomName(roomName);
+      setRoomNameSet(!!roomName && roomName !== `Room ${roomId}`); // Set if not default
       sessionStorage.setItem('isCreator', serverIsCreator);
     });
 
@@ -70,9 +74,11 @@ const GameRoom = () => {
       router.push('/');
     });
 
-    socket.on('playerUpdate', (updatedPlayers) => {
-      setPlayers(updatedPlayers);
-      const currentPlayer = updatedPlayers.find(p => p.id === socket.id);
+    socket.on('playerUpdate', ({ players, roomName }) => {
+      setPlayers(players);
+      setRoomName(roomName);
+      setRoomNameSet(!!roomName && roomName !== `Room ${roomId}`);
+      const currentPlayer = players.find(p => p.id === socket.id);
       if (currentPlayer && currentPlayer.name) setNameSet(true);
     });
 
@@ -194,6 +200,13 @@ const GameRoom = () => {
     [roomId, isCreator, isStarting]
   );
 
+  const setRoomNameHandler = () => {
+    if (roomName.trim() && roomId && isCreator && !roomNameSet) {
+      socket.emit('setRoomName', { roomId, roomName });
+      setRoomNameSet(true);
+    }
+  };
+
   const submitAcronym = () => {
     if (acronym && roomId && !hasSubmitted) {
       socket.emit('submitAcronym', { roomId, acronym });
@@ -215,6 +228,8 @@ const GameRoom = () => {
     if (roomId) {
       socket.emit('leaveRoom', roomId);
       setRoomId(null);
+      setRoomName('');
+      setRoomNameSet(false);
       setPlayers([]);
       setGameState('waiting');
       setGameStarted(false);
@@ -286,9 +301,7 @@ const GameRoom = () => {
         {roomId ? (
           <>
             <header style={styles.header}>
-              <div style={styles.roomInfo}>
-                <h2 style={styles.roomTitle}>ROOM: {roomId}</h2>
-              </div>
+              <h2 style={styles.title}>{roomName || `Room ${roomId}`}</h2>
               <div style={styles.statusContainer}>
                 {!isConnected && (
                   <div style={styles.reconnectingBadge}>
@@ -331,6 +344,23 @@ const GameRoom = () => {
                 <div className="info-box">
                   Share this link with friends to invite them to your game room!
                 </div>
+              </div>
+            )}
+
+            {isCreator && !roomNameSet && gameState === 'waiting' && (
+              <div style={styles.section}>
+                <h3 style={styles.subtitle}>Set Room Name</h3>
+                <input
+                  style={styles.input}
+                  type="text"
+                  value={roomName}
+                  onChange={(e) => setRoomName(e.target.value)}
+                  placeholder="Enter room name"
+                  maxLength={20}
+                />
+                <button style={styles.button} onClick={setRoomNameHandler}>
+                  Set Room Name
+                </button>
               </div>
             )}
 
