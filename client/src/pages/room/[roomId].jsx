@@ -301,7 +301,7 @@ const GameRoom = () => {
           }
         `}</style>
       </Head>
-      <div style={styles.container}>
+      <div className="game-room-container">
         {roomId ? (
           <>
             <header style={styles.header}>
@@ -459,8 +459,8 @@ const GameRoom = () => {
 
             {gameState === 'submitting' && (
               <div style={styles.section}>
-                <div style={styles.roundHeader}>
-                  <h3 style={styles.roundTitle}>ROUND {roundNum} OF 5</h3>
+                <div className="round-header">
+                  ROUND {roundNum} OF 5
                 </div>
                 <div style={styles.gameInfo}>
                   <div style={styles.categoryContainer}>
@@ -514,8 +514,8 @@ const GameRoom = () => {
 
             {gameState === 'voting' && (
               <div style={styles.section}>
-                <div style={styles.roundHeader}>
-                  <h3 style={styles.roundTitle}>VOTE FOR AN ACRONYM</h3>
+                <div className="round-header">
+                  <h3 className="round-title">VOTE FOR AN ACRONYM</h3>
                 </div>
                 <div className={`timer-container ${timeLeft <= 10 ? 'timer-warning' : ''}`}>
                   <span className="timer-label">TIME LEFT:</span>
