@@ -461,9 +461,9 @@ const GameRoom = () => {
                 <div style={styles.submissionForm}>
                   <input
                     style={{
-                      ...styles.submissionInput,
                       backgroundColor: hasSubmitted ? '#ffde59' : '#ffffff',
                     }}
+                    className="main-input"
                     type="text"
                     value={acronym}
                     onChange={(e) => setAcronym(e.target.value)}
@@ -781,15 +781,7 @@ const styles = {
     gap: '1rem',
     marginBottom: '1rem',
   },
-  submissionInput: {
-    width: '100%',
-    padding: '1rem',
-    fontSize: '1.25rem',
-    fontFamily: "'Space Grotesk', sans-serif",
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
-    outline: 'none',
-  },
+ 
 
   submittedMessage: {
     backgroundColor: 'var(--accent)',
@@ -1381,16 +1373,7 @@ const styles = {
     marginBottom: '1rem',
     width: '100%',
   },
-  submissionInput: {
-    width: '100%',
-    padding: '1rem',
-    fontSize: '1.25rem',
-    fontFamily: "'Space Mono', monospace",
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    color: 'var(--text)',
-    outline: 'none',
-  },
+
   submissionButton: {
     padding: '1rem',
     fontSize: '1.5rem',
