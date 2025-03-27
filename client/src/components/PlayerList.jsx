@@ -1,15 +1,6 @@
 export default function PlayerList({ players, leaveRoom }) {
   const styles = {
-    container: {
-      backgroundColor: 'var(--background)',
-      border: 'var(--border)',
-      boxShadow: 'var(--shadow)',
-      padding: '1.5rem',
-      marginBottom: '1.5rem',
-      width: '100%',
-      maxWidth: '800px',
-    },
- 
+
     list: {
       listStyle: 'none',
       padding: 0,
@@ -63,23 +54,25 @@ export default function PlayerList({ players, leaveRoom }) {
   };
 
   return (
-    <div style={styles.container} className="player-list">
-      <h3 className="section-header">PLAYERS ({players.length})</h3>
-      <ul style={styles.list}>
-        {players.map(player => (
-          <li key={player.id} style={styles.listItem}>
-            <div style={styles.playerName}>
-              {player.name || player.id}
-              {player.isBot && <span className="pill" style={styles.botBadge}>BOT</span>}
-            </div>
-            <div style={styles.score} className="pill">{player.score}</div>
-          </li>
-        ))}
-      </ul>
+    <div className="container">
+      <div className="section-content">
+        <h3 className="section-header">PLAYERS ({players.length})</h3>
+        <ul style={styles.list}>
+          {players.map(player => (
+            <li key={player.id} style={styles.listItem}>
+              <div style={styles.playerName}>
+                {player.name || player.id}
+                {player.isBot && <span className="pill" style={styles.botBadge}>BOT</span>}
+              </div>
+              <div style={styles.score} className="pill">{player.score}</div>
+            </li>
+          ))}
+        </ul>
 
-      <button style={styles.leaveButton} onClick={leaveRoom}>
-        Leave Room
-      </button>
+        <button style={styles.leaveButton} onClick={leaveRoom}>
+          Leave Room
+        </button>
+      </div>
     </div>
   )
 }
