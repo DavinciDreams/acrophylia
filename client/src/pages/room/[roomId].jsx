@@ -562,8 +562,8 @@ const GameRoom = () => {
 
             {gameState === 'results' && results && (
               <div style={styles.section}>
-                <div style={styles.roundHeader} className="section-header">
-                  <h3 style={styles.roundTitle}>ROUND {roundNum} RESULTS</h3>
+                <div className="round-header section-header">
+                  <h3 className="round-title">ROUND {roundNum} RESULTS</h3>
                 </div>
                 <div style={styles.resultsContainer}>
                   {results.submissions.map(([playerId, acronym]) => {
@@ -689,39 +689,11 @@ const GameRoom = () => {
 };
 
 const styles = {
-  container: {
-    padding: '1.5rem',
-    backgroundColor: 'var(--secondary)',
-    minHeight: '100vh',
-    fontFamily: "'Space Grotesk', sans-serif",
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    margin: '0 auto',
-    color: 'var(--text)',
-    gap: '1.5rem',
-    fontSize: 'calc(16px + 0.5vw)',
-  },
+  // Styles migrated to CSS classes:
+  // - container -> .game-room-container
+  // - roundHeader -> .round-header
+  // - roundTitle -> .round-title
   
-  // Round header and title styles
-  roundHeader: {
-    width: '100%',
-    marginBottom: '1.5rem',
-    backgroundColor: 'var(--accent)', 
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    textAlign: 'center',
-    textTransform: 'uppercase',
-  },
-  roundTitle: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    margin: 0,
-    textAlign: 'center',
-  },
   
   // Game info styles
   gameInfo: {
