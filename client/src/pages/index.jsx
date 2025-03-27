@@ -54,7 +54,7 @@ const Home = () => {
             </button>
           </div>
           
-          <div style={styles.instructions}>
+          <div className="info-box">
             <p>Create a room and invite friends to play!</p>
             <p>Each round, players create phrases from random letters.</p>
             <p>Vote for your favorites and score points!</p>
