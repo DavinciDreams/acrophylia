@@ -1303,13 +1303,7 @@ const styles = {
     fontSize: '1.25rem',
   },
   categoryValue: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 'bold',
-    fontSize: '1.25rem',
     backgroundColor: 'var(--secondary)', // Bright yellow
-    padding: '0.5rem 1rem',
-    border: '2px solid var(--text)',  
-    boxShadow: '2px 2px 0px var(--text)', 
   },
   lettersContainer: {
     display: 'flex',

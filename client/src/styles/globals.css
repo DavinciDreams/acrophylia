@@ -270,8 +270,8 @@ button:disabled {
   font-size: 1.25rem;
   background-color: var(--accent);
   padding: 0.5rem 0.75rem;
-  border: 2px solid #000000;
-  box-shadow: 2px 2px 0px #000000;
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
 }
 
 .section-header {
