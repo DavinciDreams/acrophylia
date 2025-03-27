@@ -1,4 +1,4 @@
-export default function PlayerList({ players }) {
+export default function PlayerList({ players, leaveRoom }) {
   const styles = {
     container: {
       backgroundColor: 'var(--background)',
@@ -53,7 +53,21 @@ export default function PlayerList({ players }) {
       fontSize: '0.8rem',
       fontWeight: 'bold',
       fontFamily: "'Space Mono', monospace",
-    }
+    },
+
+    leaveButton: {
+      padding: '0.75rem 1.5rem',
+      fontSize: '1.5rem',
+      fontFamily: "'Space Mono', monospace",
+      backgroundColor: 'var(--primary)', // Bright red
+      border: '3px solid var(--text)',
+      cursor: 'pointer',
+      boxShadow: '4px 4px 0px var(--text)',
+      transition: 'transform 0.1s, box-shadow 0.1s',
+      textTransform: 'uppercase',
+      flex: 1,
+      width: '100%',
+    },
   };
 
   return (
@@ -64,12 +78,16 @@ export default function PlayerList({ players }) {
           <li key={player.id} style={styles.listItem}>
             <div style={styles.playerName}>
               {player.name || player.id}
-              {player.isBot && <span style={styles.botBadge}>BOT</span>}
+              {player.isBot && <span className="pill" style={styles.botBadge}>BOT</span>}
             </div>
-            <div style={styles.score}>{player.score}</div>
+            <div style={styles.score} className="pill">{player.score}</div>
           </li>
         ))}
       </ul>
+
+      <button style={styles.leaveButton} onClick={leaveRoom}>
+        Leave Room
+      </button>
     </div>
   )
 }

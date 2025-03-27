@@ -624,12 +624,7 @@ const GameRoom = () => {
               </div>
             )}
 
-<PlayerList players={players} />
-
-
-            <button style={styles.leaveButton} onClick={leaveRoom}>
-              Leave Room
-            </button>
+            <PlayerList players={players} leaveRoom={leaveRoom} />
 
             {gameStarted && (
               <div style={styles.chatContainer}>
@@ -642,7 +637,7 @@ const GameRoom = () => {
                         backgroundColor: msg.senderId === socket.id ? '#ffde59' : '#ffffff',
                         alignSelf: msg.senderId === socket.id ? 'flex-end' : 'flex-start',
                       }}>
-                        <div style={styles.chatSender}>
+                        <div style={styles.chatSender} className="pill">
                           {msg.senderName}
                         </div>
                         <div style={styles.chatMessage}>
@@ -742,7 +737,7 @@ const styles = {
     fontFamily: "'Space Mono', monospace",
     fontWeight: 'bold',
     fontSize: '1.25rem',
-    backgroundColor: '#ffde59', // Bright yellow
+    backgroundColor: 'var(--accent)',
     padding: '0.5rem 0.75rem',
     border: '2px solid #000000',
     boxShadow: '2px 2px 0px #000000',
@@ -1675,20 +1670,7 @@ const styles = {
     boxShadow: 'var(--shadow)',
     marginTop: '2rem',
   },
-  chatTitle: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    color: 'var(--text)',
-    marginTop: 0,
-    marginBottom: '1rem',
-    backgroundColor: 'var(--accent)', // Bright blue
-    padding: '0.75rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    textAlign: 'center',
-  },
+
   chatListWrapper: {
     border: '3px solid var(--text)',
     height: '300px',
@@ -1840,20 +1822,6 @@ const styles = {
     transition: 'transform 0.1s, box-shadow 0.1s',
     textTransform: 'uppercase',
   },
-  leaveButton: {
-    padding: '0.75rem 1.5rem',
-    fontSize: '1rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: 'var(--primary)', // Bright red
-    color: 'var(--text)',
-    border: '3px solid var(--text)',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '4px 4px 0px var(--text)',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-    margin: '1.5rem auto 0',
-  },
   playerList: {
     listStyle: 'none',
     padding: '1rem',
@@ -1945,13 +1913,11 @@ const styles = {
     fontWeight: 'bold',
     textTransform: 'uppercase',
     marginBottom: '1rem',
-    position: 'relative',
-    display: 'inline-block',
-    backgroundColor: '#00c2ff',
+    display: 'block',
+    backgroundColor: 'var(--accent)',
     padding: '0.5rem 1rem',
     border: '3px solid #000000',
     boxShadow: '4px 4px 0px #000000',
-    alignSelf: 'flex-start',
   },
   chatListWrapper: {
     border: '3px solid #000000',
