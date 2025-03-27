@@ -18,6 +18,7 @@ const allowedOrigins = [
   "https://acrophylia.vercel.app",
   "https://*.vercel.app",
   "https://acrophylia-plum.vercel.app"
+
 ];
 
 app.use(cors({
@@ -77,11 +78,10 @@ async function generateCategory() {
 io.on('connection', (socket) => {
   console.debug('New client connected:', socket.id);
 
-  socket.on('createRoom', (roomName) => {
+  socket.on('createRoom', () => { // Removed roomName parameter
     const roomId = Math.random().toString(36).substr(2, 9);
-    const sanitizedRoomName = roomName ? roomName.trim().substring(0, 20) : `Room ${roomId}`; // Sanitize and limit length
     rooms.set(roomId, {
-      name: sanitizedRoomName,
+      name: `Room ${roomId}`, // Default name
       creatorId: socket.id,
       players: [{ id: socket.id, name: '', score: 0, isBot: false }],
       round: 0,
@@ -95,7 +95,7 @@ io.on('connection', (socket) => {
     });
     socket.join(roomId);
     socket.emit('roomCreated', roomId);
-    io.to(roomId).emit('playerUpdate', { players: rooms.get(roomId).players, roomName: sanitizedRoomName });
+    io.to(roomId).emit('playerUpdate', { players: rooms.get(roomId).players, roomName: rooms.get(roomId).name });
   });
 
   socket.on('joinRoom', ({ roomId, creatorId }) => {
@@ -157,6 +157,14 @@ io.on('connection', (socket) => {
           if (room.votes.size > 0) socket.emit('votingStart');
         }
       }
+    }
+  });
+
+  socket.on('setRoomName', ({ roomId, roomName }) => {
+    const room = rooms.get(roomId);
+    if (room && socket.id === room.creatorId && !room.started) {
+      room.name = roomName.trim().substring(0, 20); // Sanitize and limit length
+      io.to(roomId).emit('playerUpdate', { players: room.players, roomName: room.name });
     }
   });
 
@@ -429,5 +437,5 @@ function calculateResults(room) {
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} - v1.0 with custom room names`);
+  console.log(`Server running on port ${PORT} - v1.0 with custom room name UI`);
 });
