@@ -386,6 +386,7 @@ const GameRoom = () => {
             )}
 
             {!nameSet && gameState === 'waiting' && (
+              <div className="container">
               <div className="game-section">
                 <div className="name-set-form">
                   <input
@@ -408,6 +409,7 @@ const GameRoom = () => {
                 <div className="info-box">
                   Enter a name to join the game. You'll be able to play once the room creator starts the game.
                 </div>
+              </div>
               </div>
             )}
 
