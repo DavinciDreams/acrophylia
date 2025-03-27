@@ -42,6 +42,29 @@ const GameRoom = () => {
   const [timeLeft, setTimeLeft] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
   const chatListRef = useRef(null);
+  const chatContainerRef = useRef(null);
+  const isNearBottomRef = useRef(true);
+
+  // Function to check if user is scrolled to bottom
+  const checkIfNearBottom = useCallback(() => {
+    if (!chatContainerRef.current) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+    const scrollBottom = scrollHeight - scrollTop - clientHeight;
+    isNearBottomRef.current = scrollBottom < 30; // Within 30px of bottom is considered "at bottom"
+  }, []);
+
+  // Function to scroll to bottom if user was already at bottom
+  const scrollToBottomIfNeeded = useCallback(() => {
+    if (isNearBottomRef.current && chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, []);
+
+  // Handle new chat messages
+  useEffect(() => {
+    scrollToBottomIfNeeded();
+  }, [chatMessages, scrollToBottomIfNeeded]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -625,7 +648,11 @@ const GameRoom = () => {
             {gameStarted && (
               <div className="container">
                 <h3 className="section-header">GAME CHAT</h3>
-                <div className="chat-list-wrapper">
+                <div 
+                  className="chat-list-wrapper" 
+                  ref={chatContainerRef}
+                  onScroll={checkIfNearBottom}
+                >
                   <ul className="chat-list" ref={chatListRef}>
                     {chatMessages.map((msg, index) => (
                       <li
