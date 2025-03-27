@@ -272,3 +272,15 @@ button:disabled {
   border: 2px solid #000000;
   box-shadow: 2px 2px 0px #000000;
 }
+
+.section-header {
+  width: 100%;
+  margin-bottom: 1.5rem;
+  background-color: var(--accent);
+  padding: 1rem;
+  border: 3px solid var(--text);
+  box-shadow: 4px 4px 0px var(--text);
+  text-align: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: bold;
+}

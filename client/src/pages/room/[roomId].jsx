@@ -441,7 +441,7 @@ const GameRoom = () => {
                 <div style={styles.gameInfo}>
                   <div style={styles.categoryContainer}>
                     <span style={styles.categoryLabel}>CATEGORY:</span>
-                    <span style={styles.categoryValue}>{category}</span>
+                    <span style={styles.categoryValue} className="pill">{category}</span>
                   </div>
                   
                   <div style={styles.lettersContainer}>
@@ -544,7 +544,7 @@ const GameRoom = () => {
 
             {gameState === 'results' && results && (
               <div style={styles.section}>
-                <div style={styles.roundHeader}>
+                <div style={styles.roundHeader} className="section-header">
                   <h3 style={styles.roundTitle}>ROUND {roundNum} RESULTS</h3>
                 </div>
                 
@@ -628,7 +628,7 @@ const GameRoom = () => {
 
             {gameStarted && (
               <div style={styles.chatContainer}>
-                <h3 style={styles.chatTitle}>GAME CHAT</h3>
+                <h3 className="section-header">GAME CHAT</h3>
                 <div style={styles.chatListWrapper}>
                   <ul style={styles.chatList} ref={chatListRef}>
                     {chatMessages.map((msg, index) => (
@@ -650,6 +650,7 @@ const GameRoom = () => {
                 <div style={styles.chatInputContainer}>
                   <input
                     style={styles.chatInput}
+                    className="main-input"
                     type="text"
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
@@ -695,6 +696,8 @@ const styles = {
     padding: '1rem',
     border: '3px solid var(--text)',
     boxShadow: '4px 4px 0px var(--text)',
+    textAlign: 'center',
+    textTransform: 'uppercase',
   },
   roundTitle: {
     fontFamily: "'Space Mono', monospace",
@@ -1707,28 +1710,12 @@ const styles = {
     color: 'var(--text)',
     wordBreak: 'break-word',
   },
-  chatInputContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-    width: '100%',
-  },
-  chatInput: {
-    width: '100%',
-    padding: '1rem',
-    fontSize: '1rem',
-    fontFamily: "'Space Grotesk', sans-serif",
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    backgroundColor: 'var(--background)',
-    color: 'var(--text)',
-    outline: 'none',
-  },
+
+ 
   chatButton: {
-    padding: '0.75rem',
     fontSize: '1.25rem',
     fontFamily: "'Space Mono', monospace",
-    backgroundColor: 'var(--secondary)', // Bright yellow
+    backgroundColor: 'var(--primary)',
     color: 'var(--text)',
     border: '3px solid var(--text)',
     cursor: 'pointer',
@@ -1907,18 +1894,7 @@ const styles = {
     flexDirection: 'column',
     gap: '1rem',
   },
-  chatTitle: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    marginBottom: '1rem',
-    display: 'block',
-    backgroundColor: 'var(--accent)',
-    padding: '0.5rem 1rem',
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
-  },
+
   chatListWrapper: {
     border: '3px solid #000000',
     backgroundColor: '#f0f0f0',
@@ -1967,34 +1943,10 @@ const styles = {
     display: 'flex',
     gap: '0.75rem',
     width: '100%',
-    backgroundColor: '#00c2ff', // Bright blue
-    padding: '0.75rem',
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
+    backgroundColor: 'var(--background)',
   },
-  chatInput: {
-    flex: '1',
-    padding: '0.75rem',
-    fontSize: '1rem',
-    fontFamily: "'Space Grotesk', sans-serif",
-    border: '3px solid #000000',
-    backgroundColor: '#ffffff',
-    color: '#000000',
-    outline: 'none',
-  },
-  chatButton: {
-    padding: '0.75rem 1.5rem',
-    fontSize: '1rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: '#ff3c00', // Bright red
-    color: '#ffffff',
-    border: '3px solid #000000',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '4px 4px 0px #000000',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-  },
+ 
+
 };
 
 export default GameRoom;
