@@ -15,6 +15,8 @@ const Home = () => {
   const lastScrollY = useRef(0);
   const letterColors = ['#FF6B6B', '#4ECDC4', '#FFD166', '#06D6A0', '#118AB2'];
   const letterCount = useRef(0);
+  const specialSequenceActive = useRef(false);
+  const specialSequenceIndex = useRef(0);
 
   // Function to create a new letter element with individual animation properties
   const createLetter = (scrollDirection, mouseX, mouseY) => {
@@ -70,9 +72,35 @@ const Home = () => {
       y += (Math.random() * 100) - 50;
     }
     
-    // Random letter
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const letter = alphabet[Math.floor(Math.random() * alphabet.length)];
+    // Letter selection
+    let letter;
+    const specialWord = 'NECROPHYLIA';
+    
+    // Check if we should start the special sequence
+    if (letterCount.current > 0 && letterCount.current % 40 === 0) {
+      specialSequenceActive.current = true;
+      specialSequenceIndex.current = 0;
+      console.log('Special sequence activated at letter count:', letterCount.current);
+    }
+    
+    if (specialSequenceActive.current) {
+      // Use the letter from the special word
+      letter = specialWord[specialSequenceIndex.current];
+      console.log(`Special sequence letter: ${letter} (index: ${specialSequenceIndex.current})`);
+      
+      // Move to next letter in sequence
+      specialSequenceIndex.current++;
+      
+      // Check if we've completed the word
+      if (specialSequenceIndex.current >= specialWord.length) {
+        specialSequenceActive.current = false;
+        console.log('Special sequence completed');
+      }
+    } else {
+      // Random letter
+      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      letter = alphabet[Math.floor(Math.random() * alphabet.length)];
+    }
     
     // Random color
     const color = letterColors[Math.floor(Math.random() * letterColors.length)];
