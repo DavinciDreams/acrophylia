@@ -30,6 +30,13 @@ body {
   max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
+  background-color: var(--background);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 800px;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -70,9 +77,6 @@ h1:after {
 .player-list {
   margin: 0;
   padding: 1.5rem;
-  background-color: var(--secondary);
-  border: var(--border);
-  box-shadow: var(--shadow);
 }
 
 .player-list ul {
@@ -199,11 +203,122 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  border: 3px solid #000000;
-  box-shadow: 4px 4px 0px #000000;
+}
+
+.game-room-container {
+  padding: 1.5rem;
+  background-color: var(--secondary);
+  min-height: 100vh;
+  font-family: 'Space Grotesk', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
+  color: var(--text);
+  gap: 1.5rem;
+  font-size: calc(16px + 0.5vw);
+}
+
+.round-header {
+  width: 100%;
   margin-bottom: 1.5rem;
   background-color: var(--accent);
+  padding: 1rem;
+  border: 3px solid var(--text);
+  box-shadow: 4px 4px 0px var(--text);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.round-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin: 0;
+  text-align: center;
+}
+
+/* Button styles */
+.btn {
+  font-family: 'Space Mono', monospace;
+  font-weight: bold;
+  border: 3px solid var(--text);
+  cursor: pointer;
+  box-shadow: 4px 4px 0px var(--text);
+  transition: transform 0.1s, box-shadow 0.1s;
+  text-transform: uppercase;
+}
+
+.btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--text);
+}
+
+.btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--text);
+}
+
+.btn:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Button sizes */
+.btn-lg {
+  padding: 1.25rem;
+  font-size: 1.5rem;
+}
+
+.btn-md {
+  padding: 1rem;
+  font-size: 1.25rem;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+}
+
+.btn-xs {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Button colors */
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--background);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--text);
+}
+
+.btn-accent {
+  background-color: var(--accent);
+  color: var(--text);
+}
+
+.btn-blue {
+  background-color: #00c2ff;
+  color: var(--text);
+}
+
+/* Special button variants */
+.btn-wide {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+/* Button animations */
+.pulse-animation {
+  animation: pulse 1.5s infinite;
 }
 
 .timer-warning {
@@ -277,7 +392,6 @@ button:disabled {
 
 .section-header {
   width: 100%;
-  margin-bottom: 1.5rem;
   background-color: var(--accent);
   padding: 1rem;
   border: 3px solid var(--text);
@@ -285,4 +399,66 @@ button:disabled {
   text-align: center;
   font-family: 'Space Grotesk', sans-serif;
   font-weight: bold;
+  margin: 0;
+}
+
+.section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.player-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.player-item {
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  border: 2px solid var(--text);
+  background-color: #f0f0f0;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.player-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.player-score {
+  background-color: var(--secondary);
+  padding: 0.25rem 0.5rem;
+  border: 2px solid var(--text);
+  font-family: 'Space Mono', monospace;
+}
+
+.bot-badge {
+  background-color: var(--accent);
+  color: var(--text);
+  padding: 0.25rem 0.5rem;
+  border: 2px solid var(--text);
+  margin-left: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  font-family: 'Space Mono', monospace;
+}
+
+.leave-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1.5rem;
+  font-family: 'Space Mono', monospace;
+  background-color: var(--primary);
+  border: 3px solid var(--text);
+  cursor: pointer;
+  box-shadow: 4px 4px 0px var(--text);
+  transition: transform 0.1s, box-shadow 0.1s;
+  text-transform: uppercase;
+  flex: 1;
+  width: 100%;
 }

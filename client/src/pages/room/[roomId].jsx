@@ -301,7 +301,7 @@ const GameRoom = () => {
           }
         `}</style>
       </Head>
-      <div style={styles.container}>
+      <div className="game-room-container">
         {roomId ? (
           <>
             <header style={styles.header}>
@@ -317,11 +317,11 @@ const GameRoom = () => {
                       maxLength={20}
                       onKeyPress={(e) => e.key === 'Enter' && setRoomNameHandler()}
                     />
-                    <button style={styles.saveButton} onClick={setRoomNameHandler}>
+                    <button className="btn btn-sm btn-blue" onClick={setRoomNameHandler}>
                       Save
                     </button>
                     <button
-                      style={styles.cancelButton}
+                      className="btn btn-sm btn-primary"
                       onClick={() => setIsEditingRoomName(false)}
                     >
                       Cancel
@@ -332,7 +332,7 @@ const GameRoom = () => {
                     {roomName || `Room ${roomId}`}
                     {isCreator && !roomNameSet && gameState === 'waiting' && (
                       <button
-                        style={styles.editButton}
+                        className="btn btn-xs btn-accent"
                         onClick={() => setIsEditingRoomName(true)}
                         aria-label="Edit Room Name"
                       >
@@ -379,7 +379,7 @@ const GameRoom = () => {
                 <div style={styles.inviteContent}>
                   <input style={styles.inviteInput} type="text" value={inviteLink} readOnly />
                   <button
-                    style={styles.inviteButton}
+                    className="btn btn-md btn-blue"
                     onClick={() => {
                       navigator.clipboard.writeText(inviteLink);
                       alert('Link copied to clipboard!');
@@ -407,7 +407,7 @@ const GameRoom = () => {
                     onKeyPress={(e) => e.key === 'Enter' && playerName.trim() && setName()}
                   />
                   <button
-                    style={styles.nameButton}
+                    className="btn btn-md btn-primary"
                     onClick={setName}
                     disabled={!playerName.trim()}
                   >
@@ -436,10 +436,9 @@ const GameRoom = () => {
                 </div>
                 {isCreator ? (
                   <button
+                    className={`btn btn-lg btn-primary ${players.length >= 2 && !isStarting ? 'pulse-animation' : ''}`}
                     style={{
-                      ...styles.startGameButton,
                       opacity: isStarting ? 0.7 : 1,
-                      animation: players.length >= 2 && !isStarting ? 'pulse 1.5s infinite' : 'none',
                     }}
                     onClick={startGame}
                     disabled={isStarting}
@@ -459,8 +458,8 @@ const GameRoom = () => {
 
             {gameState === 'submitting' && (
               <div style={styles.section}>
-                <div style={styles.roundHeader}>
-                  <h3 style={styles.roundTitle}>ROUND {roundNum} OF 5</h3>
+                <div className="round-header">
+                  ROUND {roundNum} OF 5
                 </div>
                 <div style={styles.gameInfo}>
                   <div style={styles.categoryContainer}>
@@ -494,8 +493,8 @@ const GameRoom = () => {
                     onKeyPress={(e) => e.key === 'Enter' && !hasSubmitted && timeLeft > 0 && submitAcronym()}
                   />
                   <button
+                    className="btn btn-lg btn-primary"
                     style={{
-                      ...styles.submissionButton,
                       opacity: hasSubmitted || timeLeft === 0 ? 0.7 : 1,
                     }}
                     onClick={submitAcronym}
@@ -514,8 +513,8 @@ const GameRoom = () => {
 
             {gameState === 'voting' && (
               <div style={styles.section}>
-                <div style={styles.roundHeader}>
-                  <h3 style={styles.roundTitle}>VOTE FOR AN ACRONYM</h3>
+                <div className="round-header">
+                  <h3 className="round-title">VOTE FOR AN ACRONYM</h3>
                 </div>
                 <div className={`timer-container ${timeLeft <= 10 ? 'timer-warning' : ''}`}>
                   <span className="timer-label">TIME LEFT:</span>
@@ -544,8 +543,8 @@ const GameRoom = () => {
                           {isOwnSubmission && <span style={styles.yourSubmissionBadge}>YOUR SUBMISSION</span>}
                         </div>
                         <button
+                          className="btn btn-xs btn-primary"
                           style={{
-                            ...styles.voteButton,
                             opacity: isDisabled ? 0.7 : 1,
                           }}
                           onClick={() => submitVote(playerId)}
@@ -562,8 +561,8 @@ const GameRoom = () => {
 
             {gameState === 'results' && results && (
               <div style={styles.section}>
-                <div style={styles.roundHeader} className="section-header">
-                  <h3 style={styles.roundTitle}>ROUND {roundNum} RESULTS</h3>
+                <div className="round-header section-header">
+                  <h3 className="round-title">ROUND {roundNum} RESULTS</h3>
                 </div>
                 <div style={styles.resultsContainer}>
                   {results.submissions.map(([playerId, acronym]) => {
@@ -626,7 +625,7 @@ const GameRoom = () => {
                 </div>
                 <div style={styles.gameOverActions}>
                   {isCreator ? (
-                    <button style={styles.newGameButton} onClick={resetGame}>
+                    <button className="btn btn-md btn-blue btn-wide" onClick={resetGame}>
                       START NEW GAME
                     </button>
                   ) : (
@@ -673,7 +672,7 @@ const GameRoom = () => {
                     maxLength={100}
                     onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
                   />
-                  <button style={styles.chatButton} onClick={sendChatMessage}>
+                  <button className="btn btn-md btn-primary" onClick={sendChatMessage}>
                     SEND
                   </button>
                 </div>
@@ -689,39 +688,11 @@ const GameRoom = () => {
 };
 
 const styles = {
-  container: {
-    padding: '1.5rem',
-    backgroundColor: 'var(--secondary)',
-    minHeight: '100vh',
-    fontFamily: "'Space Grotesk', sans-serif",
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    margin: '0 auto',
-    color: 'var(--text)',
-    gap: '1.5rem',
-    fontSize: 'calc(16px + 0.5vw)',
-  },
+  // Styles migrated to CSS classes:
+  // - container -> .game-room-container
+  // - roundHeader -> .round-header
+  // - roundTitle -> .round-title
   
-  // Round header and title styles
-  roundHeader: {
-    width: '100%',
-    marginBottom: '1.5rem',
-    backgroundColor: 'var(--accent)', 
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    textAlign: 'center',
-    textTransform: 'uppercase',
-  },
-  roundTitle: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    margin: 0,
-    textAlign: 'center',
-  },
   
   // Game info styles
   gameInfo: {
@@ -1010,19 +981,7 @@ const styles = {
     justifyContent: 'center',
     marginTop: '1rem',
   },
-  newGameButton: {
-    padding: '1rem 2rem',
-    fontSize: '1.25rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: '#00c2ff', // Bright blue
-    color: '#000000',
-    border: '3px solid #000000',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '4px 4px 0px #000000',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-  },
+  // newGameButton -> .btn .btn-md .btn-blue .btn-wide
  
   
   // Name set styles
@@ -1059,19 +1018,7 @@ const styles = {
     boxShadow: '4px 4px 0px #000000',
     outline: 'none',
   },
-  nameButton: {
-    padding: '1rem',
-    fontSize: '1.25rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: 'var(--primary)',
-    color: 'var(--text)',
-    border: '3px solid var(--text)',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '4px 4px 0px var(--text)',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-  },
+  // nameButton -> .btn .btn-md .btn-primary
   nameSetInfo: {
     backgroundColor: 'var(--backgroundSecondary)',
     padding: '1rem',
@@ -1129,20 +1076,7 @@ const styles = {
     padding: '0.25rem 0.75rem',
     border: '2px solid #000000',
   },
-  startGameButton: {
-    padding: '1.25rem',
-    fontSize: '1.5rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: 'var(--primary)',
-    color: '#ffffff',
-    border: '3px solid var(--text)',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '4px 4px 0px var(--text)',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-    width: '100%',
-  },
+  // startGameButton -> .btn .btn-lg .btn-primary
   creatorNote: {
     backgroundColor: '#ffffff',
     padding: '1.25rem',
@@ -1206,19 +1140,7 @@ const styles = {
     color: '#000000',
     outline: 'none',
   },
-  inviteButton: {
-    padding: '1rem',
-    fontSize: '1.25rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: '#00c2ff', // Bright blue
-    color: '#000000',
-    border: '3px solid #000000',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '4px 4px 0px #000000',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-  },
+  // inviteButton -> .btn .btn-md .btn-blue
   inviteInfo: {
     backgroundColor: 'var(--backgroundSecondary)',
     padding: '1rem',
@@ -1275,43 +1197,9 @@ const styles = {
     backgroundColor: 'var(--background)',
     color: 'var(--text)',
   },
-  saveButton: {
-    padding: '0.5rem 1rem',
-    fontSize: '1rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: '#00c2ff',
-    color: 'var(--text)',
-    border: '3px solid var(--text)',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '4px 4px 0px var(--text)',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-  },
-  cancelButton: {
-    padding: '0.5rem 1rem',
-    fontSize: '1rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: 'var(--primary)',
-    color: 'var(--background)',
-    border: '3px solid var(--text)',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '4px 4px 0px var(--text)',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-  },
-  editButton: {
-    padding: '0.25rem 0.5rem',
-    fontSize: '1rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: 'var(--accent)',
-    color: 'var(--text)',
-    border: '2px solid var(--text)',
-    cursor: 'pointer',
-    boxShadow: '3px 3px 0px var(--text)',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-  },
+  // saveButton -> .btn .btn-sm .btn-blue
+  // cancelButton -> .btn .btn-sm .btn-primary
+  // editButton -> .btn .btn-xs .btn-accent
   statusContainer: {
     display: 'flex',
     flexDirection: 'column',
@@ -1392,19 +1280,7 @@ const styles = {
     color: 'var(--text)',
     outline: 'none',
   },
-  inviteButton: {
-    padding: '1rem',
-    fontSize: '1.25rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: '#00c2ff',
-    color: 'var(--text)',
-    border: '3px solid var(--text)',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '4px 4px 0px var(--text)',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-  },
+  // inviteButton -> .btn .btn-md .btn-blue
   section: {
     marginBottom: '1.5rem',
     width: '100%',
@@ -1424,19 +1300,7 @@ const styles = {
     gap: '1rem',
     marginBottom: '1.5rem',
   },
-  nameButton: {
-    padding: '1rem',
-    fontSize: '1.25rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: 'var(--primary)',
-    color: 'var(--background)',
-    border: '3px solid var(--text)',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '4px 4px 0px var(--text)',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-  },
+  // nameButton -> .btn .btn-md .btn-primary
   waitingHeader: {
     width: '100%',
     marginBottom: '1.5rem',
@@ -1483,20 +1347,7 @@ const styles = {
     padding: '0.25rem 0.75rem',
     border: '2px solid var(--text)',
   },
-  startGameButton: {
-    padding: '1.25rem',
-    fontSize: '1.5rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: 'var(--primary)',
-    color: 'var(--background)',
-    border: '3px solid var(--text)',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '4px 4px 0px var(--text)',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-    width: '100%',
-  },
+  // startGameButton -> .btn .btn-lg .btn-primary (with width: 100%)
   creatorNote: {
     backgroundColor: 'var(--background)',
     padding: '1.25rem',
@@ -1594,19 +1445,7 @@ const styles = {
     width: '100%',
   },
 
-  submissionButton: {
-    padding: '1rem',
-    fontSize: '1.5rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: 'var(--primary)',
-    color: 'var(--background)',
-    border: '3px solid var(--text)',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '4px 4px 0px var(--text)',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-  },
+  // submissionButton -> .btn .btn-lg .btn-primary
   votingList: {
     listStyle: 'none',
     padding: 0,
@@ -1644,19 +1483,7 @@ const styles = {
     border: '2px solid var(--text)',
     display: 'inline-block',
   },
-  voteButton: {
-    padding: '0.5rem 1rem',
-    fontSize: '0.9rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: 'var(--primary)',
-    color: 'var(--background)',
-    border: '3px solid var(--text)',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '3px 3px 0px var(--text)',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-  },
+  // voteButton -> .btn .btn-xs .btn-primary
   resultsContainer: {
     width: '100%',
     display: 'flex',
@@ -1811,94 +1638,8 @@ const styles = {
     justifyContent: 'center',
     marginTop: '1rem',
   },
-  newGameButton: {
-    padding: '1rem 2rem',
-    fontSize: '1.25rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: '#00c2ff',
-    color: 'var(--text)',
-    border: '3px solid var(--text)',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '4px 4px 0px var(--text)',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-  },
-  chatContainer: {
-    width: '100%',
-    maxWidth: '800px',
-    backgroundColor: 'var(--background)',
-    padding: '1.5rem',
-    border: 'var(--border)',
-    boxShadow: 'var(--shadow)',
-    marginTop: '2rem',
-  },
-  chatTitle: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    marginBottom: '1rem',
-    backgroundColor: 'var(--accent)',
-    padding: '0.5rem 1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    textAlign: 'center',
-  },
-  chatListWrapper: {
-    border: '3px solid var(--text)',
-    height: '300px',
-    overflowY: 'auto',
-    marginBottom: '1rem',
-    backgroundColor: '#f0f0f0',
-  },
-  chatList: {
-    listStyle: 'none',
-    padding: '1rem',
-    margin: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-  },
-  chatItem: {
-    padding: '0.75rem',
-    border: '2px solid var(--text)',
-    boxShadow: '3px 3px 0px var(--text)',
-    maxWidth: '80%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-  chatSender: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '0.9rem',
-    backgroundColor: 'var(--primary)',
-    color: 'var(--background)',
-    padding: '0.25rem 0.5rem',
-    border: '2px solid var(--text)',
-    display: 'inline-block',
-  },
-  chatMessage: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontSize: '1rem',
-    color: 'var(--text)',
-    wordBreak: 'break-word',
-  },
-
- 
-  chatButton: {
-    fontSize: '1.25rem',
-    fontFamily: "'Space Mono', monospace",
-    backgroundColor: 'var(--primary)',
-    color: 'var(--text)',
-    border: '3px solid var(--text)',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    boxShadow: '4px 4px 0px var(--text)',
-    transition: 'transform 0.1s, box-shadow 0.1s',
-    textTransform: 'uppercase',
-  },
+  // newGameButton -> .btn .btn-lg .btn-blue
+  // chatButton -> .btn .btn-md .btn-primary
   loading: {
     fontSize: '1.5rem',
     textAlign: 'center',
@@ -1910,71 +1651,12 @@ const styles = {
     border: 'var(--border)',
     boxShadow: 'var(--shadow)',
   },
-  chatContainer: {
-    marginTop: '1.5rem',
-    width: '100%',
-    maxWidth: '800px',
-    backgroundColor: 'var(--background)',
-    padding: '1.5rem',
-    border: 'var(--border)',
-    boxShadow: 'var(--shadow)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-
-  chatListWrapper: {
-    border: '3px solid #000000',
-    backgroundColor: '#f0f0f0',
-    padding: '1rem',
-    width: '100%',
-    height: '300px',
-    overflowY: 'auto',
-  },
-  chatList: {
-    listStyle: 'none',
-    padding: '0',
-    margin: '0',
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-  },
-  chatItem: {
-    padding: '0.75rem',
-    marginBottom: '0.5rem',
-    border: '2px solid #000000',
-    boxShadow: '3px 3px 0px #000000',
-    maxWidth: '80%',
-    wordBreak: 'break-word',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
-  chatSender: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '0.9rem',
-    backgroundColor: '#ff3c00',
-    color: '#ffffff',
-    padding: '0.25rem 0.5rem',
-    border: '2px solid #000000',
-    display: 'inline-block',
-    alignSelf: 'flex-start',
-  },
-  chatMessage: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontSize: '1rem',
-    color: '#000000',
-  },
   chatInputContainer: {
     display: 'flex',
     gap: '0.75rem',
     width: '100%',
     backgroundColor: 'var(--background)',
-  },
- 
-
+  }
 };
 
 export default GameRoom;
