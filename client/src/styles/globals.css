@@ -68,7 +68,7 @@ h1:after {
 }
 
 .player-list {
-  margin: 20px 0;
+  margin: 0;
   padding: 1.5rem;
   background-color: var(--secondary);
   border: var(--border);
@@ -78,6 +78,7 @@ h1:after {
 .player-list ul {
   list-style-type: none;
   padding: 0;
+  margin: 0;
 }
 
 .player-list li {
@@ -106,9 +107,8 @@ h1:after {
 }
 
 input[type="text"], input[type="password"], input[type="email"] {
-  padding: 0.8rem 1rem;
+  padding: 1rem 1rem;
   font-family: 'Space Mono', monospace;
-  font-size: var(--fontSecondarySize);
   border: 3px solid #000;
   background-color: #fff;
   margin-right: 10px;
@@ -131,7 +131,7 @@ button {
   border: 3px solid #000;
   box-shadow: 4px 4px 0px #000;
   cursor: pointer;
-  margin: 5px;
+  margin: 5px 0;
   transition: all 0.1s ease;
 }
 
@@ -246,12 +246,14 @@ button:disabled {
 
 .main-input {
   width:  100%;
-  padding: 1rem;
-  font-size: var(--fontSecondarySize);
-  font-family: 'Space Grotesk', sans-serif;
+  padding: 1.2rem;
+  font-size: 1.25rem;
+  font-family: 'Space Mono', monospace;
   border: 3px solid #000000;
   box-shadow: 4px 4px 0px #000000;
   outline: none;
+  gap: 0.75rem;
+
 }
 
 .info-box {
@@ -269,6 +271,18 @@ button:disabled {
   font-size: 1.25rem;
   background-color: var(--accent);
   padding: 0.5rem 0.75rem;
-  border: 2px solid #000000;
-  box-shadow: 2px 2px 0px #000000;
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+}
+
+.section-header {
+  width: 100%;
+  margin-bottom: 1.5rem;
+  background-color: var(--accent);
+  padding: 1rem;
+  border: 3px solid var(--text);
+  box-shadow: 4px 4px 0px var(--text);
+  text-align: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: bold;
 }

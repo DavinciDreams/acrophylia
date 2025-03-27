@@ -465,7 +465,7 @@ const GameRoom = () => {
                 <div style={styles.gameInfo}>
                   <div style={styles.categoryContainer}>
                     <span style={styles.categoryLabel}>CATEGORY:</span>
-                    <span style={styles.categoryValue}>{category}</span>
+                    <span style={styles.categoryValue} className="pill">{category}</span>
                   </div>
                   <div style={styles.lettersContainer}>
                     <span style={styles.lettersLabel}>LETTERS:</span>
@@ -485,6 +485,7 @@ const GameRoom = () => {
                       ...styles.submissionInput,
                       backgroundColor: hasSubmitted ? 'var(--accent)' : 'var(--background)',
                     }}
+                    className="main-input"
                     type="text"
                     value={acronym}
                     onChange={(e) => setAcronym(e.target.value)}
@@ -561,7 +562,7 @@ const GameRoom = () => {
 
             {gameState === 'results' && results && (
               <div style={styles.section}>
-                <div style={styles.roundHeader}>
+                <div style={styles.roundHeader} className="section-header">
                   <h3 style={styles.roundTitle}>ROUND {roundNum} RESULTS</h3>
                 </div>
                 <div style={styles.resultsContainer}>
@@ -641,7 +642,7 @@ const GameRoom = () => {
 
             {gameStarted && (
               <div style={styles.chatContainer}>
-                <h3 style={styles.chatTitle}>GAME CHAT</h3>
+                <h3 className="section-header">GAME CHAT</h3>
                 <div style={styles.chatListWrapper}>
                   <ul style={styles.chatList} ref={chatListRef}>
                     {chatMessages.map((msg, index) => (
@@ -664,6 +665,7 @@ const GameRoom = () => {
                 <div style={styles.chatInputContainer}>
                   <input
                     style={styles.chatInput}
+                    className="main-input"
                     type="text"
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
@@ -699,6 +701,532 @@ const styles = {
     color: 'var(--text)',
     gap: '1.5rem',
     fontSize: 'calc(16px + 0.5vw)',
+  },
+  
+  // Round header and title styles
+  roundHeader: {
+    width: '100%',
+    marginBottom: '1.5rem',
+    backgroundColor: 'var(--accent)', 
+    padding: '1rem',
+    border: '3px solid var(--text)',
+    boxShadow: '4px 4px 0px var(--text)',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  roundTitle: {
+    fontFamily: "'Space Mono', monospace",
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    margin: 0,
+    textAlign: 'center',
+  },
+  
+  // Game info styles
+  gameInfo: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    marginBottom: '1.5rem',
+  },
+
+  lettersContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+    padding: '1rem',
+    backgroundColor: '#ffffff',
+    border: '3px solid #000000',
+    boxShadow: '4px 4px 0px #000000',
+  },
+  lettersLabel: {
+    fontFamily: "'Space Mono', monospace",
+    fontWeight: 'bold',
+    fontSize: '1rem',
+  },
+  letterBoxes: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.5rem',
+  },
+  letterBox: {
+    fontFamily: "'Space Mono', monospace",
+    fontWeight: 'bold',
+    fontSize: '1.25rem',
+    backgroundColor: 'var(--accent)',
+    padding: '0.5rem 0.75rem',
+    border: '2px solid #000000',
+    boxShadow: '2px 2px 0px #000000',
+  },
+  
+  // Timer styles
+  timerContainer: {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '1rem',
+    border: '3px solid #000000',
+    boxShadow: '4px 4px 0px #000000',
+    marginBottom: '1.5rem',
+  },
+  timerLabel: {
+    fontFamily: "'Space Mono', monospace",
+    fontWeight: 'bold',
+    fontSize: '1.25rem',
+    color: '#000000',
+  },
+  timerValue: {
+    fontFamily: "'Space Mono', monospace",
+    fontWeight: 'bold',
+    fontSize: '1.5rem',
+    color: '#000000',
+    backgroundColor: '#ffffff',
+    padding: '0.5rem 0.75rem',
+    border: '2px solid #000000',
+  },
+  
+  // Submission form styles
+  submissionForm: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    marginBottom: '1rem',
+  },
+ 
+
+  submittedMessage: {
+    backgroundColor: 'var(--accent)',
+    padding: '1rem',
+    border: '3px solid #000000',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: '1rem',
+  },
+  
+  // Voting styles
+  votingInstructions: {
+    backgroundColor: '#ffffff',
+    padding: '1rem',
+    border: '3px solid #000000',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: '1.5rem',
+    fontFamily: "'Space Grotesk', sans-serif",
+  },
+  votingList: {
+    listStyle: 'none',
+    padding: 0,
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+  },
+  votingItem: {
+    padding: '1rem',
+    border: '3px solid #000000',
+    boxShadow: '4px 4px 0px #000000',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '1rem',
+  },
+  acronymDisplay: {
+    fontFamily: "'Space Grotesk', sans-serif",
+    fontWeight: 'bold',
+    fontSize: '1.25rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+  yourSubmissionBadge: {
+    fontFamily: "'Space Mono', monospace",
+    fontSize: '0.75rem',
+    backgroundColor: '#ff3c00',
+    color: '#ffffff',
+    padding: '0.25rem 0.5rem',
+    border: '2px solid #000000',
+    display: 'inline-block',
+  },
+  
+  // Results styles
+  resultsContainer: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.5rem',
+  },
+  resultItem: {
+    padding: '1rem',
+    border: '3px solid #000000',
+    boxShadow: '4px 4px 0px #000000',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+  },
+  resultAcronym: {
+    fontFamily: "'Space Grotesk', sans-serif",
+    fontWeight: 'bold',
+    fontSize: '1.5rem',
+    padding: '0.75rem',
+    backgroundColor: '#f0f0f0',
+    border: '2px solid #000000',
+  },
+  resultDetails: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '1rem',
+  },
+  resultPlayer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+  },
+  resultPlayerLabel: {
+    fontFamily: "'Space Mono', monospace",
+    fontSize: '0.85rem',
+    fontWeight: 'bold',
+  },
+  resultPlayerName: {
+    fontFamily: "'Space Grotesk', sans-serif",
+    fontWeight: 'bold',
+    fontSize: '1.1rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  yourResultBadge: {
+    fontFamily: "'Space Mono', monospace",
+    fontSize: '0.75rem',
+    backgroundColor: '#ff3c00',
+    color: '#ffffff',
+    padding: '0.25rem 0.5rem',
+    border: '2px solid #000000',
+    display: 'inline-block',
+  },
+  resultVotes: {
+    padding: '0.5rem 0.75rem',
+    border: '2px solid #000000',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.25rem',
+  },
+  resultVotesLabel: {
+    fontFamily: "'Space Mono', monospace",
+    fontSize: '0.85rem',
+    fontWeight: 'bold',
+  },
+  resultVotesCount: {
+    fontFamily: "'Space Mono', monospace",
+    fontWeight: 'bold',
+    fontSize: '1.5rem',
+  },
+  
+  // Game over styles
+  gameOverHeader: {
+    width: '100%',
+    marginBottom: '1.5rem',
+    backgroundColor: '#ff3c00', // Bright red
+    padding: '1.5rem',
+    border: '3px solid #000000',
+    boxShadow: '4px 4px 0px #000000',
+  },
+  gameOverTitle: {
+    fontFamily: "'Space Mono', monospace",
+    fontSize: '2rem',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    color: '#ffffff',
+    margin: 0,
+    textAlign: 'center',
+  },
+  winnerContainer: {
+    width: '100%',
+    backgroundColor: '#ffde59',
+    padding: '1.5rem',
+    border: '3px solid #000000',
+    boxShadow: '4px 4px 0px #000000',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '1rem',
+    marginBottom: '1.5rem',
+    position: 'relative',
+  },
+  winnerLabel: {
+    fontFamily: "'Space Mono', monospace",
+    fontSize: '1.25rem',
+    fontWeight: 'bold',
+    backgroundColor: '#ffffff',
+    padding: '0.5rem 1rem',
+    border: '3px solid #000000',
+    boxShadow: '3px 3px 0px #000000',
+  },
+  winnerName: {
+    fontFamily: "'Space Grotesk', sans-serif",
+    fontSize: '2rem',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: '0.5rem',
+  },
+  winnerScore: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.25rem',
+    backgroundColor: '#ffffff',
+    padding: '1rem',
+    border: '3px solid #000000',
+    boxShadow: '3px 3px 0px #000000',
+  },
+  winnerScoreLabel: {
+    fontFamily: "'Space Mono', monospace",
+    fontSize: '1rem',
+    fontWeight: 'bold',
+  },
+  winnerScoreValue: {
+    fontFamily: "'Space Mono', monospace",
+    fontSize: '2rem',
+    fontWeight: 'bold',
+    color: '#ff3c00',
+  },
+  trophyIcon: {
+    fontSize: '4rem',
+    position: 'absolute',
+    top: '-1.5rem',
+    right: '1rem',
+    transform: 'rotate(15deg)',
+  },
+  gameOverActions: {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    marginTop: '1rem',
+  },
+  newGameButton: {
+    padding: '1rem 2rem',
+    fontSize: '1.25rem',
+    fontFamily: "'Space Mono', monospace",
+    backgroundColor: '#00c2ff', // Bright blue
+    color: '#000000',
+    border: '3px solid #000000',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    boxShadow: '4px 4px 0px #000000',
+    transition: 'transform 0.1s, box-shadow 0.1s',
+    textTransform: 'uppercase',
+  },
+ 
+  
+  // Name set styles
+  nameSetHeader: {
+    width: '100%',
+    marginBottom: '1.5rem',
+    backgroundColor: '#00c2ff', // Bright blue
+    padding: '1rem',
+    border: '3px solid #000000',
+    boxShadow: '4px 4px 0px #000000',
+  },
+  nameSetTitle: {
+    fontFamily: "'Space Mono', monospace",
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    color: '#000000',
+    margin: 0,
+    textAlign: 'center',
+  },
+  nameSetForm: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    marginBottom: '1.5rem',
+  },
+  nameInput: {
+    width: '100%',
+    padding: '1rem',
+    fontSize: 'var(--fontSecondarySize)',
+    fontFamily: "'Space Grotesk', sans-serif",
+    border: '3px solid #000000',
+    boxShadow: '4px 4px 0px #000000',
+    outline: 'none',
+  },
+  nameButton: {
+    padding: '1rem',
+    fontSize: '1.25rem',
+    fontFamily: "'Space Mono', monospace",
+    backgroundColor: 'var(--primary)',
+    color: 'var(--text)',
+    border: '3px solid var(--text)',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    boxShadow: '4px 4px 0px var(--text)',
+    transition: 'transform 0.1s, box-shadow 0.1s',
+    textTransform: 'uppercase',
+  },
+  nameSetInfo: {
+    backgroundColor: 'var(--backgroundSecondary)',
+    padding: '1rem',
+    border: '3px solid var(--text)',
+    fontSize: 'var(--fontSecondarySize)',
+    textAlign: 'center',
+    fontFamily: "'Space Grotesk', sans-serif",
+  },
+  
+  // Waiting styles
+  waitingHeader: {
+    width: '100%',
+    marginBottom: '1.5rem',
+    backgroundColor: 'var(--accent)',
+    padding: '1rem',
+    border: '3px solid var(--text)',
+    boxShadow: '4px 4px 0px var(--text)',
+  },
+  waitingTitle: {
+    fontFamily: "'Space Mono', monospace",
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    color: '#000000',
+    margin: 0,
+    textAlign: 'center',
+  },
+  waitingInfo: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    marginBottom: '1.5rem',
+  },
+
+  playerCount: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'var(--background)',
+    padding: '1rem',
+    border: '3px solid var(--text)',
+    boxShadow: '4px 4px 0px var(--text)',
+  },
+  playerCountLabel: {
+    fontFamily: "'Space Mono', monospace",
+    fontWeight: 'bold',
+    fontSize: '1.25rem',
+  },
+  playerCountValue: {
+    fontFamily: "'Space Mono', monospace",
+    fontWeight: 'bold',
+    fontSize: '2rem',
+    backgroundColor: '#ffffff',
+    padding: '0.25rem 0.75rem',
+    border: '2px solid #000000',
+  },
+  startGameButton: {
+    padding: '1.25rem',
+    fontSize: '1.5rem',
+    fontFamily: "'Space Mono', monospace",
+    backgroundColor: 'var(--primary)',
+    color: '#ffffff',
+    border: '3px solid var(--text)',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    boxShadow: '4px 4px 0px var(--text)',
+    transition: 'transform 0.1s, box-shadow 0.1s',
+    textTransform: 'uppercase',
+    width: '100%',
+  },
+  creatorNote: {
+    backgroundColor: '#ffffff',
+    padding: '1.25rem',
+    border: '3px solid #000000',
+    boxShadow: '4px 4px 0px #000000',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+  },
+  creatorIcon: {
+    fontSize: '2.5rem',
+  },
+  creatorText: {
+    fontFamily: "'Space Grotesk', sans-serif",
+    fontWeight: 'bold',
+    fontSize: '1.1rem',
+  },
+  
+  // Invite styles
+  inviteContainer: {
+    width: '100%',
+    maxWidth: '800px',
+    backgroundColor: '#ffffff',
+    padding: '1.5rem',
+    border: '4px solid #000000',
+    boxShadow: '6px 6px 0px #000000',
+    marginBottom: '1.5rem',
+  },
+  inviteHeader: {
+    width: '100%',
+    marginBottom: '1.5rem',
+    backgroundColor: 'var(--accent)',
+    padding: '1rem',
+    border: '3px solid var(--text)',
+    boxShadow: '4px 4px 0px var(--text)',
+  },
+  inviteTitle: {
+    fontFamily: "'Space Mono', monospace",
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    color: '#000000',
+    margin: 0,
+    textAlign: 'center',
+  },
+  inviteContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    marginBottom: '1.5rem',
+    width: '100%',
+  },
+  inviteInput: {
+    width: '100%',
+    padding: '1rem',
+    fontSize: '1rem',
+    fontFamily: "'Space Mono', monospace",
+    border: '3px solid var(--text)',
+    boxShadow: '4px 4px 0px var(--text)',
+    backgroundColor: '#f0f0f0',
+    color: '#000000',
+    outline: 'none',
+  },
+  inviteButton: {
+    padding: '1rem',
+    fontSize: '1.25rem',
+    fontFamily: "'Space Mono', monospace",
+    backgroundColor: '#00c2ff', // Bright blue
+    color: '#000000',
+    border: '3px solid #000000',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    boxShadow: '4px 4px 0px #000000',
+    transition: 'transform 0.1s, box-shadow 0.1s',
+    textTransform: 'uppercase',
+  },
+  inviteInfo: {
+    backgroundColor: 'var(--backgroundSecondary)',
+    padding: '1rem',
+    border: '3px solid var(--text)',
+    fontSize: 'var(--fontSecondarySize)',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    fontFamily: "'Space Grotesk', sans-serif",
   },
   header: {
     position: 'sticky',
@@ -1025,13 +1553,7 @@ const styles = {
     fontSize: '1.25rem',
   },
   categoryValue: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 'bold',
-    fontSize: '1.25rem',
-    backgroundColor: 'var(--secondary)',
-    padding: '0.5rem 1rem',
-    border: '2px solid var(--text)',
-    boxShadow: '2px 2px 0px var(--text)',
+    backgroundColor: 'var(--secondary)', // Bright yellow
   },
   lettersContainer: {
     display: 'flex',
@@ -1071,16 +1593,7 @@ const styles = {
     marginBottom: '1rem',
     width: '100%',
   },
-  submissionInput: {
-    width: '100%',
-    padding: '1rem',
-    fontSize: '1.25rem',
-    fontFamily: "'Space Mono', monospace",
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    color: 'var(--text)',
-    outline: 'none',
-  },
+
   submissionButton: {
     padding: '1rem',
     fontSize: '1.5rem',
@@ -1372,28 +1885,12 @@ const styles = {
     color: 'var(--text)',
     wordBreak: 'break-word',
   },
-  chatInputContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-    width: '100%',
-  },
-  chatInput: {
-    width: '100%',
-    padding: '1rem',
-    fontSize: '1rem',
-    fontFamily: "'Space Grotesk', sans-serif",
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    backgroundColor: 'var(--background)',
-    color: 'var(--text)',
-    outline: 'none',
-  },
+
+ 
   chatButton: {
-    padding: '0.75rem',
     fontSize: '1.25rem',
     fontFamily: "'Space Mono', monospace",
-    backgroundColor: 'var(--secondary)',
+    backgroundColor: 'var(--primary)',
     color: 'var(--text)',
     border: '3px solid var(--text)',
     cursor: 'pointer',
@@ -1413,6 +1910,71 @@ const styles = {
     border: 'var(--border)',
     boxShadow: 'var(--shadow)',
   },
+  chatContainer: {
+    marginTop: '1.5rem',
+    width: '100%',
+    maxWidth: '800px',
+    backgroundColor: 'var(--background)',
+    padding: '1.5rem',
+    border: 'var(--border)',
+    boxShadow: 'var(--shadow)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+  },
+
+  chatListWrapper: {
+    border: '3px solid #000000',
+    backgroundColor: '#f0f0f0',
+    padding: '1rem',
+    width: '100%',
+    height: '300px',
+    overflowY: 'auto',
+  },
+  chatList: {
+    listStyle: 'none',
+    padding: '0',
+    margin: '0',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+  },
+  chatItem: {
+    padding: '0.75rem',
+    marginBottom: '0.5rem',
+    border: '2px solid #000000',
+    boxShadow: '3px 3px 0px #000000',
+    maxWidth: '80%',
+    wordBreak: 'break-word',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+  chatSender: {
+    fontFamily: "'Space Mono', monospace",
+    fontWeight: 'bold',
+    fontSize: '0.9rem',
+    backgroundColor: '#ff3c00',
+    color: '#ffffff',
+    padding: '0.25rem 0.5rem',
+    border: '2px solid #000000',
+    display: 'inline-block',
+    alignSelf: 'flex-start',
+  },
+  chatMessage: {
+    fontFamily: "'Space Grotesk', sans-serif",
+    fontSize: '1rem',
+    color: '#000000',
+  },
+  chatInputContainer: {
+    display: 'flex',
+    gap: '0.75rem',
+    width: '100%',
+    backgroundColor: 'var(--background)',
+  },
+ 
+
 };
 
 export default GameRoom;

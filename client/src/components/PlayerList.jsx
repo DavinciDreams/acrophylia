@@ -9,15 +9,7 @@ export default function PlayerList({ players, leaveRoom }) {
       width: '100%',
       maxWidth: '800px',
     },
-    title: {
-      fontFamily: "'Space Mono', monospace",
-      fontSize: '1.5rem',
-      fontWeight: 'bold',
-      textTransform: 'uppercase',
-      marginBottom: '1rem',
-      position: 'relative',
-      display: 'inline-block',
-    },
+ 
     list: {
       listStyle: 'none',
       padding: 0,
@@ -72,7 +64,7 @@ export default function PlayerList({ players, leaveRoom }) {
 
   return (
     <div style={styles.container} className="player-list">
-      <h3 style={styles.title}>PLAYERS ({players.length})</h3>
+      <h3 className="section-header">PLAYERS ({players.length})</h3>
       <ul style={styles.list}>
         {players.map(player => (
           <li key={player.id} style={styles.listItem}>
