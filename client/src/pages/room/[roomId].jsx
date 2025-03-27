@@ -16,6 +16,7 @@ const GameRoom = () => {
   const router = useRouter();
   const { roomId: urlRoomId, creatorId } = router.query;
   const [roomId, setRoomId] = useState(urlRoomId || null);
+  const [roomName, setRoomName] = useState(''); // New state for room name
   const [players, setPlayers] = useState([]);
   const [roundNum, setRoundNum] = useState(0);
   const [letterSet, setLetterSet] = useState([]);
@@ -58,9 +59,10 @@ const GameRoom = () => {
       setIsConnected(false);
     });
 
-    socket.on('roomJoined', ({ roomId, isCreator: serverIsCreator }) => {
+    socket.on('roomJoined', ({ roomId, isCreator: serverIsCreator, roomName }) => {
       setRoomId(roomId);
       setIsCreator(serverIsCreator);
+      setRoomName(roomName); // Set room name on join
       sessionStorage.setItem('isCreator', serverIsCreator);
     });
 
@@ -69,9 +71,10 @@ const GameRoom = () => {
       router.push('/');
     });
 
-    socket.on('playerUpdate', (updatedPlayers) => {
-      setPlayers(updatedPlayers);
-      const currentPlayer = updatedPlayers.find(p => p.id === socket.id);
+    socket.on('playerUpdate', ({ players, roomName }) => {
+      setPlayers(players);
+      setRoomName(roomName); // Update room name with player updates
+      const currentPlayer = players.find(p => p.id === socket.id);
       if (currentPlayer && currentPlayer.name) setNameSet(true);
     });
 
@@ -214,6 +217,7 @@ const GameRoom = () => {
     if (roomId) {
       socket.emit('leaveRoom', roomId);
       setRoomId(null);
+      setRoomName('');
       setPlayers([]);
       setGameState('waiting');
       setGameStarted(false);
@@ -269,7 +273,7 @@ const GameRoom = () => {
         {roomId ? (
           <>
             <header style={styles.header}>
-              <h2 style={styles.title}>Room: {roomId}</h2>
+              <h2 style={styles.title}>{roomName}</h2> {/* Display roomName instead of roomId */}
               <div style={styles.statusContainer}>
                 {!isConnected && <span style={styles.warning}>Reconnecting...</span>}
                 <span
