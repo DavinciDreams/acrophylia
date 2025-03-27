@@ -1553,17 +1553,7 @@ const styles = {
     fontSize: '1.25rem',
   },
   categoryValue: {
-<<<<<<< HEAD
     backgroundColor: 'var(--secondary)', // Bright yellow
-=======
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 'bold',
-    fontSize: '1.25rem',
-    backgroundColor: 'var(--secondary)',
-    padding: '0.5rem 1rem',
-    border: '2px solid var(--text)',
-    boxShadow: '2px 2px 0px var(--text)',
->>>>>>> lisa/main
   },
   lettersContainer: {
     display: 'flex',
