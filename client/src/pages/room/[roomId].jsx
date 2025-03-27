@@ -317,11 +317,11 @@ const GameRoom = () => {
                       maxLength={20}
                       onKeyPress={(e) => e.key === 'Enter' && setRoomNameHandler()}
                     />
-                    <button className="btn btn-sm btn-blue" onClick={setRoomNameHandler}>
+                    <button className="button" onClick={setRoomNameHandler}>
                       Save
                     </button>
                     <button
-                      className="btn btn-sm btn-primary"
+                      className="button"
                       onClick={() => setIsEditingRoomName(false)}
                     >
                       Cancel
@@ -332,7 +332,6 @@ const GameRoom = () => {
                     {roomName || `Room ${roomId}`}
                     {isCreator && !roomNameSet && gameState === 'waiting' && (
                       <button
-                        className="btn btn-xs btn-accent"
                         onClick={() => setIsEditingRoomName(true)}
                         aria-label="Edit Room Name"
                       >
@@ -370,7 +369,7 @@ const GameRoom = () => {
                 <div className="invite-content">
                   <input className="invite-input" type="text" value={inviteLink} readOnly />
                   <button
-                    className="btn btn-md btn-blue"
+                    className="button"
                     onClick={() => {
                       navigator.clipboard.writeText(inviteLink);
                       alert('Link copied to clipboard!');
@@ -399,7 +398,7 @@ const GameRoom = () => {
                     onKeyPress={(e) => e.key === 'Enter' && playerName.trim() && setName()}
                   />
                   <button
-                    className="btn btn-md btn-primary"
+                    className="button"
                     onClick={setName}
                     disabled={!playerName.trim()}
                   >
@@ -414,191 +413,199 @@ const GameRoom = () => {
             )}
 
             {gameState === 'waiting' && nameSet && (
-              <div className="game-section">
-                <div className="waiting-header">
-                  <h3 className="waiting-title">WAITING FOR PLAYERS</h3>
-                </div>
-                <div className="waiting-info">
-                  <div className="info-box">
-                    Game starts with 4 players. Bots will be added if needed.
+              <div className="container">
+                <div className="game-section">
+                  <div className="waiting-header">
+                    <h3 className="waiting-title">WAITING FOR PLAYERS</h3>
                   </div>
-                  <div className="player-count">
-                    <span className="player-count-label">PLAYERS:</span>
-                    <span className="player-count-value">{players.length}/4</span>
-                  </div>
-                </div>
-                {isCreator ? (
-                  <button
-                    className={`btn btn-lg btn-primary ${players.length >= 2 && !isStarting ? 'pulse-animation' : ''} ${isStarting ? 'opacity-70' : ''}`}
-                    onClick={startGame}
-                    disabled={isStarting}
-                  >
-                    {isStarting ? 'STARTING...' : 'START GAME'}
-                  </button>
-                ) : (
-                  <div className="creator-note">
-                    <div className="creator-icon">👑</div>
-                    <div className="creator-text">
-                      Waiting for the room creator to start the game...
+                  <div className="waiting-info">
+                    <div className="info-box">
+                      Game starts with 4 players. Bots will be added if needed.
+                    </div>
+                    <div className="player-count">
+                      <span className="player-count-label">PLAYERS:</span>
+                      <span className="player-count-value">{players.length}/4</span>
                     </div>
                   </div>
-                )}
+                  {isCreator ? (
+                    <button
+                      className={`button ${players.length >= 2 && !isStarting ? 'pulse-animation' : ''} ${isStarting ? 'opacity-70' : ''}`}
+                      onClick={startGame}
+                      disabled={isStarting}
+                    >
+                      {isStarting ? 'STARTING...' : 'START GAME'}
+                    </button>
+                  ) : (
+                    <div className="creator-note">
+                      <div className="creator-icon">👑</div>
+                      <div className="creator-text">
+                        Waiting for the room creator to start the game...
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
             {gameState === 'submitting' && (
-              <div className="game-section">
-                <div className="round-header">
-                  ROUND {roundNum} OF 5
-                </div>
-                <div className="game-info">
-                  <div className="category-container">
-                    <span className="category-label">CATEGORY:</span>
-                    <span className="category-value pill">{category}</span>
+              <div className="container">
+                <div className="game-section">
+                  <div className="section-header">
+                    ROUND {roundNum} OF 5
                   </div>
-                  <div className="letters-container">
-                    <span className="letters-label">LETTERS:</span>
-                    <div className="letter-boxes">
-                      {letterSet.map((letter, index) => (
-                        <span key={index} className="letter-box">{letter}</span>
-                      ))}
+                  <div className="game-info">
+                    <div className="category-container">
+                      <span className="category-label">CATEGORY:</span>
+                      <span className="category-value pill">{category}</span>
+                    </div>
+                    <div className="letters-container">
+                      <span className="letters-label">LETTERS:</span>
+                      <div className="letter-boxes">
+                        {letterSet.map((letter, index) => (
+                          <span key={index} className="letter-box">{letter}</span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className={`timer-container ${timeLeft <= 10 ? 'timer-warning' : ''}`}>
-                  <span className="timer-label">TIME LEFT: {timeLeft !== null ? `${timeLeft}s` : 'WAITING...'}</span>
-                </div>
-                <div className="submission-form">
-                  <input
-                    className={`main-input ${hasSubmitted ? 'submitted' : ''}`}
-                    type="text"
-                    value={acronym}
-                    onChange={(e) => setAcronym(e.target.value)}
-                    placeholder="Enter your acronym"
-                    disabled={hasSubmitted || timeLeft === 0}
-                    onKeyPress={(e) => e.key === 'Enter' && !hasSubmitted && timeLeft > 0 && submitAcronym()}
-                  />
-                  <button
-                    className={`btn btn-lg btn-primary ${hasSubmitted || timeLeft === 0 ? 'opacity-70' : ''}`}
-                    onClick={submitAcronym}
-                    disabled={hasSubmitted || timeLeft === 0}
-                  >
-                    {hasSubmitted ? 'SUBMITTED!' : 'SUBMIT'}
-                  </button>
-                </div>
-                {hasSubmitted && (
-                  <div className="info-box">
-                    Your submission has been received! Waiting for other players...
+                  <div className={`timer-container ${timeLeft <= 10 ? 'timer-warning' : ''}`}>
+                    <span className="timer-label">TIME LEFT: {timeLeft !== null ? `${timeLeft}s` : 'WAITING...'}</span>
                   </div>
-                )}
+                  <div className="submission-form">
+                    <input
+                      className={`main-input ${hasSubmitted ? 'submitted' : ''}`}
+                      type="text"
+                      value={acronym}
+                      onChange={(e) => setAcronym(e.target.value)}
+                      placeholder="Enter your acronym"
+                      disabled={hasSubmitted || timeLeft === 0}
+                      onKeyPress={(e) => e.key === 'Enter' && !hasSubmitted && timeLeft > 0 && submitAcronym()}
+                    />
+                    <button
+                      className={`button ${hasSubmitted || timeLeft === 0 ? 'opacity-70' : ''}`}
+                      onClick={submitAcronym}
+                      disabled={hasSubmitted || timeLeft === 0}
+                    >
+                      {hasSubmitted ? 'SUBMITTED!' : 'SUBMIT'}
+                    </button>
+                  </div>
+                  {hasSubmitted && (
+                    <div className="info-box">
+                      Your submission has been received! Waiting for other players...
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
             {gameState === 'voting' && (
-              <div className="game-section">
-                <div className="round-header">
-                  <h3 className="round-title">VOTE FOR AN ACRONYM</h3>
-                </div>
-                <div className={`timer-container ${timeLeft <= 10 ? 'timer-warning' : ''}`}>
-                  <span className="timer-label">TIME LEFT:</span>
-                  <span className="timer-value">
-                    {timeLeft !== null ? `${timeLeft}s` : 'WAITING...'}
-                  </span>
-                </div>
-                <div className="info-box">
-                  {hasVoted ? 'You have cast your vote! Waiting for others...' : 'Choose your favorite acronym below:'}
-                </div>
-                <ul className="voting-list">
-                  {submissions.map(([playerId, acronym]) => {
-                    const isOwnSubmission = playerId === socket.id;
-                    const isDisabled = hasVoted || isOwnSubmission || timeLeft === 0;
-                    return (
-                      <li
-                        key={playerId}
-                        className={`voting-item ${isOwnSubmission ? 'own-submission' : ''} ${isDisabled ? 'disabled' : ''}`}
-                      >
-                        <div className="acronym-display">
-                          {acronym || '(No submission)'}
-                          {isOwnSubmission && <span className="your-submission-badge">YOUR SUBMISSION</span>}
-                        </div>
-                        <button
-                          className={`btn btn-xs btn-primary ${isDisabled ? 'opacity-70' : ''}`}
-                          onClick={() => submitVote(playerId)}
-                          disabled={isDisabled}
+              <div className="container">
+                <div className="game-section">
+                  <h3 className="section-header">VOTE FOR AN ACRONYM</h3>
+                  <div className={`timer-container ${timeLeft <= 10 ? 'timer-warning' : ''}`}>
+                    <span className="timer-label">TIME LEFT:</span>
+                    <span className="timer-value">
+                      {timeLeft !== null ? `${timeLeft}s` : 'WAITING...'}
+                    </span>
+                  </div>
+                  <div className="info-box">
+                    {hasVoted ? 'You have cast your vote! Waiting for others...' : 'Choose your favorite acronym below:'}
+                  </div>
+                  <ul className="voting-list">
+                    {submissions.map(([playerId, acronym]) => {
+                      const isOwnSubmission = playerId === socket.id;
+                      const isDisabled = hasVoted || isOwnSubmission || timeLeft === 0;
+                      return (
+                        <li
+                          key={playerId}
+                          className={`voting-item ${isOwnSubmission ? 'own-submission' : ''} ${isDisabled ? 'disabled' : ''}`}
                         >
-                          {hasVoted ? 'VOTED' : 'VOTE'}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+                          <div className="acronym-display">
+                            {acronym || '(No submission)'}
+                            {isOwnSubmission && <span className="your-submission-badge">YOUR SUBMISSION</span>}
+                          </div>
+                          <button
+                            className={`button ${isDisabled ? 'opacity-70' : ''}`}
+                            onClick={() => submitVote(playerId)}
+                            disabled={isDisabled}
+                          >
+                            {hasVoted ? 'VOTED' : 'VOTE'}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               </div>
             )}
 
             {gameState === 'results' && results && (
-              <div className="game-section">
-                <div className="round-header section-header">
-                  <h3 className="round-title">ROUND {roundNum} RESULTS</h3>
-                </div>
-                <div className="results-container">
-                  {results.submissions.map(([playerId, acronym]) => {
-                    const voteCount = (results.votes || []).filter(([_, votedId]) => votedId === playerId).length || 0;
-                    const player = players.find(p => p.id === playerId);
-                    const isOwnSubmission = playerId === socket.id;
-                    const hasVotes = voteCount > 0;
-                    return (
-                      <div
-                        key={playerId}
-                        className={`result-item ${isOwnSubmission ? 'own-result' : ''} ${hasVotes ? 'has-votes' : ''}`}
-                      >
-                        <div className="result-acronym">
-                          {acronym || '(No submission)'}
-                        </div>
-                        <div className="result-details">
-                          <div className="result-player">
-                            <span className="result-player-label">PLAYER:</span>
-                            <span className="result-player-name">
-                              {player?.name || (player?.isBot ? player.name : playerId)}
-                              {isOwnSubmission && <span className="your-result-badge">YOU</span>}
-                            </span>
+              <div className="container">
+                <div className="game-section">
+                  <div className="round-header section-header">
+                    <h3 className="round-title">ROUND {roundNum} RESULTS</h3>
+                  </div>
+                  <div className="results-container">
+                    {results.submissions.map(([playerId, acronym]) => {
+                      const voteCount = (results.votes || []).filter(([_, votedId]) => votedId === playerId).length || 0;
+                      const player = players.find(p => p.id === playerId);
+                      const isOwnSubmission = playerId === socket.id;
+                      const hasVotes = voteCount > 0;
+                      return (
+                        <div
+                          key={playerId}
+                          className={`result-item ${isOwnSubmission ? 'own-result' : ''} ${hasVotes ? 'has-votes' : ''}`}
+                        >
+                          <div className="result-acronym">
+                            {acronym || '(No submission)'}
                           </div>
-                          <div className={`result-votes ${voteCount > 0 ? 'has-votes' : ''}`}
-                          >
-                            <span className="result-votes-label">VOTES:</span>
-                            <span className="result-votes-count">{voteCount}</span>
+                          <div className="result-details">
+                            <div className="result-player">
+                              <span className="result-player-label">PLAYER:</span>
+                              <span className="result-player-name">
+                                {player?.name || (player?.isBot ? player.name : playerId)}
+                                {isOwnSubmission && <span className="your-result-badge">YOU</span>}
+                              </span>
+                            </div>
+                            <div className={`result-votes ${voteCount > 0 ? 'has-votes' : ''}`}
+                            >
+                              <span className="result-votes-label">VOTES:</span>
+                              <span className="result-votes-count">{voteCount}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
 
             {gameState === 'ended' && winner && (
-              <div className="game-section">
-                <div className="game-over-header">
-                  <h3 className="game-over-title">GAME OVER!</h3>
-                </div>
-                <div className="winner-container">
-                  <div className="winner-label">WINNER</div>
-                  <div className="winner-name">{winner.name || winner.id}</div>
-                  <div className="winner-score">
-                    <span className="winner-score-label">SCORE</span>
-                    <span className="winner-score-value">{winner.score}</span>
+              <div className="container">
+                <div className="game-section">
+                  <div className="game-over-header">
+                    <h3 className="game-over-title">GAME OVER!</h3>
                   </div>
-                  <div className="trophy-icon">🏆</div>
-                </div>
-                <div className="game-over-actions">
-                  {isCreator ? (
-                    <button className="btn btn-md btn-blue btn-wide" onClick={resetGame}>
-                      START NEW GAME
-                    </button>
-                  ) : (
-                    <div className="info-box">
-                      Waiting for room creator to start a new game...
+                  <div className="winner-container">
+                    <div className="winner-label">WINNER</div>
+                    <div className="winner-name">{winner.name || winner.id}</div>
+                    <div className="winner-score">
+                      <span className="winner-score-label">SCORE</span>
+                      <span className="winner-score-value">{winner.score}</span>
                     </div>
-                  )}
+                    <div className="trophy-icon">🏆</div>
+                  </div>
+                  <div className="game-over-actions">
+                    {isCreator ? (
+                      <button className="button" onClick={resetGame}>
+                        START NEW GAME
+                      </button>
+                    ) : (
+                      <div className="info-box">
+                        Waiting for room creator to start a new game...
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -606,7 +613,7 @@ const GameRoom = () => {
             <PlayerList players={players} leaveRoom={leaveRoom} />
 
             {gameStarted && (
-              <div className="chat-container">
+              <div className="container">
                 <h3 className="section-header">GAME CHAT</h3>
                 <div className="chat-list-wrapper">
                   <ul className="chat-list" ref={chatListRef}>
@@ -615,7 +622,7 @@ const GameRoom = () => {
                         key={index}
                         className={`chat-item ${msg.senderId === socket.id ? 'own-message' : ''}`}
                       >
-                        <div className="chat-sender pill">
+                        <div className="pill chat-pill">
                           {msg.senderName}
                         </div>
                         <div className="chat-message">{msg.message}</div>
@@ -633,7 +640,7 @@ const GameRoom = () => {
                     maxLength={100}
                     onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
                   />
-                  <button className="btn btn-md btn-primary" onClick={sendChatMessage}>
+                  <button className="button" onClick={sendChatMessage}>
                     SEND
                   </button>
                 </div>

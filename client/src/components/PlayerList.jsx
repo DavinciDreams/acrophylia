@@ -16,7 +16,7 @@ export default function PlayerList({ players, leaveRoom }) {
           ))}
         </ul>
 
-        <button className="leave-button" onClick={leaveRoom}>
+        <button className="button" onClick={leaveRoom}>
           Leave Room
         </button>
       </div>
