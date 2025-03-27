@@ -291,6 +291,7 @@ const GameRoom = () => {
     <>
       <Head>
         <title>{`Acrophylia - Room ${roomId || ''}`}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         {/* Move this to _document.js as per Next.js recommendation */}
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Space+Mono:wght@400;700&display=swap"

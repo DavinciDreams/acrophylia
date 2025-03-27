@@ -266,6 +266,7 @@ const Home = () => {
     <>
       <Head>
         <title>Acrophylia | Word Game</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="description" content="A fun word game where players create phrases from random letters" />
       </Head>
       
@@ -338,6 +339,9 @@ const styles = {
     padding: '20px',
     position: 'relative',
     overflow: 'hidden',
+    '@media (max-width: 480px)': {
+      padding: '15px 10px'
+    }
   },
   '@keyframes float-0': {
     '0%': {
@@ -389,6 +393,15 @@ const styles = {
     textAlign: 'center',
     position: 'relative',
     zIndex: 1,
+    '@media (max-width: 768px)': {
+      padding: '30px 20px',
+      maxWidth: '100%',
+      margin: '0 10px'
+    },
+    '@media (max-width: 480px)': {
+      padding: '20px 15px',
+      border: '3px solid var(--text)'
+    }
   },
   glitch: {
     position: 'relative',
@@ -404,6 +417,14 @@ const styles = {
     position: 'relative',
     textShadow: `2px 0 0 var(--primary), -2px 0 0 var(--accent)`,
     letterSpacing: '-2px',
+    '@media (max-width: 768px)': {
+      fontSize: '3.5rem'
+    },
+    '@media (max-width: 480px)': {
+      fontSize: '2.5rem',
+      letterSpacing: '-1px',
+      textShadow: `1px 0 0 var(--primary), -1px 0 0 var(--accent)`
+    }
   },
   subtitle: {
     fontFamily: '"Space Mono", monospace',
@@ -415,6 +436,10 @@ const styles = {
     display: 'inline-block',
     transform: 'rotate(-1deg)',
     border: '2px solid var(--text)',
+    '@media (max-width: 480px)': {
+      fontSize: '1rem',
+      padding: '4px 8px'
+    }
   },
   inputContainer: {
     marginBottom: '30px',
@@ -442,6 +467,18 @@ const styles = {
     textTransform: 'uppercase',
     transition: 'transform 0.1s, box-shadow 0.1s',
     marginTop: '10px',
+    '@media (max-width: 480px)': {
+      fontSize: '1rem',
+      padding: '12px',
+      boxShadow: '4px 4px 0px var(--text)'
+    },
+    '@media (hover: none)': {
+      // Better touch experience for mobile devices
+      '&:active': {
+        transform: 'translate(2px, 2px)',
+        boxShadow: '3px 3px 0px var(--text)'
+      }
+    }
   },
   instructions: {
     marginTop: '30px',
@@ -464,6 +501,10 @@ const styles = {
     padding: '5px 15px',
     border: '2px solid var(--text)',
     display: 'inline-block',
+    '@media (max-width: 480px)': {
+      fontSize: '0.8rem',
+      padding: '4px 10px'
+    }
   }
 };
 
