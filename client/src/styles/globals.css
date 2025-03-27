@@ -68,7 +68,7 @@ h1:after {
 }
 
 .player-list {
-  margin: 20px 0;
+  margin: 0;
   padding: 1.5rem;
   background-color: var(--secondary);
   border: var(--border);
@@ -78,6 +78,7 @@ h1:after {
 .player-list ul {
   list-style-type: none;
   padding: 0;
+  margin: 0;
 }
 
 .player-list li {
