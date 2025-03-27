@@ -7,6 +7,7 @@ export default function PlayerList({ players }) {
       padding: '1.5rem',
       marginBottom: '1.5rem',
       width: '100%',
+      maxWidth: '800px',
     },
     title: {
       fontFamily: "'Space Mono', monospace",
