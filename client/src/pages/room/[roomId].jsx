@@ -460,7 +460,7 @@ const GameRoom = () => {
                 </div>
                 
                 {hasSubmitted && (
-                  <div style={styles.submittedMessage}>
+                  <div className="info-box">
                     Your submission has been received! Waiting for other players...
                   </div>
                 )}
