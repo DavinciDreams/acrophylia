@@ -453,22 +453,26 @@ const GameRoom = () => {
                   <div className="section-header">
                     ROUND {roundNum} OF 5
                   </div>
-                  <div className="game-info">
-                    <div className="category-container">
-                      <span className="category-label">CATEGORY:</span>
-                      <span className="category-value pill">{category}</span>
-                    </div>
-                    <div className="letters-container">
-                      <span className="letters-label">LETTERS:</span>
-                      <div className="letter-boxes">
-                        {letterSet.map((letter, index) => (
-                          <span key={index} className="letter-box">{letter}</span>
-                        ))}
+                  <div className="section-content">
+                    <div className="game-info">
+                      <div className="category-container">
+                        <span className="category-label">CATEGORY:</span>
+                        <span className="category-value pill">{category}</span>
+                      </div>
+
+                      <div className={`timer-container ${timeLeft <= 10 ? 'timer-warning' : ''}`}>
+                        <span className="timer-label">TIME LEFT 
+                          <div>{timeLeft !== null ? `${timeLeft}s` : 'WAITING...'}</div></span>
+                      </div>
+                      <div className="letters-container">
+                        <span className="letters-label">LETTERS:</span>
+                        <div className="letter-boxes">
+                          {letterSet.map((letter, index) => (
+                            <span key={index} className="letter-box">{letter}</span>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className={`timer-container ${timeLeft <= 10 ? 'timer-warning' : ''}`}>
-                    <span className="timer-label">TIME LEFT: {timeLeft !== null ? `${timeLeft}s` : 'WAITING...'}</span>
                   </div>
                   <div className="submission-form">
                     <input
@@ -502,10 +506,8 @@ const GameRoom = () => {
                 <div className="game-section">
                   <h3 className="section-header">VOTE FOR AN ACRONYM</h3>
                   <div className={`timer-container ${timeLeft <= 10 ? 'timer-warning' : ''}`}>
-                    <span className="timer-label">TIME LEFT:</span>
-                    <span className="timer-value">
-                      {timeLeft !== null ? `${timeLeft}s` : 'WAITING...'}
-                    </span>
+                    <span className="timer-label">TIME LEFT</span>
+                    <div>{timeLeft !== null ? `${timeLeft}s` : 'WAITING...'}</div>
                   </div>
                   <div className="info-box">
                     {hasVoted ? 'You have cast your vote! Waiting for others...' : 'Choose your favorite acronym below:'}
@@ -641,7 +643,7 @@ const GameRoom = () => {
                     maxLength={100}
                     onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
                   />
-                  <button className="button" onClick={sendChatMessage}>
+                  <button style={{width: '140px'}}className="button" onClick={sendChatMessage}>
                     SEND
                   </button>
                 </div>
