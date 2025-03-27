@@ -16,7 +16,7 @@ const Home = () => {
   const letterColors = ['#FF6B6B', '#4ECDC4', '#FFD166', '#06D6A0', '#118AB2'];
   const letterCount = useRef(0);
 
-  // Function to create a new letter element
+  // Function to create a new letter element with individual animation properties
   const createLetter = (scrollDirection, mouseX, mouseY) => {
     if (!containerRef.current) return;
     
@@ -87,6 +87,13 @@ const Home = () => {
     const moveX = (Math.random() * 100) - 50; // -50 to 50px
     const moveY = scrollDirection === 'down' ? -100 - Math.random() * 100 : 100 + Math.random() * 100;
     
+    // Individual animation timing - faster and shorter
+    const duration = 1000 + Math.random() * 1000; // 1-2 seconds
+    const delay = Math.random() * 100; // 0-100ms delay
+    
+    // Random float pattern
+    const floatPattern = Math.floor(Math.random() * 5); // 5 different float patterns
+    
     return {
       id: letterCount.current++,
       letter,
@@ -98,6 +105,9 @@ const Home = () => {
       rotation,
       size,
       opacity: 1,
+      duration,
+      delay,
+      floatPattern,
       createdAt: Date.now()
     };
   };
@@ -145,28 +155,39 @@ const Home = () => {
     }
   };
 
-  // Clean up old letters
+  // Update letter animations instead of removing them
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
-      const before = letters.length;
       setLetters(prev => {
-        const filtered = prev.filter(letter => {
-          // Remove letters older than 3 seconds
-          return now - letter.createdAt < 3000;
+        return prev.map(letter => {
+          const age = now - letter.createdAt;
+          const maxAge = letter.duration + letter.delay;
+          
+          // Calculate opacity based on age
+          if (age < letter.delay) {
+            // Still in delay phase, maintain full opacity
+            return letter;
+          } else if (age > maxAge) {
+            // Past max age, mark for removal with zero opacity
+            return { ...letter, opacity: 0 };
+          } else {
+            // In fade-out phase, calculate opacity
+            const fadeProgress = (age - letter.delay) / letter.duration;
+            const newOpacity = Math.max(0, 1 - fadeProgress);
+            return { ...letter, opacity: newOpacity };
+          }
+        }).filter(letter => {
+          // Only keep letters that haven't been at zero opacity for too long
+          const age = now - letter.createdAt;
+          const maxAge = letter.duration + letter.delay + 200; // Give 200ms extra after reaching zero opacity
+          return letter.opacity > 0 || age < maxAge;
         });
-        
-        // Debug log if letters were removed
-        if (filtered.length !== before && before > 0) {
-          console.log(`Cleaned up letters: ${before} → ${filtered.length}`);
-        }
-        
-        return filtered;
       });
-    }, 500);
+    }, 30); // Update more frequently for smoother animations
 
     return () => clearInterval(interval);
-  }, [letters.length]);
+  }, []);
 
   // Set up scroll and mouse listeners
   useEffect(() => {
@@ -237,8 +258,8 @@ const Home = () => {
               fontSize: `${letter.size}px`,
               transform: `rotate(${letter.rotation}deg)`,
               opacity: letter.opacity,
-              transition: 'all 3s ease-out',
-              animation: `float-${letter.id % 3} 3s forwards ease-out`,
+              transition: `opacity ${letter.duration/1000}s ease-out, transform ${letter.duration/1000}s ease-out`,
+              animation: `float-${letter.floatPattern} ${letter.duration/1000}s forwards ${letter.delay/1000}s ease-out`,
               border: '2px solid #000',
               boxShadow: '2px 2px 0 #000',
               zIndex: 0,
@@ -293,31 +314,41 @@ const styles = {
   '@keyframes float-0': {
     '0%': {
       transform: 'rotate(0deg) translate(0, 0)',
-      opacity: 1,
     },
     '100%': {
       transform: 'rotate(10deg) translate(50px, -100px)',
-      opacity: 0,
     },
   },
   '@keyframes float-1': {
     '0%': {
       transform: 'rotate(0deg) translate(0, 0)',
-      opacity: 1,
     },
     '100%': {
       transform: 'rotate(-10deg) translate(-50px, -100px)',
-      opacity: 0,
     },
   },
   '@keyframes float-2': {
     '0%': {
       transform: 'rotate(0deg) translate(0, 0)',
-      opacity: 1,
     },
     '100%': {
       transform: 'rotate(5deg) translate(30px, -120px)',
-      opacity: 0,
+    },
+  },
+  '@keyframes float-3': {
+    '0%': {
+      transform: 'rotate(0deg) translate(0, 0)',
+    },
+    '100%': {
+      transform: 'rotate(-5deg) translate(70px, -80px)',
+    },
+  },
+  '@keyframes float-4': {
+    '0%': {
+      transform: 'rotate(0deg) translate(0, 0)',
+    },
+    '100%': {
+      transform: 'rotate(15deg) translate(-40px, -110px)',
     },
   },
   card: {
