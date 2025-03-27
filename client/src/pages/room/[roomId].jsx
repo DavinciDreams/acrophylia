@@ -583,9 +583,10 @@ const GameRoom = () => {
             {gameState === 'ended' && winner && (
               <div className="container">
                 <div className="game-section">
-                  <div className="game-over-header">
+                  <div className="section-header">
                     <h3 className="game-over-title">GAME OVER!</h3>
                   </div>
+                    
                   <div className="winner-container">
                     <div className="winner-label">WINNER</div>
                     <div className="winner-name">{winner.name || winner.id}</div>
