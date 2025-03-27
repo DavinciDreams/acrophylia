@@ -304,12 +304,12 @@ const GameRoom = () => {
       <div className="game-room-container">
         {roomId ? (
           <>
-            <header style={styles.header}>
-              <div style={styles.roomTitleContainer}>
+            <header className="header">
+              <div className="room-title-container">
                 {isEditingRoomName && isCreator && !roomNameSet && gameState === 'waiting' ? (
-                  <div style={styles.roomNameEdit}>
+                  <div className="room-name-edit">
                     <input
-                      style={styles.input}
+                      className="input"
                       type="text"
                       value={roomName}
                       onChange={(e) => setRoomName(e.target.value)}
@@ -328,7 +328,7 @@ const GameRoom = () => {
                     </button>
                   </div>
                 ) : (
-                  <h2 style={styles.title}>
+                  <h2 className="title">
                     {roomName || `Room ${roomId}`}
                     {isCreator && !roomNameSet && gameState === 'waiting' && (
                       <button
@@ -342,29 +342,20 @@ const GameRoom = () => {
                   </h2>
                 )}
               </div>
-              <div style={styles.statusContainer}>
+              <div className="status-container">
                 {!isConnected && (
-                  <div style={styles.reconnectingBadge}>
-                    <span style={styles.reconnectingText}>RECONNECTING</span>
-                    <span style={styles.reconnectingDots}>...</span>
+                  <div className="reconnecting-badge">
+                    <span className="reconnecting-text">RECONNECTING</span>
+                    <span className="reconnecting-dots">...</span>
                   </div>
                 )}
                 <div
-                  style={{
-                    ...styles.gameStatusBadge,
-                    backgroundColor:
-                      gameState === 'waiting'
-                        ? 'var(--accent)'
-                        : gameState === 'submitting'
-                        ? '#00c2ff'
-                        : gameState === 'voting'
-                        ? 'var(--primary)'
-                        : gameState === 'results'
-                        ? '#00c2ff'
-                        : 'var(--background)',
-                  }}
+                  className={`game-status-badge ${gameState === 'waiting' ? 'bg-accent' : 
+                    gameState === 'submitting' ? 'bg-blue' : 
+                    gameState === 'voting' ? 'bg-primary' : 
+                    gameState === 'results' ? 'bg-blue' : 'bg-background'}`}
                 >
-                  <span style={styles.gameStatusText}>
+                  <span className="game-status-text">
                     {gameState.toUpperCase()}
                   </span>
                 </div>
@@ -372,12 +363,12 @@ const GameRoom = () => {
             </header>
 
             {!gameStarted && (
-              <div style={styles.inviteContainer}>
-                <div style={styles.inviteHeader}>
-                  <h3 style={styles.inviteTitle}>INVITE FRIENDS</h3>
+              <div className="invite-container">
+                <div className="invite-header">
+                  <h3 className="invite-title">INVITE FRIENDS</h3>
                 </div>
-                <div style={styles.inviteContent}>
-                  <input style={styles.inviteInput} type="text" value={inviteLink} readOnly />
+                <div className="invite-content">
+                  <input className="invite-input" type="text" value={inviteLink} readOnly />
                   <button
                     className="btn btn-md btn-blue"
                     onClick={() => {
@@ -395,8 +386,8 @@ const GameRoom = () => {
             )}
 
             {!nameSet && gameState === 'waiting' && (
-              <div style={styles.section}>
-                <div style={styles.nameSetForm}>
+              <div className="game-section">
+                <div className="name-set-form">
                   <input
                     className="main-input"
                     type="text"
@@ -421,34 +412,31 @@ const GameRoom = () => {
             )}
 
             {gameState === 'waiting' && nameSet && (
-              <div style={styles.section}>
-                <div style={styles.waitingHeader}>
-                  <h3 style={styles.waitingTitle}>WAITING FOR PLAYERS</h3>
+              <div className="game-section">
+                <div className="waiting-header">
+                  <h3 className="waiting-title">WAITING FOR PLAYERS</h3>
                 </div>
-                <div style={styles.waitingInfo}>
+                <div className="waiting-info">
                   <div className="info-box">
                     Game starts with 4 players. Bots will be added if needed.
                   </div>
-                  <div style={styles.playerCount}>
-                    <span style={styles.playerCountLabel}>PLAYERS:</span>
-                    <span style={styles.playerCountValue}>{players.length}/4</span>
+                  <div className="player-count">
+                    <span className="player-count-label">PLAYERS:</span>
+                    <span className="player-count-value">{players.length}/4</span>
                   </div>
                 </div>
                 {isCreator ? (
                   <button
-                    className={`btn btn-lg btn-primary ${players.length >= 2 && !isStarting ? 'pulse-animation' : ''}`}
-                    style={{
-                      opacity: isStarting ? 0.7 : 1,
-                    }}
+                    className={`btn btn-lg btn-primary ${players.length >= 2 && !isStarting ? 'pulse-animation' : ''} ${isStarting ? 'opacity-70' : ''}`}
                     onClick={startGame}
                     disabled={isStarting}
                   >
                     {isStarting ? 'STARTING...' : 'START GAME'}
                   </button>
                 ) : (
-                  <div style={styles.creatorNote}>
-                    <div style={styles.creatorIcon}>👑</div>
-                    <div style={styles.creatorText}>
+                  <div className="creator-note">
+                    <div className="creator-icon">👑</div>
+                    <div className="creator-text">
                       Waiting for the room creator to start the game...
                     </div>
                   </div>
@@ -457,20 +445,20 @@ const GameRoom = () => {
             )}
 
             {gameState === 'submitting' && (
-              <div style={styles.section}>
+              <div className="game-section">
                 <div className="round-header">
                   ROUND {roundNum} OF 5
                 </div>
-                <div style={styles.gameInfo}>
-                  <div style={styles.categoryContainer}>
-                    <span style={styles.categoryLabel}>CATEGORY:</span>
-                    <span style={styles.categoryValue} className="pill">{category}</span>
+                <div className="game-info">
+                  <div className="category-container">
+                    <span className="category-label">CATEGORY:</span>
+                    <span className="category-value pill">{category}</span>
                   </div>
-                  <div style={styles.lettersContainer}>
-                    <span style={styles.lettersLabel}>LETTERS:</span>
-                    <div style={styles.letterBoxes}>
+                  <div className="letters-container">
+                    <span className="letters-label">LETTERS:</span>
+                    <div className="letter-boxes">
                       {letterSet.map((letter, index) => (
-                        <span key={index} style={styles.letterBox}>{letter}</span>
+                        <span key={index} className="letter-box">{letter}</span>
                       ))}
                     </div>
                   </div>
@@ -478,13 +466,9 @@ const GameRoom = () => {
                 <div className={`timer-container ${timeLeft <= 10 ? 'timer-warning' : ''}`}>
                   <span className="timer-label">TIME LEFT: {timeLeft !== null ? `${timeLeft}s` : 'WAITING...'}</span>
                 </div>
-                <div style={styles.submissionForm}>
+                <div className="submission-form">
                   <input
-                    style={{
-                      ...styles.submissionInput,
-                      backgroundColor: hasSubmitted ? 'var(--accent)' : 'var(--background)',
-                    }}
-                    className="main-input"
+                    className={`main-input ${hasSubmitted ? 'submitted' : ''}`}
                     type="text"
                     value={acronym}
                     onChange={(e) => setAcronym(e.target.value)}
@@ -493,10 +477,7 @@ const GameRoom = () => {
                     onKeyPress={(e) => e.key === 'Enter' && !hasSubmitted && timeLeft > 0 && submitAcronym()}
                   />
                   <button
-                    className="btn btn-lg btn-primary"
-                    style={{
-                      opacity: hasSubmitted || timeLeft === 0 ? 0.7 : 1,
-                    }}
+                    className={`btn btn-lg btn-primary ${hasSubmitted || timeLeft === 0 ? 'opacity-70' : ''}`}
                     onClick={submitAcronym}
                     disabled={hasSubmitted || timeLeft === 0}
                   >
@@ -512,7 +493,7 @@ const GameRoom = () => {
             )}
 
             {gameState === 'voting' && (
-              <div style={styles.section}>
+              <div className="game-section">
                 <div className="round-header">
                   <h3 className="round-title">VOTE FOR AN ACRONYM</h3>
                 </div>
@@ -525,28 +506,21 @@ const GameRoom = () => {
                 <div className="info-box">
                   {hasVoted ? 'You have cast your vote! Waiting for others...' : 'Choose your favorite acronym below:'}
                 </div>
-                <ul style={styles.votingList}>
+                <ul className="voting-list">
                   {submissions.map(([playerId, acronym]) => {
                     const isOwnSubmission = playerId === socket.id;
                     const isDisabled = hasVoted || isOwnSubmission || timeLeft === 0;
                     return (
                       <li
                         key={playerId}
-                        style={{
-                          ...styles.votingItem,
-                          backgroundColor: isOwnSubmission ? 'var(--accent)' : 'var(--background)',
-                          opacity: isDisabled ? 0.8 : 1,
-                        }}
+                        className={`voting-item ${isOwnSubmission ? 'own-submission' : ''} ${isDisabled ? 'disabled' : ''}`}
                       >
-                        <div style={styles.acronymDisplay}>
+                        <div className="acronym-display">
                           {acronym || '(No submission)'}
-                          {isOwnSubmission && <span style={styles.yourSubmissionBadge}>YOUR SUBMISSION</span>}
+                          {isOwnSubmission && <span className="your-submission-badge">YOUR SUBMISSION</span>}
                         </div>
                         <button
-                          className="btn btn-xs btn-primary"
-                          style={{
-                            opacity: isDisabled ? 0.7 : 1,
-                          }}
+                          className={`btn btn-xs btn-primary ${isDisabled ? 'opacity-70' : ''}`}
                           onClick={() => submitVote(playerId)}
                           disabled={isDisabled}
                         >
@@ -560,11 +534,11 @@ const GameRoom = () => {
             )}
 
             {gameState === 'results' && results && (
-              <div style={styles.section}>
+              <div className="game-section">
                 <div className="round-header section-header">
                   <h3 className="round-title">ROUND {roundNum} RESULTS</h3>
                 </div>
-                <div style={styles.resultsContainer}>
+                <div className="results-container">
                   {results.submissions.map(([playerId, acronym]) => {
                     const voteCount = (results.votes || []).filter(([_, votedId]) => votedId === playerId).length || 0;
                     const player = players.find(p => p.id === playerId);
@@ -573,33 +547,23 @@ const GameRoom = () => {
                     return (
                       <div
                         key={playerId}
-                        style={{
-                          ...styles.resultItem,
-                          backgroundColor: isOwnSubmission ? 'var(--accent)' : 'var(--background)',
-                          borderColor: hasVotes ? 'var(--primary)' : 'var(--text)',
-                          borderWidth: hasVotes ? '4px' : '3px',
-                        }}
+                        className={`result-item ${isOwnSubmission ? 'own-result' : ''} ${hasVotes ? 'has-votes' : ''}`}
                       >
-                        <div style={styles.resultAcronym}>
+                        <div className="result-acronym">
                           {acronym || '(No submission)'}
                         </div>
-                        <div style={styles.resultDetails}>
-                          <div style={styles.resultPlayer}>
-                            <span style={styles.resultPlayerLabel}>PLAYER:</span>
-                            <span style={styles.resultPlayerName}>
+                        <div className="result-details">
+                          <div className="result-player">
+                            <span className="result-player-label">PLAYER:</span>
+                            <span className="result-player-name">
                               {player?.name || (player?.isBot ? player.name : playerId)}
-                              {isOwnSubmission && <span style={styles.yourResultBadge}>YOU</span>}
+                              {isOwnSubmission && <span className="your-result-badge">YOU</span>}
                             </span>
                           </div>
-                          <div
-                            style={{
-                              ...styles.resultVotes,
-                              backgroundColor: voteCount > 0 ? 'var(--primary)' : '#f0f0f0',
-                              color: voteCount > 0 ? 'var(--background)' : 'var(--text)',
-                            }}
+                          <div className={`result-votes ${voteCount > 0 ? 'has-votes' : ''}`}
                           >
-                            <span style={styles.resultVotesLabel}>VOTES:</span>
-                            <span style={styles.resultVotesCount}>{voteCount}</span>
+                            <span className="result-votes-label">VOTES:</span>
+                            <span className="result-votes-count">{voteCount}</span>
                           </div>
                         </div>
                       </div>
@@ -610,20 +574,20 @@ const GameRoom = () => {
             )}
 
             {gameState === 'ended' && winner && (
-              <div style={styles.section}>
-                <div style={styles.gameOverHeader}>
-                  <h3 style={styles.gameOverTitle}>GAME OVER!</h3>
+              <div className="game-section">
+                <div className="game-over-header">
+                  <h3 className="game-over-title">GAME OVER!</h3>
                 </div>
-                <div style={styles.winnerContainer}>
-                  <div style={styles.winnerLabel}>WINNER</div>
-                  <div style={styles.winnerName}>{winner.name || winner.id}</div>
-                  <div style={styles.winnerScore}>
-                    <span style={styles.winnerScoreLabel}>SCORE</span>
-                    <span style={styles.winnerScoreValue}>{winner.score}</span>
+                <div className="winner-container">
+                  <div className="winner-label">WINNER</div>
+                  <div className="winner-name">{winner.name || winner.id}</div>
+                  <div className="winner-score">
+                    <span className="winner-score-label">SCORE</span>
+                    <span className="winner-score-value">{winner.score}</span>
                   </div>
-                  <div style={styles.trophyIcon}>🏆</div>
+                  <div className="trophy-icon">🏆</div>
                 </div>
-                <div style={styles.gameOverActions}>
+                <div className="game-over-actions">
                   {isCreator ? (
                     <button className="btn btn-md btn-blue btn-wide" onClick={resetGame}>
                       START NEW GAME
@@ -640,31 +604,26 @@ const GameRoom = () => {
             <PlayerList players={players} leaveRoom={leaveRoom} />
 
             {gameStarted && (
-              <div style={styles.chatContainer}>
+              <div className="chat-container">
                 <h3 className="section-header">GAME CHAT</h3>
-                <div style={styles.chatListWrapper}>
-                  <ul style={styles.chatList} ref={chatListRef}>
+                <div className="chat-list-wrapper">
+                  <ul className="chat-list" ref={chatListRef}>
                     {chatMessages.map((msg, index) => (
                       <li
                         key={index}
-                        style={{
-                          ...styles.chatItem,
-                          backgroundColor: msg.senderId === socket.id ? 'var(--accent)' : 'var(--background)',
-                          alignSelf: msg.senderId === socket.id ? 'flex-end' : 'flex-start',
-                        }}
+                        className={`chat-item ${msg.senderId === socket.id ? 'own-message' : ''}`}
                       >
-                        <div style={styles.chatSender} className="pill">
+                        <div className="chat-sender pill">
                           {msg.senderName}
                         </div>
-                        <div style={styles.chatMessage}>{msg.message}</div>
+                        <div className="chat-message">{msg.message}</div>
                       </li>
                     ))}
                   </ul>
                 </div>
-                <div style={styles.chatInputContainer}>
+                <div className="chat-input-container">
                   <input
-                    style={styles.chatInput}
-                    className="main-input"
+                    className="main-input chat-input"
                     type="text"
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
@@ -680,983 +639,13 @@ const GameRoom = () => {
             )}
           </>
         ) : (
-          <p style={styles.loading}>Loading room...</p>
+          <p className="loading-message">Loading room...</p>
         )}
       </div>
     </>
   );
 };
 
-const styles = {
-  // Styles migrated to CSS classes:
-  // - container -> .game-room-container
-  // - roundHeader -> .round-header
-  // - roundTitle -> .round-title
-  
-  
-  // Game info styles
-  gameInfo: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    marginBottom: '1.5rem',
-  },
-
-  lettersContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-    padding: '1rem',
-    backgroundColor: '#ffffff',
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
-  },
-  lettersLabel: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '1rem',
-  },
-  letterBoxes: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '0.5rem',
-  },
-  letterBox: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '1.25rem',
-    backgroundColor: 'var(--accent)',
-    padding: '0.5rem 0.75rem',
-    border: '2px solid #000000',
-    boxShadow: '2px 2px 0px #000000',
-  },
-  
-  // Timer styles
-  timerContainer: {
-    width: '100%',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '1rem',
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
-    marginBottom: '1.5rem',
-  },
-  timerLabel: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '1.25rem',
-    color: '#000000',
-  },
-  timerValue: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '1.5rem',
-    color: '#000000',
-    backgroundColor: '#ffffff',
-    padding: '0.5rem 0.75rem',
-    border: '2px solid #000000',
-  },
-  
-  // Submission form styles
-  submissionForm: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    marginBottom: '1rem',
-  },
- 
-
-  submittedMessage: {
-    backgroundColor: 'var(--accent)',
-    padding: '1rem',
-    border: '3px solid #000000',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: '1rem',
-  },
-  
-  // Voting styles
-  votingInstructions: {
-    backgroundColor: '#ffffff',
-    padding: '1rem',
-    border: '3px solid #000000',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: '1.5rem',
-    fontFamily: "'Space Grotesk', sans-serif",
-  },
-  votingList: {
-    listStyle: 'none',
-    padding: 0,
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-  votingItem: {
-    padding: '1rem',
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '1rem',
-  },
-  acronymDisplay: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 'bold',
-    fontSize: '1.25rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
-  yourSubmissionBadge: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '0.75rem',
-    backgroundColor: '#ff3c00',
-    color: '#ffffff',
-    padding: '0.25rem 0.5rem',
-    border: '2px solid #000000',
-    display: 'inline-block',
-  },
-  
-  // Results styles
-  resultsContainer: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.5rem',
-  },
-  resultItem: {
-    padding: '1rem',
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-  resultAcronym: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 'bold',
-    fontSize: '1.5rem',
-    padding: '0.75rem',
-    backgroundColor: '#f0f0f0',
-    border: '2px solid #000000',
-  },
-  resultDetails: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '1rem',
-  },
-  resultPlayer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-  resultPlayerLabel: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '0.85rem',
-    fontWeight: 'bold',
-  },
-  resultPlayerName: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 'bold',
-    fontSize: '1.1rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  yourResultBadge: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '0.75rem',
-    backgroundColor: '#ff3c00',
-    color: '#ffffff',
-    padding: '0.25rem 0.5rem',
-    border: '2px solid #000000',
-    display: 'inline-block',
-  },
-  resultVotes: {
-    padding: '0.5rem 0.75rem',
-    border: '2px solid #000000',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '0.25rem',
-  },
-  resultVotesLabel: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '0.85rem',
-    fontWeight: 'bold',
-  },
-  resultVotesCount: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '1.5rem',
-  },
-  
-  // Game over styles
-  gameOverHeader: {
-    width: '100%',
-    marginBottom: '1.5rem',
-    backgroundColor: '#ff3c00', // Bright red
-    padding: '1.5rem',
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
-  },
-  gameOverTitle: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '2rem',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    color: '#ffffff',
-    margin: 0,
-    textAlign: 'center',
-  },
-  winnerContainer: {
-    width: '100%',
-    backgroundColor: '#ffde59',
-    padding: '1.5rem',
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '1rem',
-    marginBottom: '1.5rem',
-    position: 'relative',
-  },
-  winnerLabel: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1.25rem',
-    fontWeight: 'bold',
-    backgroundColor: '#ffffff',
-    padding: '0.5rem 1rem',
-    border: '3px solid #000000',
-    boxShadow: '3px 3px 0px #000000',
-  },
-  winnerName: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontSize: '2rem',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: '0.5rem',
-  },
-  winnerScore: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '0.25rem',
-    backgroundColor: '#ffffff',
-    padding: '1rem',
-    border: '3px solid #000000',
-    boxShadow: '3px 3px 0px #000000',
-  },
-  winnerScoreLabel: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1rem',
-    fontWeight: 'bold',
-  },
-  winnerScoreValue: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '2rem',
-    fontWeight: 'bold',
-    color: '#ff3c00',
-  },
-  trophyIcon: {
-    fontSize: '4rem',
-    position: 'absolute',
-    top: '-1.5rem',
-    right: '1rem',
-    transform: 'rotate(15deg)',
-  },
-  gameOverActions: {
-    width: '100%',
-    display: 'flex',
-    justifyContent: 'center',
-    marginTop: '1rem',
-  },
-  // newGameButton -> .btn .btn-md .btn-blue .btn-wide
- 
-  
-  // Name set styles
-  nameSetHeader: {
-    width: '100%',
-    marginBottom: '1.5rem',
-    backgroundColor: '#00c2ff', // Bright blue
-    padding: '1rem',
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
-  },
-  nameSetTitle: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    color: '#000000',
-    margin: 0,
-    textAlign: 'center',
-  },
-  nameSetForm: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    marginBottom: '1.5rem',
-  },
-  nameInput: {
-    width: '100%',
-    padding: '1rem',
-    fontSize: 'var(--fontSecondarySize)',
-    fontFamily: "'Space Grotesk', sans-serif",
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
-    outline: 'none',
-  },
-  // nameButton -> .btn .btn-md .btn-primary
-  nameSetInfo: {
-    backgroundColor: 'var(--backgroundSecondary)',
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    fontSize: 'var(--fontSecondarySize)',
-    textAlign: 'center',
-    fontFamily: "'Space Grotesk', sans-serif",
-  },
-  
-  // Waiting styles
-  waitingHeader: {
-    width: '100%',
-    marginBottom: '1.5rem',
-    backgroundColor: 'var(--accent)',
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-  },
-  waitingTitle: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    color: '#000000',
-    margin: 0,
-    textAlign: 'center',
-  },
-  waitingInfo: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    marginBottom: '1.5rem',
-  },
-
-  playerCount: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'var(--background)',
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-  },
-  playerCountLabel: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '1.25rem',
-  },
-  playerCountValue: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '2rem',
-    backgroundColor: '#ffffff',
-    padding: '0.25rem 0.75rem',
-    border: '2px solid #000000',
-  },
-  // startGameButton -> .btn .btn-lg .btn-primary
-  creatorNote: {
-    backgroundColor: '#ffffff',
-    padding: '1.25rem',
-    border: '3px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem',
-  },
-  creatorIcon: {
-    fontSize: '2.5rem',
-  },
-  creatorText: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 'bold',
-    fontSize: '1.1rem',
-  },
-  
-  // Invite styles
-  inviteContainer: {
-    width: '100%',
-    maxWidth: '800px',
-    backgroundColor: '#ffffff',
-    padding: '1.5rem',
-    border: '4px solid #000000',
-    boxShadow: '6px 6px 0px #000000',
-    marginBottom: '1.5rem',
-  },
-  inviteHeader: {
-    width: '100%',
-    marginBottom: '1.5rem',
-    backgroundColor: 'var(--accent)',
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-  },
-  inviteTitle: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    color: '#000000',
-    margin: 0,
-    textAlign: 'center',
-  },
-  inviteContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    marginBottom: '1.5rem',
-    width: '100%',
-  },
-  inviteInput: {
-    width: '100%',
-    padding: '1rem',
-    fontSize: '1rem',
-    fontFamily: "'Space Mono', monospace",
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    backgroundColor: '#f0f0f0',
-    color: '#000000',
-    outline: 'none',
-  },
-  // inviteButton -> .btn .btn-md .btn-blue
-  inviteInfo: {
-    backgroundColor: 'var(--backgroundSecondary)',
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    fontSize: 'var(--fontSecondarySize)',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontFamily: "'Space Grotesk', sans-serif",
-  },
-  header: {
-    position: 'sticky',
-    top: '1rem',
-    backgroundColor: 'var(--background)',
-    padding: '1.5rem',
-    width: '100%',
-    maxWidth: '800px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    border: 'var(--border)',
-    boxShadow: 'var(--shadow)',
-    zIndex: 10,
-    marginBottom: '1.5rem',
-  },
-  roomTitleContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  title: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '2rem',
-    color: 'var(--text)',
-    margin: 0,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    textShadow: `2px 0 0 var(--primary), -2px 0 0 var(--accent)`,
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  roomNameEdit: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  input: {
-    padding: '0.75rem 1rem',
-    fontSize: '1rem',
-    fontFamily: "'Space Mono', monospace",
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    outline: 'none',
-    backgroundColor: 'var(--background)',
-    color: 'var(--text)',
-  },
-  // saveButton -> .btn .btn-sm .btn-blue
-  // cancelButton -> .btn .btn-sm .btn-primary
-  // editButton -> .btn .btn-xs .btn-accent
-  statusContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-    gap: '0.75rem',
-  },
-  reconnectingBadge: {
-    backgroundColor: 'var(--primary)',
-    color: 'var(--background)',
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    padding: '0.5rem 0.75rem',
-    border: '3px solid var(--text)',
-    boxShadow: '3px 3px 0px var(--text)',
-    animation: 'pulse 1s infinite',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-  },
-  reconnectingText: {
-    fontSize: '0.9rem',
-  },
-  reconnectingDots: {
-    animation: 'pulse 1s infinite',
-  },
-  gameStatusBadge: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    padding: '0.5rem 0.75rem',
-    border: '3px solid var(--text)',
-    boxShadow: '3px 3px 0px var(--text)',
-  },
-  gameStatusText: {
-    color: 'var(--text)',
-    fontSize: '1rem',
-  },
-  inviteContainer: {
-    width: '100%',
-    maxWidth: '800px',
-    backgroundColor: 'var(--background)',
-    padding: '1.5rem',
-    border: 'var(--border)',
-    boxShadow: 'var(--shadow)',
-    marginBottom: '1.5rem',
-  },
-  inviteHeader: {
-    width: '100%',
-    marginBottom: '1.5rem',
-    backgroundColor: 'var(--accent)',
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-  },
-  inviteTitle: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    color: 'var(--text)',
-    margin: 0,
-    textAlign: 'center',
-  },
-  inviteContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    marginBottom: '1.5rem',
-    width: '100%',
-  },
-  inviteInput: {
-    width: '100%',
-    padding: '1rem',
-    fontSize: '1rem',
-    fontFamily: "'Space Mono', monospace",
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    backgroundColor: '#f0f0f0',
-    color: 'var(--text)',
-    outline: 'none',
-  },
-  // inviteButton -> .btn .btn-md .btn-blue
-  section: {
-    marginBottom: '1.5rem',
-    width: '100%',
-    maxWidth: '800px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    backgroundColor: 'var(--background)',
-    padding: '1.5rem',
-    border: 'var(--border)',
-    boxShadow: 'var(--shadow)',
-  },
-  nameSetForm: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    marginBottom: '1.5rem',
-  },
-  // nameButton -> .btn .btn-md .btn-primary
-  waitingHeader: {
-    width: '100%',
-    marginBottom: '1.5rem',
-    backgroundColor: 'var(--accent)',
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-  },
-  waitingTitle: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    color: 'var(--text)',
-    margin: 0,
-    textAlign: 'center',
-  },
-  waitingInfo: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    marginBottom: '1.5rem',
-  },
-  playerCount: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'var(--background)',
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-  },
-  playerCountLabel: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '1.25rem',
-  },
-  playerCountValue: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '2rem',
-    backgroundColor: 'var(--background)',
-    padding: '0.25rem 0.75rem',
-    border: '2px solid var(--text)',
-  },
-  // startGameButton -> .btn .btn-lg .btn-primary (with width: 100%)
-  creatorNote: {
-    backgroundColor: 'var(--background)',
-    padding: '1.25rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem',
-  },
-  creatorIcon: {
-    fontSize: '2.5rem',
-  },
-  creatorText: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 'bold',
-    fontSize: '1.1rem',
-  },
-  roundHeader: {
-    width: '100%',
-    marginBottom: '1.5rem',
-    backgroundColor: 'var(--primary)',
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-  },
-  roundTitle: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    color: 'var(--background)',
-    margin: 0,
-    textAlign: 'center',
-  },
-  gameInfo: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    marginBottom: '1.5rem',
-  },
-  categoryContainer: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'var(--background)',
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-  },
-  categoryLabel: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '1.25rem',
-  },
-  categoryValue: {
-    backgroundColor: 'var(--secondary)', // Bright yellow
-  },
-  lettersContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-    backgroundColor: 'var(--background)',
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-  },
-  lettersLabel: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '1.25rem',
-  },
-  letterBoxes: {
-    display: 'flex',
-    gap: '0.5rem',
-    flexWrap: 'wrap',
-  },
-  letterBox: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '1.5rem',
-    backgroundColor: 'var(--accent)',
-    color: 'var(--text)',
-    padding: '0.5rem 0.75rem',
-    border: '3px solid var(--text)',
-    boxShadow: '3px 3px 0px var(--text)',
-    minWidth: '2.5rem',
-    textAlign: 'center',
-  },
-  submissionForm: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    marginBottom: '1rem',
-    width: '100%',
-  },
-
-  // submissionButton -> .btn .btn-lg .btn-primary
-  votingList: {
-    listStyle: 'none',
-    padding: 0,
-    margin: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    width: '100%',
-  },
-  votingItem: {
-    backgroundColor: 'var(--background)',
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '1rem',
-  },
-  acronymDisplay: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 'bold',
-    fontSize: '1.25rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
-  yourSubmissionBadge: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '0.75rem',
-    backgroundColor: 'var(--primary)',
-    color: 'var(--background)',
-    padding: '0.25rem 0.5rem',
-    border: '2px solid var(--text)',
-    display: 'inline-block',
-  },
-  // voteButton -> .btn .btn-xs .btn-primary
-  resultsContainer: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.5rem',
-  },
-  resultItem: {
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-  resultAcronym: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 'bold',
-    fontSize: '1.5rem',
-    padding: '0.75rem',
-    backgroundColor: '#f0f0f0',
-    border: '2px solid var(--text)',
-  },
-  resultDetails: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '1rem',
-  },
-  resultPlayer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-  resultPlayerLabel: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '0.85rem',
-    fontWeight: 'bold',
-  },
-  resultPlayerName: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 'bold',
-    fontSize: '1.1rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  yourResultBadge: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '0.75rem',
-    backgroundColor: 'var(--primary)',
-    color: 'var(--background)',
-    padding: '0.25rem 0.5rem',
-    border: '2px solid var(--text)',
-    display: 'inline-block',
-  },
-  resultVotes: {
-    padding: '0.5rem 0.75rem',
-    border: '2px solid var(--text)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '0.25rem',
-  },
-  resultVotesLabel: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '0.85rem',
-    fontWeight: 'bold',
-  },
-  resultVotesCount: {
-    fontFamily: "'Space Mono', monospace",
-    fontWeight: 'bold',
-    fontSize: '1.5rem',
-  },
-  gameOverHeader: {
-    width: '100%',
-    marginBottom: '1.5rem',
-    backgroundColor: 'var(--primary)',
-    padding: '1.5rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-  },
-  gameOverTitle: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '2rem',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    color: 'var(--background)',
-    margin: 0,
-    textAlign: 'center',
-  },
-  winnerContainer: {
-    width: '100%',
-    backgroundColor: 'var(--secondary)',
-    padding: '1.5rem',
-    border: '3px solid var(--text)',
-    boxShadow: '4px 4px 0px var(--text)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '1rem',
-    marginBottom: '1.5rem',
-    position: 'relative',
-  },
-  winnerLabel: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1.25rem',
-    fontWeight: 'bold',
-    backgroundColor: 'var(--background)',
-    padding: '0.5rem 1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '3px 3px 0px var(--text)',
-  },
-  winnerName: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontSize: '2rem',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: '0.5rem',
-  },
-  winnerScore: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '0.25rem',
-    backgroundColor: 'var(--background)',
-    padding: '1rem',
-    border: '3px solid var(--text)',
-    boxShadow: '3px 3px 0px var(--text)',
-  },
-  winnerScoreLabel: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '1rem',
-    fontWeight: 'bold',
-  },
-  winnerScoreValue: {
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '2rem',
-    fontWeight: 'bold',
-    color: 'var(--primary)',
-  },
-  trophyIcon: {
-    fontSize: '4rem',
-    position: 'absolute',
-    top: '-1.5rem',
-    right: '1rem',
-    transform: 'rotate(15deg)',
-  },
-  gameOverActions: {
-    width: '100%',
-    display: 'flex',
-    justifyContent: 'center',
-    marginTop: '1rem',
-  },
-  // newGameButton -> .btn .btn-lg .btn-blue
-  // chatButton -> .btn .btn-md .btn-primary
-  loading: {
-    fontSize: '1.5rem',
-    textAlign: 'center',
-    marginTop: '20vh',
-    color: 'var(--text)',
-    fontWeight: 'bold',
-    backgroundColor: 'var(--background)',
-    padding: '1.5rem',
-    border: 'var(--border)',
-    boxShadow: 'var(--shadow)',
-  },
-  chatInputContainer: {
-    display: 'flex',
-    gap: '0.75rem',
-    width: '100%',
-    backgroundColor: 'var(--background)',
-  }
-};
+// All styles have been migrated to CSS classes in globals.css
 
 export default GameRoom;
