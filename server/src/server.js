@@ -2,9 +2,9 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const { OpenAI } = require('openai');
 const { generateLetters } = require('./utils/gameLogic');
 const { addBotPlayers } = require('./utils/botLogic');
+const { generateContent, generateBotSubmission } = require('./utils/contentGenerators');
 
 require('dotenv').config();
 
@@ -41,39 +41,9 @@ app.get('/', (req, res) => {
 
 const rooms = new Map();
 
-const grokClient = new OpenAI({
-  apiKey: process.env.XAI_API_KEY,
-  baseURL: 'https://api.x.ai/v1',
-});
+// OpenAI client moved to utils/contentGenerators.js
 
-async function callLLM(prompt) {
-  try {
-    const response = await grokClient.chat.completions.create({
-      model: 'grok-beta',
-      messages: [
-        { role: 'system', content: 'You are a creative assistant helping generate acronyms or rate them.' },
-        { role: 'user', content: prompt }
-      ],
-      max_tokens: 100,
-      temperature: 0.7,
-    });
-    return response.choices[0].message.content.trim();
-  } catch (error) {
-    console.error('xAI API error:', error.message);
-    throw error;
-  }
-}
-
-async function generateCategory() {
-  const prompt = 'Generate a single-word category for an acronym game (e.g., "Space", "Animals", "Tech"). Return only the word, no explanation.';
-  try {
-    const category = await callLLM(prompt);
-    return category;
-  } catch (error) {
-    console.error('Category generation error:', error);
-    return 'Random';
-  }
-}
+// Content generation functions moved to utils/contentGenerators.js
 
 io.on('connection', (socket) => {
   console.debug('New client connected:', socket.id);
@@ -85,7 +55,10 @@ io.on('connection', (socket) => {
       creatorId: socket.id,
       players: [{ id: socket.id, name: '', score: 0, isBot: false }],
       round: 0,
-      letters: [],
+      totalRounds: 5, // Default to 5 rounds
+      gameTypes: ['acronym', 'date', 'movie'], // Default to all game types
+      currentGameType: null,
+      content: null, // Will store letters, date, or movie title
       submissions: new Map(),
       votes: new Map(),
       started: false,
@@ -106,7 +79,10 @@ io.on('connection', (socket) => {
         creatorId: null,
         players: [],
         round: 0,
-        letters: [],
+        totalRounds: 5, // Default to 5 rounds
+        gameTypes: ['acronym', 'date', 'movie'], // Default to all game types
+        currentGameType: null,
+        content: null, // Will store letters, date, or movie title
         submissions: new Map(),
         votes: new Map(),
         started: false,
@@ -144,7 +120,8 @@ io.on('connection', (socket) => {
       if (room.round > 0) {
         socket.emit('newRound', {
           roundNum: room.round,
-          letterSet: room.letters,
+          gameType: room.currentGameType,
+          content: room.currentGameType === 'acronym' ? room.letters : room.content,
           timeLeft: room.submissionTimer
             ? Math.max(0, Math.floor((room.submissionTimer._idleStart + room.submissionTimer._idleTimeout - Date.now()) / 1000))
             : room.votingTimer
@@ -165,6 +142,31 @@ io.on('connection', (socket) => {
     if (room && socket.id === room.creatorId && !room.started) {
       room.name = roomName.trim().substring(0, 20); // Sanitize and limit length
       io.to(roomId).emit('playerUpdate', { players: room.players, roomName: room.name });
+    }
+  });
+  
+  socket.on('setGameOptions', ({ roomId, rounds, gameTypes }) => {
+    const room = rooms.get(roomId);
+    if (room && socket.id === room.creatorId && !room.started) {
+      // Validate rounds
+      if ([3, 5, 7, 10].includes(rounds)) {
+        room.totalRounds = rounds;
+      }
+      
+      // Validate game types
+      const validGameTypes = ['acronym', 'date', 'movie'];
+      const selectedGameTypes = gameTypes.filter(type => validGameTypes.includes(type));
+      
+      // Ensure at least one game type is selected
+      if (selectedGameTypes.length > 0) {
+        room.gameTypes = selectedGameTypes;
+      }
+      
+      // Emit updated game options to all clients in the room
+      io.to(roomId).emit('gameOptionsUpdated', { 
+        totalRounds: room.totalRounds, 
+        gameTypes: room.gameTypes 
+      });
     }
   });
 
@@ -204,6 +206,19 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('submitContent', ({ roomId, submission }) => {
+    const room = rooms.get(roomId);
+    if (room && room.started && room.round > 0 && !room.submissions.has(socket.id)) {
+      room.submissions.set(socket.id, submission);
+      if (room.submissions.size === room.players.length && room.submissionTimer) {
+        clearInterval(room.submissionTimer);
+        room.submissionTimer = null;
+        startVoting(roomId);
+      }
+    }
+  });
+
+  // Keep the old event for backward compatibility
   socket.on('submitAcronym', ({ roomId, acronym }) => {
     const room = rooms.get(roomId);
     if (room && room.started) {
@@ -291,35 +306,70 @@ async function startGame(roomId) {
   }
   io.to(roomId).emit('playerUpdate', { players: room.players, roomName: room.name });
   room.started = true;
-  io.to(roomId).emit('gameStarted');
+  io.to(roomId).emit('gameStarted', { 
+    totalRounds: room.totalRounds, 
+    gameTypes: room.gameTypes 
+  });
   await startRound(roomId);
 }
 
 async function startRound(roomId) {
   const room = rooms.get(roomId);
   room.round++;
-  room.letters = generateLetters(room.round);
-  const category = await generateCategory();
-  room.category = category;
-  console.debug('Starting round', room.round, 'for room:', roomId, 'letters:', room.letters, 'category:', category);
+  
+  // Randomly select a game type from available types
+  const randomIndex = Math.floor(Math.random() * room.gameTypes.length);
+  room.currentGameType = room.gameTypes[randomIndex];
+  
+  // Generate content based on selected game type
+  const contentData = await generateContent(room.currentGameType, room.round);
+  room.content = contentData.content;
+  room.category = contentData.category;
+  
+  console.debug('Starting round', room.round, 'for room:', roomId, 
+    'game type:', room.currentGameType, 
+    'content:', room.content, 
+    'category:', room.category);
 
   room.submissions.clear();
   room.votes.clear();
 
-  const letterCount = room.letters.length;
-  const timeLimit = letterCount <= 4 ? 30 : letterCount <= 6 ? 60 : 90;
+  // Set time limit based on game type
+  let timeLimit;
+  if (room.currentGameType === 'acronym') {
+    const letterCount = room.content.length;
+    timeLimit = letterCount <= 4 ? 30 : letterCount <= 6 ? 60 : 90;
+  } else {
+    timeLimit = 60; // Standard time for date and movie types
+  }
   let timeLeft = timeLimit;
 
-  io.to(roomId).emit('newRound', { roundNum: room.round, letterSet: room.letters, timeLeft, category });
+  // Emit round data to clients
+  io.to(roomId).emit('newRound', { 
+    roundNum: room.round, 
+    gameType: room.currentGameType,
+    content: room.content, 
+    timeLeft, 
+    category: room.category 
+  });
 
+  // Generate bot submissions
   for (const player of room.players) {
     if (player.isBot) {
-      const prompt = `Generate a creative acronym phrase using the letters ${room.letters.join(', ')} for the category "${category}". Return only the phrase, no explanation.`;
       try {
-        const acronym = await callLLM(prompt);
-        room.submissions.set(player.id, acronym);
+        const submission = await generateBotSubmission(
+          room.currentGameType, 
+          room.content, 
+          room.category
+        );
+        room.submissions.set(player.id, submission);
       } catch (error) {
-        room.submissions.set(player.id, room.letters.join(''));
+        // Fallback submission if API fails
+        if (room.currentGameType === 'acronym') {
+          room.submissions.set(player.id, room.content.join(''));
+        } else {
+          room.submissions.set(player.id, 'No submission');
+        }
       }
     }
   }
@@ -343,8 +393,15 @@ function startVoting(roomId) {
   io.to(roomId).emit('submissionsReceived', Array.from(room.submissions));
   io.to(roomId).emit('votingStart');
 
-  const letterCount = room.letters.length;
-  const timeLimit = letterCount <= 4 ? 30 : letterCount <= 6 ? 60 : 90;
+  // Set time limit based on game type
+  let timeLimit;
+  if (room.currentGameType === 'acronym' && room.letters) {
+    const letterCount = room.letters.length;
+    timeLimit = letterCount <= 4 ? 30 : letterCount <= 6 ? 60 : 90;
+  } else {
+    // Default time limit for other game types
+    timeLimit = 60;
+  }
   let timeLeft = timeLimit;
 
   setTimeout(() => simulateBotVotes(roomId), 5000);
@@ -406,7 +463,7 @@ function endVoting(roomId) {
     const results = calculateResults(room);
     io.to(roomId).emit('roundResults', results);
 
-    if (room.round < 5) {
+    if (room.round < room.totalRounds) {
       room.submissions.clear();
       room.votes.clear();
       startRound(roomId);

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import io from 'socket.io-client';
+import config from '../config';
 
-const socket = io('https://acrophylia.onrender.com', {
+const socket = io(config.socketUrl, {
   withCredentials: true,
   transports: ['polling'],
   reconnection: true,
@@ -17,8 +18,10 @@ const GameRoom = () => {
   const [roomId, setRoomId] = useState(urlRoomId || null);
   const [players, setPlayers] = useState([]);
   const [roundNum, setRoundNum] = useState(0);
-  const [letterSet, setLetterSet] = useState([]);
-  const [acronym, setAcronym] = useState('');
+  const [gameType, setGameType] = useState(null);
+  const [content, setContent] = useState(null); // Will hold letters, date, or movie title
+  const [category, setCategory] = useState('');
+  const [submission, setSubmission] = useState('');
   const [submissions, setSubmissions] = useState([]);
   const [gameState, setGameState] = useState('waiting');
   const [hasVoted, setHasVoted] = useState(false);
@@ -81,10 +84,12 @@ const GameRoom = () => {
       setPlayers(updatedPlayers);
     });
 
-    socket.on('newRound', ({ roundNum, letterSet }) => {
-      console.log('New round started:', roundNum, letterSet);
+    socket.on('newRound', ({ roundNum, gameType, content, category, timeLeft }) => {
+      console.log('New round started:', roundNum, gameType, content);
       setRoundNum(roundNum);
-      setLetterSet(letterSet);
+      setGameType(gameType);
+      setContent(content);
+      setCategory(category || '');
       setGameState('submitting');
       setSubmissions([]);
       setHasVoted(false);
@@ -167,11 +172,11 @@ const GameRoom = () => {
     [roomId, isCreator, players.length, isStarting]
   );
 
-  const submitAcronym = () => {
-    if (acronym && roomId) {
-      console.log('Submitting acronym:', acronym);
-      socket.emit('submitAcronym', { roomId, acronym });
-      setAcronym('');
+  const submitContent = () => {
+    if (submission && roomId) {
+      console.log(`Submitting ${gameType}:`, submission);
+      socket.emit('submitContent', { roomId, submission });
+      setSubmission('');
     }
   };
 
@@ -234,21 +239,66 @@ const GameRoom = () => {
 
           {gameState === 'submitting' && (
             <div style={styles.section}>
-              <h3 style={styles.subtitle}>Round {roundNum} - Letters: {letterSet.join(', ')}</h3>
-              <input
-                style={styles.input}
-                type="text"
-                value={acronym}
-                onChange={(e) => setAcronym(e.target.value.toUpperCase())}
-                placeholder="Enter acronym"
-              />
-              <button style={styles.button} onClick={submitAcronym}>Submit</button>
+              <h3 style={styles.subtitle}>Round {roundNum}</h3>
+              <div style={styles.gameTypeIndicator}>
+                Game Type: <span data-testid="current-game-type">
+                  {gameType === 'acronym' ? 'Acronyms' : 
+                   gameType === 'date' ? 'Historical Dates' : 
+                   gameType === 'movie' ? 'Movie Plots' : 'Unknown'}
+                </span>
+              </div>
+              
+              {gameType === 'acronym' && (
+                <div style={styles.contentDisplay}>
+                  <p>Create an acronym using these letters:</p>
+                  <div style={styles.letters}>{Array.isArray(content) ? content.join(' ') : ''}</div>
+                  <p>Category: {category}</p>
+                </div>
+              )}
+              
+              {gameType === 'date' && (
+                <div style={styles.contentDisplay}>
+                  <p>What happened on this date?</p>
+                  <div style={styles.date}>{content}</div>
+                  <p>Create a fictional historical event</p>
+                </div>
+              )}
+              
+              {gameType === 'movie' && (
+                <div style={styles.contentDisplay}>
+                  <p>Write a plot for this movie:</p>
+                  <div style={styles.movieTitle}>{content}</div>
+                  <p>Create a brief, creative plot summary</p>
+                </div>
+              )}
+              
+              {gameType === 'acronym' ? (
+                <input
+                  style={styles.input}
+                  type="text"
+                  value={submission}
+                  onChange={(e) => setSubmission(e.target.value.toUpperCase())}
+                  placeholder={`Enter a phrase using the letters ${Array.isArray(content) ? content.join('') : ''}`}
+                />
+              ) : (
+                <textarea
+                  style={styles.textarea}
+                  value={submission}
+                  onChange={(e) => setSubmission(e.target.value)}
+                  placeholder={gameType === 'date' ? 
+                    'Enter a fictional historical event for this date' : 
+                    'Enter a plot summary for this movie'}
+                  rows={4}
+                />
+              )}
+              
+              <button style={styles.button} onClick={submitContent}>Submit</button>
             </div>
           )}
 
           {gameState === 'voting' && (
             <div style={styles.section}>
-              <h3 style={styles.subtitle}>Vote for an Acronym:</h3>
+              <h3 style={styles.subtitle}>Vote for an answer:</h3>
               <ul style={styles.submissionList}>
                 {submissions.map(([playerId, acronym]) => (
                   <li key={playerId} style={styles.submissionItem}>
@@ -309,6 +359,12 @@ const styles = {
   container: { padding: '2rem', backgroundColor: '#f0f4f8', minHeight: '100vh', fontFamily: 'Arial, sans-serif' },
   error: { color: '#dc3545', textAlign: 'center', marginBottom: '1rem' },
   title: { fontSize: '2rem', color: '#333', marginBottom: '1rem' },
+  gameTypeIndicator: { backgroundColor: '#e0e8f0', padding: '0.5rem', borderRadius: '4px', marginBottom: '1rem', fontWeight: 'bold' },
+  contentDisplay: { backgroundColor: '#f8f9fa', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' },
+  letters: { fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '0.5rem', margin: '1rem 0' },
+  date: { fontSize: '1.5rem', fontWeight: 'bold', margin: '1rem 0' },
+  movieTitle: { fontSize: '1.5rem', fontWeight: 'bold', fontStyle: 'italic', margin: '1rem 0' },
+  textarea: { width: '100%', padding: '0.75rem', marginBottom: '1rem', borderRadius: '4px', border: '1px solid #ced4da', minHeight: '100px' },
   subtitle: { fontSize: '1.5rem', color: '#555', marginBottom: '1rem' },
   invite: { display: 'flex', gap: '1rem', marginBottom: '2rem' },
   input: { padding: '0.5rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: '5px', flexGrow: 1 },

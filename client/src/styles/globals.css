@@ -1467,3 +1467,124 @@ button:disabled:hover {
   flex-direction: column;
   gap: 1rem;
 }
+
+/* Game Type Styles */
+.date-container,
+.movie-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background-color: var(--background);
+  padding: 1rem;
+  border: 3px solid var(--text);
+  box-shadow: 4px 4px 0px var(--text);
+}
+
+.date-label,
+.movie-label {
+  font-family: 'Space Mono', monospace;
+  font-weight: bold;
+  font-size: 1.25rem;
+}
+
+.date-value,
+.movie-value {
+  font-family: 'Space Mono', monospace;
+  font-weight: bold;
+  font-size: 1.5rem;
+  background-color: var(--primary);
+  color: #ffffff;
+  padding: 0.5rem 0.75rem;
+  border: 3px solid var(--text);
+  box-shadow: 3px 3px 0px var(--text);
+  display: inline-block;
+}
+
+.date-instruction,
+.movie-instruction {
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--text);
+  opacity: 0.8;
+  margin-top: 0.5rem;
+}
+
+/* Game type selection styles */
+.game-types-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.game-type-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.5rem;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.game-type-checkbox:hover {
+  background-color: var(--backgroundSecondary);
+}
+
+.game-type-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
+/* Room settings styles */
+.room-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px dashed var(--primary);
+}
+
+.room-name-edit,
+.room-name-display,
+.game-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.current-room-name {
+  font-family: 'Space Mono', monospace;
+  font-weight: bold;
+  font-size: 1.2rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--backgroundSecondary);
+  border: 2px solid var(--primary);
+  border-radius: 4px;
+  flex-grow: 1;
+}
+
+.button.secondary {
+  background-color: var(--background);
+  color: var(--primary);
+  border: 2px solid var(--primary);
+}
+
+.button.secondary:hover {
+  background-color: var(--backgroundSecondary);
+}

@@ -4,7 +4,9 @@ import io from 'socket.io-client';
 import Head from 'next/head';
 import PlayerList from '../../components/PlayerList';
 
-const socket = io('https://acrophylia.onrender.com', {
+import config from '../../config';
+
+const socket = io(config.socketUrl, {
   withCredentials: true,
   transports: ['polling', 'websocket'],
   reconnection: true,
@@ -22,7 +24,9 @@ const GameRoom = () => {
   const [isEditingRoomName, setIsEditingRoomName] = useState(false); // New state for edit mode
   const [players, setPlayers] = useState([]);
   const [roundNum, setRoundNum] = useState(0);
+  const [gameType, setGameType] = useState('acronym');
   const [letterSet, setLetterSet] = useState([]);
+  const [content, setContent] = useState(null); // For date or movie title
   const [category, setCategory] = useState('');
   const [acronym, setAcronym] = useState('');
   const [submissions, setSubmissions] = useState([]);
@@ -41,6 +45,7 @@ const GameRoom = () => {
   const [chatInput, setChatInput] = useState('');
   const [timeLeft, setTimeLeft] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
+  const [selectedGameTypes, setSelectedGameTypes] = useState(['acronym']);
   const chatListRef = useRef(null);
   const chatContainerRef = useRef(null);
   const isNearBottomRef = useRef(true);
@@ -115,10 +120,21 @@ const GameRoom = () => {
       setGameStarted(true);
     });
 
-    socket.on('newRound', ({ roundNum, letterSet, timeLeft: initialTime, category }) => {
+    socket.on('newRound', ({ roundNum, gameType, content, timeLeft: initialTime, category }) => {
+      console.log('New round received:', { roundNum, gameType, content, category });
       setRoundNum(roundNum);
-      setLetterSet(letterSet);
-      setCategory(category);
+      setGameType(gameType || 'acronym');
+      
+      // Handle different content types based on game type
+      if (gameType === 'acronym') {
+        setLetterSet(Array.isArray(content) ? content : []);
+        setContent(null);
+      } else {
+        setLetterSet([]);
+        setContent(content);
+      }
+      
+      setCategory(category || '');
       setGameState('submitting');
       setSubmissions([]);
       setHasVoted(false);
@@ -217,11 +233,13 @@ const GameRoom = () => {
     debounce(() => {
       if (roomId && isCreator && !isStarting) {
         setIsStarting(true);
+        // Send selected game types when starting the game
+        socket.emit('setGameOptions', { roomId, rounds: 5, gameTypes: selectedGameTypes });
         socket.emit('startGame', roomId);
         setTimeout(() => setIsStarting(false), 1000);
       }
     }, 500),
-    [roomId, isCreator, isStarting]
+    [roomId, isCreator, isStarting, selectedGameTypes]
   );
 
   const setRoomNameHandler = () => {
@@ -232,9 +250,36 @@ const GameRoom = () => {
     }
   };
 
+  const toggleGameType = (gameType) => {
+    setSelectedGameTypes(prev => {
+      if (prev.includes(gameType)) {
+        // Don't remove if it's the last game type
+        if (prev.length === 1) return prev;
+        return prev.filter(type => type !== gameType);
+      } else {
+        return [...prev, gameType];
+      }
+    });
+  };
+
+  const submitContent = () => {
+    if (acronym && roomId && !hasSubmitted) {
+      // Use the generic submitContent event for all game types
+      socket.emit('submitContent', { roomId, submission: acronym });
+      setHasSubmitted(true);
+      setAcronym('');
+    }
+  };
+  
+  // Keep the old submitAcronym function for backward compatibility
   const submitAcronym = () => {
     if (acronym && roomId && !hasSubmitted) {
-      socket.emit('submitAcronym', { roomId, acronym });
+      if (gameType === 'acronym') {
+        socket.emit('submitAcronym', { roomId, acronym });
+      } else {
+        // Use the new submitContent event for other game types
+        socket.emit('submitContent', { roomId, submission: acronym });
+      }
       setHasSubmitted(true);
       setAcronym('');
     }
@@ -330,40 +375,9 @@ const GameRoom = () => {
           <>
             <header className="header">
               <div className="room-title-container">
-                {isEditingRoomName && isCreator && !roomNameSet && gameState === 'waiting' ? (
-                  <div className="room-name-edit">
-                    <input
-                      className="input"
-                      type="text"
-                      value={roomName}
-                      onChange={(e) => setRoomName(e.target.value)}
-                      placeholder="Enter room name"
-                      maxLength={20}
-                      onKeyPress={(e) => e.key === 'Enter' && setRoomNameHandler()}
-                    />
-                    <button className="button" onClick={setRoomNameHandler}>
-                      Save
-                    </button>
-                    <button
-                      className="button"
-                      onClick={() => setIsEditingRoomName(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <h2 className="title">
+                <h2 className="title">
                     {roomName || `Room ${roomId}`}
-                    {isCreator && !roomNameSet && gameState === 'waiting' && (
-                      <button
-                        onClick={() => setIsEditingRoomName(true)}
-                        aria-label="Edit Room Name"
-                      >
-                        ✏️
-                      </button>
-                    )}
                   </h2>
-                )}
               </div>
               <div className="status-container">
                 {!isConnected && (
@@ -418,7 +432,87 @@ const GameRoom = () => {
             {!nameSet && gameState === 'waiting' && (
               <div className="container">
               <div className="game-section">
-                <div className="name-set-form">
+                {isCreator && gameState === 'waiting' && (
+                <div className="room-settings">
+                  {isEditingRoomName ? (
+                    <div className="room-name-edit">
+                      <h3 className="section-header">ROOM NAME</h3>
+                      <div className="input-group">
+                        <input
+                          className="main-input"
+                          type="text"
+                          value={roomName}
+                          onChange={(e) => setRoomName(e.target.value)}
+                          placeholder="Enter room name"
+                          maxLength={20}
+                          onKeyPress={(e) => e.key === 'Enter' && setRoomNameHandler()}
+                        />
+                        <div className="button-group">
+                          <button className="button" onClick={setRoomNameHandler}>
+                            Save
+                          </button>
+                          <button
+                            className="button secondary"
+                            onClick={() => setIsEditingRoomName(false)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="room-name-display">
+                      <h3 className="section-header">ROOM NAME</h3>
+                      <div className="input-group">
+                        <div className="current-room-name">{roomName || `Room ${roomId}`}</div>
+                        <button
+                          className="button"
+                          onClick={() => setIsEditingRoomName(true)}
+                          aria-label="Edit Room Name"
+                        >
+                          Edit Name
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="game-options">
+                    <h3 className="section-header">GAME TYPES</h3>
+                    <div className="game-types-container">
+                      <label className="game-type-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={selectedGameTypes.includes('acronym')}
+                          onChange={() => toggleGameType('acronym')}
+                        />
+                        Acronyms
+                      </label>
+                      <label className="game-type-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={selectedGameTypes.includes('date')}
+                          onChange={() => toggleGameType('date')}
+                        />
+                        Historical Dates
+                      </label>
+                      <label className="game-type-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={selectedGameTypes.includes('movie')}
+                          onChange={() => toggleGameType('movie')}
+                        />
+                        Movie Plots
+                      </label>
+                    </div>
+                    <div className="info-box">
+                      Select at least one game type for your room.
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="name-set-form">
+                  <h3 className="section-header">YOUR NAME</h3>
                   <input
                     className="main-input"
                     type="text"
@@ -495,14 +589,32 @@ const GameRoom = () => {
                         <span className="timer-label">TIME LEFT 
                           <div>{timeLeft !== null ? `${timeLeft}s` : 'WAITING...'}</div></span>
                       </div>
-                      <div className="letters-container">
-                        <span className="letters-label">LETTERS:</span>
-                        <div className="letter-boxes">
-                          {letterSet.map((letter, index) => (
-                            <span key={index} className="letter-box">{letter}</span>
-                          ))}
+                      {gameType === 'acronym' && letterSet && letterSet.length > 0 && (
+                        <div className="letters-container">
+                          <span className="letters-label">LETTERS:</span>
+                          <div className="letter-boxes">
+                            {letterSet.map((letter, index) => (
+                              <span key={index} className="letter-box">{letter}</span>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
+                      
+                      {gameType === 'date' && content && (
+                        <div className="date-container">
+                          <span className="date-label">HISTORICAL DATE:</span>
+                          <div className="date-value">{content}</div>
+                          <div className="date-instruction">Create a fictional historical event for this date</div>
+                        </div>
+                      )}
+                      
+                      {gameType === 'movie' && content && (
+                        <div className="movie-container">
+                          <span className="movie-label">MOVIE TITLE:</span>
+                          <div className="movie-value">{content}</div>
+                          <div className="movie-instruction">Write a plot summary for this movie</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="submission-form">
@@ -511,13 +623,15 @@ const GameRoom = () => {
                       type="text"
                       value={acronym}
                       onChange={(e) => setAcronym(e.target.value)}
-                      placeholder="Enter your acronym"
+                      placeholder={gameType === 'acronym' ? "Enter your acronym" : 
+                                 gameType === 'date' ? "Enter historical event" : 
+                                 "Enter movie plot"}
                       disabled={hasSubmitted || timeLeft === 0}
-                      onKeyPress={(e) => e.key === 'Enter' && !hasSubmitted && timeLeft > 0 && submitAcronym()}
+                      onKeyPress={(e) => e.key === 'Enter' && !hasSubmitted && timeLeft > 0 && submitContent()}
                     />
                     <button
                       className={`button ${hasSubmitted || timeLeft === 0 ? 'opacity-70' : ''}`}
-                      onClick={submitAcronym}
+                      onClick={submitContent}
                       disabled={hasSubmitted || timeLeft === 0}
                     >
                       {hasSubmitted ? 'SUBMITTED!' : 'SUBMIT'}
@@ -535,7 +649,7 @@ const GameRoom = () => {
             {gameState === 'voting' && (
               <div className="container">
                 <div className="game-section">
-                  <h3 className="section-header">VOTE FOR AN ACRONYM</h3>
+                  <h3 className="section-header">VOTE FOR AN ANSWER</h3>
                   <div className={`timer-container ${timeLeft <= 10 ? 'timer-warning' : ''}`}>
                     <span className="timer-label">TIME LEFT</span>
                     <div>{timeLeft !== null ? `${timeLeft}s` : 'WAITING...'}</div>

@@ -3,7 +3,9 @@ import { useRouter } from 'next/router';
 import io from 'socket.io-client';
 import Head from 'next/head';
 
-const socket = io('https://acrophylia.onrender.com', {
+import config from '../config';
+
+const socket = io(config.socketUrl, {
   withCredentials: true,
   transports: ['websocket', 'polling']
 });
