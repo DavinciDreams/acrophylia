@@ -1470,7 +1470,8 @@ button:disabled:hover {
 
 /* Game Type Styles */
 .date-container,
-.movie-container {
+.movie-container,
+.content-container {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -1481,14 +1482,16 @@ button:disabled:hover {
 }
 
 .date-label,
-.movie-label {
+.movie-label,
+.content-label {
   font-family: 'Space Mono', monospace;
   font-weight: bold;
   font-size: 1.25rem;
 }
 
 .date-value,
-.movie-value {
+.movie-value,
+.content-value {
   font-family: 'Space Mono', monospace;
   font-weight: bold;
   font-size: 1.5rem;
@@ -1501,7 +1504,8 @@ button:disabled:hover {
 }
 
 .date-instruction,
-.movie-instruction {
+.movie-instruction,
+.content-instruction {
   font-style: italic;
   font-size: 0.9rem;
   color: var(--text);
@@ -1512,9 +1516,16 @@ button:disabled:hover {
 /* Game type selection styles */
 .game-types-container {
   display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.game-types-column {
+  display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  margin-top: 0.5rem;
+  flex: 1;
 }
 
 .game-type-checkbox {

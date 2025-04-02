@@ -138,6 +138,88 @@ async function generateCategory() {
  * @param {number} round - The current round number
  * @returns {Promise<Object>} - Content and category for the round
  */
+// Generate a random obscure word
+async function generateObscureWord() {
+  try {
+    const prompt = 'Give me one obscure English word that most people wouldn\'t know. Just return the word and nothing else.';
+    const response = await callLLM(prompt);
+    return response.trim();
+  } catch (error) {
+    console.error('Error generating obscure word:', error);
+    return 'Quixotic'; // Fallback word
+  }
+}
+
+// Generate a random historical person
+async function generateHistoricalPerson() {
+  try {
+    const prompt = 'Give me the name of an obscure historical figure that most people wouldn\'t know. Just return the name and nothing else.';
+    const response = await callLLM(prompt);
+    return response.trim();
+  } catch (error) {
+    console.error('Error generating historical person:', error);
+    return 'Ignaz Semmelweis'; // Fallback person
+  }
+}
+
+// Generate random initials (2-5 letters)
+function generateInitials() {
+  const length = Math.floor(Math.random() * 4) + 2; // 2-5 letters
+  let initials = '';
+  for (let i = 0; i < length; i++) {
+    initials += String.fromCharCode(65 + Math.floor(Math.random() * 26)); // A-Z
+  }
+  return initials;
+}
+
+// Generate a random strange law
+async function generateStrangeLaw() {
+  try {
+    const prompt = 'Give me a brief description of a strange-sounding but plausible law that could exist somewhere in the world. Just return the law description and nothing else.';
+    const response = await callLLM(prompt);
+    return response.trim();
+  } catch (error) {
+    console.error('Error generating strange law:', error);
+    return 'In Switzerland, it is illegal to flush a toilet after 10 PM'; // Fallback law
+  }
+}
+
+// Generate a random app name
+async function generateAppName() {
+  try {
+    const prompt = 'Create a silly but plausible-sounding app name that doesn\'t actually exist. Just return the app name and nothing else.';
+    const response = await callLLM(prompt);
+    return response.trim();
+  } catch (error) {
+    console.error('Error generating app name:', error);
+    return 'SnorklMate'; // Fallback app name
+  }
+}
+
+// Generate a random conspiracy theory name
+async function generateConspiracyTheory() {
+  try {
+    const prompt = 'Create a name for a fictional conspiracy theory that sounds intriguing but isn\'t real. Just return the name and nothing else.';
+    const response = await callLLM(prompt);
+    return response.trim();
+  } catch (error) {
+    console.error('Error generating conspiracy theory:', error);
+    return 'The Denver Airport Underground Colony'; // Fallback conspiracy
+  }
+}
+
+// Generate a random weird product name
+async function generateWeirdProduct() {
+  try {
+    const prompt = 'Create a name for a weird but plausible product that could exist. Just return the product name and nothing else.';
+    const response = await callLLM(prompt);
+    return response.trim();
+  } catch (error) {
+    console.error('Error generating weird product:', error);
+    return 'Nose Hair Styling Gel'; // Fallback product
+  }
+}
+
 async function generateContent(gameType, round) {
   switch (gameType) {
     case 'acronym':
@@ -157,6 +239,48 @@ async function generateContent(gameType, round) {
         content: await generateMovieTitle(),
         category: 'Movie Plot',
         type: 'movie'
+      };
+    case 'words':
+      return {
+        content: await generateObscureWord(),
+        category: 'Word Definition',
+        type: 'words'
+      };
+    case 'people':
+      return {
+        content: await generateHistoricalPerson(),
+        category: 'Historical Person',
+        type: 'people'
+      };
+    case 'initials':
+      return {
+        content: generateInitials(),
+        category: 'Acronym Meaning',
+        type: 'initials'
+      };
+    case 'laws':
+      return {
+        content: await generateStrangeLaw(),
+        category: 'Law Explanation',
+        type: 'laws'
+      };
+    case 'apps':
+      return {
+        content: await generateAppName(),
+        category: 'App Description',
+        type: 'apps'
+      };
+    case 'conspiracies':
+      return {
+        content: await generateConspiracyTheory(),
+        category: 'Conspiracy Details',
+        type: 'conspiracies'
+      };
+    case 'reviews':
+      return {
+        content: await generateWeirdProduct(),
+        category: 'Product Review',
+        type: 'reviews'
       };
     default:
       // Default to acronym if invalid type
@@ -180,16 +304,37 @@ async function generateBotSubmission(gameType, content, category) {
   
   switch (gameType) {
     case 'acronym':
-      prompt = `Generate a creative acronym phrase using the letters ${content.join(', ')} for the category "${category}". Return only the phrase, no explanation.`;
+      prompt = `Make up a phrase using the letters ${content.join(', ')} for "${category}". Keep it casual and fun, like something a friend would write. Just give me the phrase.`;
       break;
     case 'date':
-      prompt = `Create a fictional but plausible historical event that happened on "${content}" that sounds believable. Return only the event, no explanation.`;
+      prompt = `Make up a quick fake historical event for "${content}". Sound casual like you're just making it up on the spot. Just the event, no explanation.`;
       break;
     case 'movie':
-      prompt = `Write a brief, creative movie plot summary (1-2 sentences) for a movie titled "${content}". Return only the plot summary, no explanation.`;
+      prompt = `Write a super short, fun movie plot for "${content}". Make it sound like a casual friend describing a movie. Keep it to 1-2 sentences max.`;
+      break;
+    case 'words':
+      prompt = `Make up a quick, casual definition for the word "${content}". Sound like a friend just making something up, not like a dictionary. Keep it short and fun.`;
+      break;
+    case 'people':
+      prompt = `Make up a brief, casual story about who "${content}" was. Sound like you're just making it up on the spot with friends. Keep it short and a bit silly.`;
+      break;
+    case 'initials':
+      prompt = `What could the initials "${content}" stand for? Make up something funny and casual, like you're joking with friends. Just give me the phrase.`;
+      break;
+    case 'laws':
+      prompt = `Make up a quick explanation for why this law exists: "${content}". Sound casual like you're just guessing with friends. Keep it short and somewhat believable.`;
+      break;
+    case 'apps':
+      prompt = `What does the app "${content}" do? Make up something quick and casual, like you're just guessing with friends. Keep it short and a bit ridiculous.`;
+      break;
+    case 'conspiracies':
+      prompt = `Make up some quick details about the conspiracy theory "${content}". Sound casual like you're just making it up with friends. Keep it brief and a bit out there.`;
+      break;
+    case 'reviews':
+      prompt = `Write a short, casual product review for "${content}". Sound like a real person, not too formal. Make it funny or weirdly enthusiastic. Keep it brief.`;
       break;
     default:
-      prompt = `Generate a creative response for "${content}" in the category "${category}". Return only your response, no explanation.`;
+      prompt = `Make up a creative response for "${content}" in the category "${category}". Sound casual and fun like you're just chatting with friends.`;
   }
 
   try {
@@ -210,9 +355,34 @@ async function generateBotSubmission(gameType, content, category) {
       };
       return content.map(letter => words[letter] || `${letter}ot`).join(' ');
     } else if (gameType === 'date') {
-      return `On ${content}, an unexpected discovery changed how historians viewed this period.`;
+      return `So on ${content}, some guy apparently found a weird old coin and it totally changed what historians thought about that time.`;
     } else if (gameType === 'movie') {
-      return `"${content}" follows the journey of an unlikely hero who must overcome personal challenges while saving their community from disaster.`;
+      return `"${content}" is about this random person who has to deal with a bunch of problems while trying to save their town from some disaster. Pretty wild stuff.`;
+    } else if (gameType === 'words') {
+      return `${content}? Oh that's when you accidentally put too much hot sauce on your burrito and regret it immediately.`;
+    } else if (gameType === 'people') {
+      return `${content} was this random person from the 1800s who supposedly invented a machine to talk to cats. Didn't work, obviously.`;
+    } else if (gameType === 'initials') {
+      return `${content} clearly stands for "${content.split('').map(letter => {
+        const options = {
+          'A': 'Awesome', 'B': 'Bizarre', 'C': 'Crazy', 'D': 'Dramatic',
+          'E': 'Extreme', 'F': 'Funky', 'G': 'Groovy', 'H': 'Hilarious',
+          'I': 'Intense', 'J': 'Jumbo', 'K': 'Kooky', 'L': 'Loud',
+          'M': 'Mega', 'N': 'Nutty', 'O': 'Odd', 'P': 'Peculiar',
+          'Q': 'Quirky', 'R': 'Radical', 'S': 'Silly', 'T': 'Totally',
+          'U': 'Unusual', 'V': 'Very', 'W': 'Wacky', 'X': 'Xtreme',
+          'Y': 'Yikes', 'Z': 'Zany'
+        };
+        return options[letter] || letter;
+      }).join(' ')}".`;
+    } else if (gameType === 'laws') {
+      return `That law about "${content}" was made because some mayor's pet got into trouble once and they got super dramatic about it.`;
+    } else if (gameType === 'apps') {
+      return `${content} is this app that helps you track how many times your cat judges you throughout the day. Super useful, right?`;
+    } else if (gameType === 'conspiracies') {
+      return `The "${content}" theory is about how all the world's sock-disappearances are actually part of a secret government energy project.`;
+    } else if (gameType === 'reviews') {
+      return `OMG this ${content} changed my life!!! 5 stars! Would buy again even though it broke after 2 days lol.`;
     }
     
     return 'Bot submission';

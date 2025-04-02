@@ -479,30 +479,90 @@ const GameRoom = () => {
                   <div className="game-options">
                     <h3 className="section-header">GAME TYPES</h3>
                     <div className="game-types-container">
-                      <label className="game-type-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={selectedGameTypes.includes('acronym')}
-                          onChange={() => toggleGameType('acronym')}
-                        />
-                        Acronyms
-                      </label>
-                      <label className="game-type-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={selectedGameTypes.includes('date')}
-                          onChange={() => toggleGameType('date')}
-                        />
-                        Historical Dates
-                      </label>
-                      <label className="game-type-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={selectedGameTypes.includes('movie')}
-                          onChange={() => toggleGameType('movie')}
-                        />
-                        Movie Plots
-                      </label>
+                      <div className="game-types-column">
+                        <label className="game-type-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={selectedGameTypes.includes('acronym')}
+                            onChange={() => toggleGameType('acronym')}
+                          />
+                          Acronyms
+                        </label>
+                        <label className="game-type-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={selectedGameTypes.includes('date')}
+                            onChange={() => toggleGameType('date')}
+                          />
+                          Historical Dates
+                        </label>
+                        <label className="game-type-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={selectedGameTypes.includes('movie')}
+                            onChange={() => toggleGameType('movie')}
+                          />
+                          Movie Plots
+                        </label>
+                        <label className="game-type-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={selectedGameTypes.includes('words')}
+                            onChange={() => toggleGameType('words')}
+                          />
+                          Word Definitions
+                        </label>
+                        <label className="game-type-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={selectedGameTypes.includes('people')}
+                            onChange={() => toggleGameType('people')}
+                          />
+                          Historical People
+                        </label>
+                      </div>
+                      <div className="game-types-column">
+                        <label className="game-type-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={selectedGameTypes.includes('initials')}
+                            onChange={() => toggleGameType('initials')}
+                          />
+                          Initials
+                        </label>
+                        <label className="game-type-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={selectedGameTypes.includes('laws')}
+                            onChange={() => toggleGameType('laws')}
+                          />
+                          Strange Laws
+                        </label>
+                        <label className="game-type-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={selectedGameTypes.includes('apps')}
+                            onChange={() => toggleGameType('apps')}
+                          />
+                          App Descriptions
+                        </label>
+                        <label className="game-type-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={selectedGameTypes.includes('conspiracies')}
+                            onChange={() => toggleGameType('conspiracies')}
+                          />
+                          Conspiracy Theories
+                        </label>
+                        <label className="game-type-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={selectedGameTypes.includes('reviews')}
+                            onChange={() => toggleGameType('reviews')}
+                          />
+                          Product Reviews
+                        </label>
+                      </div>
                     </div>
                     <div className="info-box">
                       Select at least one game type for your room.
@@ -615,6 +675,62 @@ const GameRoom = () => {
                           <div className="movie-instruction">Write a plot summary for this movie</div>
                         </div>
                       )}
+
+                      {gameType === 'words' && content && (
+                        <div className="content-container">
+                          <span className="content-label">WORD:</span>
+                          <div className="content-value">{content}</div>
+                          <div className="content-instruction">Make up a definition for this word</div>
+                        </div>
+                      )}
+
+                      {gameType === 'people' && content && (
+                        <div className="content-container">
+                          <span className="content-label">PERSON:</span>
+                          <div className="content-value">{content}</div>
+                          <div className="content-instruction">Make up who this person was</div>
+                        </div>
+                      )}
+
+                      {gameType === 'initials' && content && (
+                        <div className="content-container">
+                          <span className="content-label">INITIALS:</span>
+                          <div className="content-value">{content}</div>
+                          <div className="content-instruction">What could these initials stand for?</div>
+                        </div>
+                      )}
+
+                      {gameType === 'laws' && content && (
+                        <div className="content-container">
+                          <span className="content-label">LAW:</span>
+                          <div className="content-value">{content}</div>
+                          <div className="content-instruction">Explain why this law exists</div>
+                        </div>
+                      )}
+
+                      {gameType === 'apps' && content && (
+                        <div className="content-container">
+                          <span className="content-label">APP NAME:</span>
+                          <div className="content-value">{content}</div>
+                          <div className="content-instruction">What does this app do?</div>
+                        </div>
+                      )}
+
+                      {gameType === 'conspiracies' && content && (
+                        <div className="content-container">
+                          <span className="content-label">CONSPIRACY THEORY:</span>
+                          <div className="content-value">{content}</div>
+                          <div className="content-instruction">Explain this conspiracy theory</div>
+                        </div>
+                      )}
+
+                      {gameType === 'reviews' && content && (
+                        <div className="content-container">
+                          <span className="content-label">PRODUCT:</span>
+                          <div className="content-value">{content}</div>
+                          <div className="content-instruction">Write a review for this product</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="submission-form">
@@ -623,9 +739,19 @@ const GameRoom = () => {
                       type="text"
                       value={acronym}
                       onChange={(e) => setAcronym(e.target.value)}
-                      placeholder={gameType === 'acronym' ? "Enter your acronym" : 
-                                 gameType === 'date' ? "Enter historical event" : 
-                                 "Enter movie plot"}
+                      placeholder={
+                        gameType === 'acronym' ? "Enter your acronym" : 
+                        gameType === 'date' ? "Enter historical event" : 
+                        gameType === 'movie' ? "Enter movie plot" :
+                        gameType === 'words' ? "Enter word definition" :
+                        gameType === 'people' ? "Enter who this person was" :
+                        gameType === 'initials' ? "Enter what these initials stand for" :
+                        gameType === 'laws' ? "Enter why this law exists" :
+                        gameType === 'apps' ? "Enter what this app does" :
+                        gameType === 'conspiracies' ? "Enter conspiracy theory details" :
+                        gameType === 'reviews' ? "Enter product review" :
+                        "Enter your response"
+                      }
                       disabled={hasSubmitted || timeLeft === 0}
                       onKeyPress={(e) => e.key === 'Enter' && !hasSubmitted && timeLeft > 0 && submitContent()}
                     />

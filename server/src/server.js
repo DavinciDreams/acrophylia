@@ -339,6 +339,8 @@ async function startRound(roomId) {
   if (room.currentGameType === 'acronym') {
     const letterCount = room.content.length;
     timeLimit = letterCount <= 4 ? 30 : letterCount <= 6 ? 60 : 90;
+  } else if (['words', 'people', 'initials', 'laws', 'apps', 'conspiracies', 'reviews'].includes(room.currentGameType)) {
+    timeLimit = 45; // Slightly shorter time for the new casual game types
   } else {
     timeLimit = 60; // Standard time for date and movie types
   }
@@ -367,6 +369,20 @@ async function startRound(roomId) {
         // Fallback submission if API fails
         if (room.currentGameType === 'acronym') {
           room.submissions.set(player.id, room.content.join(''));
+        } else if (room.currentGameType === 'words') {
+          room.submissions.set(player.id, `${room.content}? That's when you accidentally do something embarrassing in public.`);
+        } else if (room.currentGameType === 'people') {
+          room.submissions.set(player.id, `${room.content} was famous for something, probably.`);
+        } else if (room.currentGameType === 'initials') {
+          room.submissions.set(player.id, `${room.content} stands for something funny.`);
+        } else if (room.currentGameType === 'laws') {
+          room.submissions.set(player.id, `That law exists because someone did something silly once.`);
+        } else if (room.currentGameType === 'apps') {
+          room.submissions.set(player.id, `${room.content} helps you track something nobody needs to track.`);
+        } else if (room.currentGameType === 'conspiracies') {
+          room.submissions.set(player.id, `The ${room.content} theory is about aliens, probably.`);
+        } else if (room.currentGameType === 'reviews') {
+          room.submissions.set(player.id, `This ${room.content} changed my life! Five stars!`);
         } else {
           room.submissions.set(player.id, 'No submission');
         }
