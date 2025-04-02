@@ -1,15 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Space+Mono:wght@400;700&display=swap');
 
 :root {
-  --primary: #1cafec;
-  --secondary: #1bbf9a;
-  --accent: #fdd413;
+  --primary: #4B0082; /* Indigo/Purple - Main Balderdash color */
+  --secondary: #B22222; /* Firebrick Red - Accent color */
+  --accent: #FFD700; /* Gold - For highlights and important elements */
   --background: #ffffff;
-  --backgroundSecondary: #f0f0f0;
+  --backgroundSecondary: #f5f0ff; /* Light purple tint */
   --text: #000000;
   --border: 4px solid #000000;
   --shadow: 5px 5px 0px #000000;
-  --fontSecondarySize: 1rem; 
+  --fontSecondarySize: 1rem;
+  --accentBlue: #1E90FF; /* Dodger Blue - Additional accent */
 }
 
 * {
@@ -64,7 +65,7 @@ h1:after {
   left: 0;
   width: 100%;
   height: 8px;
-  background-color: var(--primary);
+  background-color: var(--accent);
   z-index: -1;
 }
 
@@ -75,6 +76,7 @@ h1:after {
   box-shadow: var(--shadow);
   padding: 2rem;
   margin: 2rem auto;
+  border-top: 8px solid var(--primary);
 }
 
 .player-list {
@@ -99,9 +101,10 @@ h1:after {
 .voting-panel {
   margin: 20px 0;
   padding: 1.5rem;
-  background-color: var(--accent);
+  background-color: var(--primary);
   border: var(--border);
   box-shadow: var(--shadow);
+  color: #ffffff;
 }
 
 .submission {
@@ -134,7 +137,7 @@ button {
   text-transform: uppercase;
   padding: 0.8rem 1.5rem;
   background-color: var(--primary);
-  color: var(--text);
+  color: #ffffff;
   border: 3px solid #000;
   box-shadow: 4px 4px 0px #000;
   cursor: pointer;
@@ -216,7 +219,7 @@ button:disabled:hover {
 
 .game-room-container {
   padding: 1.5rem;
-  background-color: var(--secondary);
+  background-color: var(--backgroundSecondary);
   min-height: 100vh;
   font-family: 'Space Grotesk', sans-serif;
   display: flex;
@@ -231,12 +234,13 @@ button:disabled:hover {
 .round-header {
   width: 100%;
   margin-bottom: 1.5rem;
-  background-color: var(--accent);
+  background-color: var(--primary);
   padding: 1rem;
   border: 3px solid var(--text);
   box-shadow: 4px 4px 0px var(--text);
   text-align: center;
   text-transform: uppercase;
+  color: #ffffff;
 }
 
 .round-title {
@@ -246,6 +250,7 @@ button:disabled:hover {
   text-transform: uppercase;
   margin: 0;
   text-align: center;
+  color: #ffffff;
 }
 
 /* Button styles */
@@ -301,12 +306,12 @@ button:disabled:hover {
 /* Button colors */
 .btn-primary {
   background-color: var(--primary);
-  color: var(--background);
+  color: #ffffff;
 }
 
 .btn-secondary {
   background-color: var(--secondary);
-  color: var(--text);
+  color: #ffffff;
 }
 
 .btn-accent {
@@ -315,8 +320,8 @@ button:disabled:hover {
 }
 
 .btn-blue {
-  background-color: #00c2ff;
-  color: var(--text);
+  background-color: var(--accentBlue);
+  color: #ffffff;
 }
 
 /* Special button variants */
@@ -399,11 +404,12 @@ button:disabled:hover {
   box-shadow: 3px 3px 0px #000000;
   display: inline-block;
   text-transform: uppercase;
+  color: var(--text);
 }
 
 .section-header {
   width: 100%;
-  background-color: var(--accent);
+  background-color: var(--primary);
   padding: 1rem;
   border: 3px solid var(--text);
   box-shadow: 4px 4px 0px var(--text);
@@ -411,6 +417,7 @@ button:disabled:hover {
   font-family: 'Space Grotesk', sans-serif;
   font-weight: bold;
   margin: 0;
+  color: #ffffff;
 }
 
 /* Name set styles */
@@ -524,10 +531,11 @@ button:disabled:hover {
 .invite-header {
   width: 100%;
   margin-bottom: 1.5rem;
-  background-color: var(--accent);
+  background-color: var(--primary);
   padding: 1rem;
   border: 3px solid var(--text);
   box-shadow: 4px 4px 0px var(--text);
+  color: #ffffff;
 }
 
 .invite-title {
@@ -615,11 +623,11 @@ button:disabled:hover {
 .title {
   font-family: 'Space Mono', monospace;
   font-size: 2rem;
-  color: var(--text);
+  color: var(--accent);
   margin: 0;
   font-weight: bold;
   text-transform: uppercase;
-  text-shadow: 2px 0 0 var(--primary), -2px 0 0 var(--accent);
+  text-shadow: 2px 0 0 var(--primary), -2px 0 0 var(--secondary);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -885,8 +893,8 @@ button:disabled:hover {
   font-family: 'Space Mono', monospace;
   font-weight: bold;
   font-size: 1.5rem;
-  background-color: var(--accent);
-  color: var(--text);
+  background-color: var(--primary);
+  color: #ffffff;
   padding: 0.5rem 0.75rem;
   border: 3px solid var(--text);
   box-shadow: 3px 3px 0px var(--text);
@@ -982,7 +990,7 @@ button:disabled:hover {
 /* Results styles */
 .winner-container {
   width: 100%;
-  background-color: var(--accent);
+  background-color: var(--primary);
   padding: 1.5rem;
   border: 3px solid var(--text);
   box-shadow: 4px 4px 0px var(--text);
@@ -991,6 +999,7 @@ button:disabled:hover {
   align-items: center;
   gap: 1rem;
   margin: 1.5rem 0;
+  color: #ffffff;
 }
 
 .winner-label {
@@ -1348,6 +1357,7 @@ button:disabled:hover {
   padding: 1.5rem;
   border: 3px solid var(--text);
   box-shadow: 4px 4px 0px var(--text);
+  color: #ffffff;
 }
 
 .game-over-title {
@@ -1377,10 +1387,11 @@ button:disabled:hover {
   font-family: 'Space Mono', monospace;
   font-size: 1.25rem;
   font-weight: bold;
-  background-color: #ffffff;
+  background-color: var(--accent);
   padding: 0.5rem 1rem;
   border: 3px solid var(--text);
   box-shadow: 3px 3px 0px var(--text);
+  color: var(--text);
 }
 
 .winner-name {
@@ -1433,10 +1444,11 @@ button:disabled:hover {
 .name-set-header {
   width: 100%;
   margin-bottom: 1.5rem;
-  background-color: #00c2ff;
+  background-color: var(--primary);
   padding: 1rem;
   border: 3px solid var(--text);
   box-shadow: 4px 4px 0px var(--text);
+  color: #ffffff;
 }
 
 .name-set-title {
