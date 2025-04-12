@@ -49,7 +49,7 @@ const grokClient = new OpenAI({
 async function callLLM(prompt) {
   try {
     const response = await grokClient.chat.completions.create({
-      model: 'grok-beta',
+      model: 'grok-3-mini',
       messages: [
         { role: 'system', content: 'You are a creative assistant helping generate acronyms or rate them.' },
         { role: 'user', content: prompt }
