@@ -78,10 +78,10 @@ async function generateCategory() {
 io.on('connection', (socket) => {
   console.debug('New client connected:', socket.id);
 
-  socket.on('createRoom', () => { // Removed roomName parameter
+  socket.on('createRoom', (name) => { 
     const roomId = Math.random().toString(36).substr(2, 9);
     rooms.set(roomId, {
-      name: `Room ${roomId}`, // Default name
+      name: `Room: ${name}`, // Default name
       creatorId: socket.id,
       players: [{ id: socket.id, name: '', score: 0, isBot: false }],
       round: 0,

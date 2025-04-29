@@ -255,7 +255,7 @@ const Home = () => {
     socket.emit('createRoom', 'Neobrutalist Room');
     
     socket.once('roomCreated', (roomId) => {
-      console.debug('Room created received, roomId:', roomId);
+      console.debug('Room created received, roomId:', roomId); 
       sessionStorage.setItem('isCreator', 'true');
       sessionStorage.setItem('creatorSocketId', socket.id);
       router.push(`/room/${roomId}?creatorId=${socket.id}`);
