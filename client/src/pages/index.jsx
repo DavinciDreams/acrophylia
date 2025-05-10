@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import io from 'socket.io-client';
 import Head from 'next/head';
 
-const socket = io('https://acrophylia.onrender.com', {
+const socket = io('http://localhost:3001', {
   withCredentials: true,
   transports: ['websocket', 'polling']
 });
@@ -255,7 +255,7 @@ const Home = () => {
     socket.emit('createRoom', 'Neobrutalist Room');
     
     socket.once('roomCreated', (roomId) => {
-      console.debug('Room created received, roomId:', roomId);
+      console.debug('Room created received, roomId:', roomId); 
       sessionStorage.setItem('isCreator', 'true');
       sessionStorage.setItem('creatorSocketId', socket.id);
       router.push(`/room/${roomId}?creatorId=${socket.id}`);

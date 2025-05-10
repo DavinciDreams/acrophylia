@@ -7,7 +7,7 @@ export function SocketProvider({ children }) {
   const [socket, setSocket] = useState(null)
 
   useEffect(() => {
-    const serverUrl = 'https://acrophylia.onrender.com'  // Replace with your Render URL
+    const serverUrl = 'http://localhost:3001'  // Replace with your Render URL
     const newSocket = io(serverUrl)
     setSocket(newSocket)
     

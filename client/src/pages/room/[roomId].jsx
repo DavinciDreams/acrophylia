@@ -4,7 +4,7 @@ import io from 'socket.io-client';
 import Head from 'next/head';
 import PlayerList from '../../components/PlayerList';
 
-const socket = io('https://acrophylia.onrender.com', {
+const socket = io('http://localhost:3001', {
   withCredentials: true,
   transports: ['polling', 'websocket'],
   reconnection: true,
