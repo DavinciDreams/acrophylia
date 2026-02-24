@@ -12,7 +12,7 @@ const app = express();
 const server = http.createServer(app);
 
 const allowedOrigins = [
-  "http://localhost:3000",
+  "http://localhost:*",
   "https://urban-succotash-p9rqv5qxxg5cr4v4-3000.app.github.dev",
   "https://acrophylia-5sij2fzvc-davincidreams-projects.vercel.app",
   "https://acrophylia.vercel.app",
@@ -78,10 +78,10 @@ async function generateCategory() {
 io.on('connection', (socket) => {
   console.debug('New client connected:', socket.id);
 
-  socket.on('createRoom', () => { // Removed roomName parameter
+  socket.on('createRoom', (name) => { 
     const roomId = Math.random().toString(36).substr(2, 9);
     rooms.set(roomId, {
-      name: `Room ${roomId}`, // Default name
+      name: `Room: ${name}`, // Default name
       creatorId: socket.id,
       players: [{ id: socket.id, name: '', score: 0, isBot: false }],
       round: 0,
